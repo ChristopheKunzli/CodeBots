@@ -480,10 +480,12 @@ export class ItemBar extends BaseInterface {
 
 export class RobotInterface extends BaseInterface {
     private code: string;
+    private item: Item | null;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item = null) {
         super(app, spritesheets, scale);
         this.code = code;
+        this.item = item;
     }
 
     public draw(): void {
@@ -543,12 +545,41 @@ export class RobotInterface extends BaseInterface {
 
         const contentHeight = codeText.height + padding / 2;
 
+        //draw border around content
+        codeArea.lineStyle(2, "black", 1);
+        codeArea.beginFill(0x2a2727, 0.25);//almost transparent fill
+        codeArea.drawRect(0, 0, codeAreaW, contentHeight);
+        codeArea.endFill();
+
         const scrollbarX = codeArea.x + codeAreaW + scrollbarW + padding / 4;
-        const scrollbarY = padding;
+        new ScrollBar(codeArea, contentHeight, codeAreaH, robotInterface, scrollbarX, padding, scrollbarW, scrollbarH, this.app);
 
-        new ScrollBar(codeArea, contentHeight, codeAreaH, robotInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
+        //measure available space to add itemSlot and power button
+        const bounds = robotInterface.getLocalBounds();
+        const availableWidth = bounds.width - scrollbarX - padding;
+        const size = availableWidth * 0.75;
 
+        //item slot on right
+        const itemSlot = new Sprite(findTexture(this.spritesheets, "light_square"));
+        itemSlot.width = itemSlot.height = size;
+        itemSlot.x = (scrollbarX + scrollbarW) + (availableWidth - size) / 2;
+        itemSlot.y = (bounds.height - size) / 2;
+        robotInterface.addChild(itemSlot);
+        this.drawItem(this.item, itemSlot, true, true);
 
+        //power button
+        const powerButton = new Sprite(findTexture(this.spritesheets, "power"));
+        const powerButtonSize = size * 0.5;
+        powerButton.width = powerButton.height = powerButtonSize;
+        powerButton.x = itemSlot.x + (itemSlot.width - powerButtonSize) / 2;
+        powerButton.y = itemSlot.y + itemSlot.height + (bounds.height - (itemSlot.y + itemSlot.height) - powerButtonSize) / 2;
+        powerButton.interactive = true;
+        powerButton.on('pointerdown', () => {
+            //TODO manage robot power button click
+            console.log(`Clicked on robot power button`);
+            powerButton.tint = powerButton.tint === 0xff0000 ? 0xffffff : 0xff0000;
+        });
+        robotInterface.addChild(powerButton);
     }
 }
 
