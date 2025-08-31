@@ -14,9 +14,18 @@ export abstract class BaseInterface extends Container {
         this.app = app;
         this.spritesheets = spritesheets;
         this.guiScale = scale;
+        this.hide();
     }
 
-    public abstract draw(): void;
+    protected abstract draw(): void;
+
+    public hide(): void {
+        this.visible = false;
+    }
+
+    public show(): void {
+        this.visible = true;
+    }
 
     /**
      * Creates a close button and positions it at the top-right corner of the given container.
@@ -31,7 +40,7 @@ export abstract class BaseInterface extends Container {
         closeButton.y = 5;
         closeButton.interactive = true;
         closeButton.on('pointerdown', () => {
-            this.app.stage.removeChild(container);
+            this.hide();
         });
         closeButton.on('mouseover', () => {
             closeButton.tint = 0xff0000;
@@ -57,7 +66,10 @@ export abstract class BaseInterface extends Container {
         container.y = this.app.screen.height / 2 - (height / 2);
         container.addChild(this.createFrame(width, height, textureName, borderDimension));
         container.addChild(this.createCloseButton(container));
-        this.app.stage.addChild(container);
+        this.addChild(container);
+        if (!this.app.stage.children.includes(this)) {
+            this.app.stage.addChild(this);
+        }
         return container;
     }
 
@@ -123,7 +135,7 @@ export abstract class BaseInterface extends Container {
 
         if (drawNameOnHover) {
             const nameText = new Text({
-                text: item.spriteName.replace(/_/g, ' ').toUpperCase(),
+                text: item.spriteName.replace(/_/g, ' ').toUpperCase() + (item.quantity > 1 ? ` x${item.quantity}` : ''),
                 style: {
                     fill: '#ffffff',
                     fontSize: 8,
@@ -156,9 +168,10 @@ export class ChestInterface extends BaseInterface {
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
         super(app, spritesheets, scale);
         this.items = items;
+        this.draw();
     }
 
-    public draw() {
+    protected draw() {
         const chestWidth = this.app.screen.width * 0.5;
         const chestHeight = this.app.screen.height * 0.5;
         const chestInventory = this.createCenteredContainer(chestWidth, chestHeight, "dark_frame", 4);
@@ -204,9 +217,10 @@ export class CraftingInterface extends BaseInterface {
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[]) {
         super(app, spritesheets, scale);
         this.recipes = recipes;
+        this.draw();
     }
 
-    public draw(): void {
+    protected draw(): void {
         const craftingWidth = this.app.screen.width * 0.5;
         const craftingHeight = this.app.screen.height * 0.5;
         const craftingInterface = this.createCenteredContainer(craftingWidth, craftingHeight, "dark_frame", 4);
@@ -330,9 +344,10 @@ export class CoreInterface extends BaseInterface {
         super(app, spritesheets, scale);
         this.steps = steps;
         this.currentStepIndex = currentStepIndex;
+        this.draw();
     }
 
-    public draw(): void {
+    protected draw(): void {
         const step = this.steps[this.currentStepIndex];
         if (!step) {
             throw new Error("Invalid step index");
@@ -440,9 +455,10 @@ export class ItemBar extends BaseInterface {
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
         super(app, spritesheets, scale);
         this.items = items;
+        this.draw();
     }
 
-    public draw(): void {
+    protected draw(): void {
         const itemBar = new Container();
         this.app.stage.addChild(itemBar);
 
@@ -486,9 +502,10 @@ export class RobotInterface extends BaseInterface {
         super(app, spritesheets, scale);
         this.code = code;
         this.item = item;
+        this.draw();
     }
 
-    public draw(): void {
+    protected draw(): void {
         const width = this.app.screen.width * 0.5;
         const height = this.app.screen.height * 0.5;
         const padding = 18;

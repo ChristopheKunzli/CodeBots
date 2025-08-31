@@ -135,19 +135,16 @@ const exampleCode: string =
     const guiScale = 64;
     const spritesheets = await getSpritesheets();
 
-    const gui = {
-        itemBar: new ItemBar(app, spritesheets, guiScale, exampleItemBar),
-        chestInterface: new ChestInterface(app, spritesheets, guiScale, exampleChestItems),
-        craftingInterface: new CraftingInterface(app, spritesheets, guiScale, exampleRecipes),
-        coreInterface: new CoreInterface(app, spritesheets, guiScale, exampleCoreSteps),
-        robotInterface: new RobotInterface(app, spritesheets, guiScale, exampleCode),
-    };
+    const itemBar = new ItemBar(app, spritesheets, guiScale, exampleItemBar);
+    const chestInterface = new ChestInterface(app, spritesheets, guiScale, exampleChestItems);
+    const craftingInterface = new CraftingInterface(app, spritesheets, guiScale, exampleRecipes);
+    const coreInterface = new CoreInterface(app, spritesheets, guiScale, exampleCoreSteps);
+    const robotInterface = new RobotInterface(app, spritesheets, guiScale, exampleCode);
 
-    //gui.chestInterface.draw();
-    //gui.craftingInterface.draw();
-    //gui.coreInterface.draw();
-    gui.robotInterface.draw();
-
-    gui.itemBar.draw();
+    chestInterface.show();
+    //craftingInterface.show();
+    //coreInterface.show();
+    //robotInterface.show();
+    itemBar.show();
 
 })();
