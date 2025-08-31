@@ -226,8 +226,7 @@ export class MultilineInput extends Graphics {
     }
 
     private ensureCaretVisible() {
-        if (!this.texts[this.cursorLine]) return;
-
+        if (!this.texts[this.cursorLine] || !this._scrollbar) return;
         const caretTop = this.texts[this.cursorLine].y;
         const caretBottom = caretTop + this.texts[this.cursorLine].height;
 
@@ -248,11 +247,6 @@ export class MultilineInput extends Graphics {
     private focus() {
         this.focused = true;
         this._caret.visible = true;
-    }
-
-    private blur() {
-        this.focused = false;
-        this._caret.visible = false;
     }
 
     private onKeyDown = (e: KeyboardEvent) => {

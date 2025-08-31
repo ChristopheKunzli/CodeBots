@@ -6,17 +6,14 @@ import {MultilineInput} from "./MultilineInput";
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
-    protected container: Container;
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
 
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
         super();
         this.app = app;
-        //this.container = new Container();
         this.spritesheets = spritesheets;
         this.guiScale = scale;
-        //this.app.stage.addChild(this);
     }
 
     public abstract draw(): void;
@@ -36,6 +33,12 @@ export abstract class BaseInterface extends Container {
         closeButton.on('pointerdown', () => {
             this.app.stage.removeChild(container);
         });
+        closeButton.on('mouseover', () => {
+            closeButton.tint = 0xff0000;
+        })
+        closeButton.on('mouseout', () => {
+            closeButton.tint = 0xffffff;
+        })
         return closeButton;
     }
 
