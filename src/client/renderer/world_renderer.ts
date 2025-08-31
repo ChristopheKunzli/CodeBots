@@ -9,6 +9,7 @@ import { TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
+import { OutlineFilter } from "pixi-filters";
 
 
 export class WorldRenderer {
@@ -33,9 +34,9 @@ export class WorldRenderer {
     private currentlyRenderingChunks: Set<string> = new Set();
     private world: World;
     private app: PIXI.Application;
-    spriteMap: Map<Tile, PIXI.Sprite> = new Map();
+    private onInteractionWithTile: (tile: Tile) => void;
 
-    constructor(world: World, app: PIXI.Application) {
+    constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
@@ -50,10 +51,19 @@ export class WorldRenderer {
         this.container.addChild(this.overTileLayer);
         this.container.addChild(this.middleLayer);
         this.container.addChild(this.foregroundLayer);
+
+        this.onInteractionWithTile = onInteractionWithTile;
+    }
+
+    private setCursor() {
+        const getCursor = (name: string) => `url('/assets/${name}.png'),auto`;
+        this.app.renderer.events.cursorStyles.default = getCursor("cursor");
+        this.app.renderer.events.cursorStyles.hover = getCursor("pointer");
     }
 
     async initialize() {
         this.spriteSheet = await getSpritesheets();
+        this.setCursor();
     }
 
     public render(chunks: Chunk[]) {
@@ -83,9 +93,10 @@ export class WorldRenderer {
 
         const sprite = new PIXI.AnimatedSprite(animation);
         sprite.animationSpeed = 0.1;
-        sprite.anchor.set(0.5, 1);
+        sprite.anchor.set(0, 1);
         sprite.play();
-        sprite.label = entity.id;
+        sprite.x = entity.posX * TILE_SIZE;
+        sprite.y = entity.posY * TILE_SIZE + TILE_SIZE;
 
         // sprite.anchor.set(0.5, 1); // les pieds posés sur le sol
         // bas du sprite = bas du tile
@@ -99,11 +110,9 @@ export class WorldRenderer {
                 sprite.textures = findAnimation(this.spriteSheet, entity.getAnimationName())!;
                 animationName = entity.getAnimationName();
             }
-            new PIXI.Sprite({ label: "" })
-            new PIXI.Container({ label: "" })
 
             sprite.x = state.posX * TILE_SIZE;
-            sprite.y = state.posY * TILE_SIZE;
+            sprite.y = state.posY * TILE_SIZE + TILE_SIZE;
 
             if (entity.isAnimated()) {
                 sprite.play();
@@ -287,7 +296,6 @@ export class WorldRenderer {
                 const spriteIndex = Math.floor(tile.variation * treeTypes.length);
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, treeTypes[spriteIndex]));
                 this.middleLayer.addChild(sprite);
-                sprite.anchor.set(0.5, 1);
                 offsetY = -2;
                 break;
 
@@ -295,31 +303,33 @@ export class WorldRenderer {
             case ResourceType.STONE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
-                sprite.anchor.set(0.5, 0.5);
                 break;
             };
             case ResourceType.COPPER: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "copper"))
                 this.overTileLayer.addChild(sprite);
-                sprite.anchor.set(0.5, 0.5);
                 break;
             };
             case ResourceType.IRON: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron"))
                 this.overTileLayer.addChild(sprite);
-                sprite.anchor.set(0.5, 0.5);
                 break;
             };
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
                 this.middleLayer.addChild(sprite);
-                sprite.anchor.set(0.5, 0.5);
                 break;
             }
         }
 
         sprite.anchor.set(0.5, 1);
 
+        sprite.interactive = true;
+        sprite.cursor = "hover";
+        sprite
+            .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+            .on("pointerout", () => sprite.filters = null)
+            .on("click", () => this.onInteractionWithTile(tile));
 
         sprite.roundPixels = true;
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;

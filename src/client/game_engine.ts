@@ -4,7 +4,8 @@ import { WorldRenderer } from "./renderer/world_renderer";
 import { World } from "./world/world";
 import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
-import { CHUNK_SIZE, TILE_SIZE } from "./constants";
+import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
+import Tile from "./world/tile";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -19,7 +20,7 @@ export class GameEngine {
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app);
+        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
         this.camera = new Camera();
         this.camera.zoom = 2;
 
@@ -67,12 +68,29 @@ export class GameEngine {
         this.renderer.container.y = this.camera.y;
     }
 
-    private handleMouseClick(event: MouseEvent) {
+    private handleInteractWithTile(tile: Tile) {
+        const distance = Math.sqrt(
+            Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
+        );
 
+        if (distance > PLAYER_RANGE) {
+            return;
+        }
+
+        const mined = this.player.interactWithTile(tile);
+        if (mined) {
+            let chunk = tile?.chunk;
+            if (chunk == undefined || tile == null) return;
+            // Rafraîchir le rendu si une ressource a été minée
+            this.renderer.updateTile(chunk, tile);
+            // const visibleChunks = this.world.getChunksInVisibleRange(this.player);
+            // this.renderer.render(visibleChunks);
+        }
+    }
+
+    private handleMouseClick(event: MouseEvent) {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
-
-        this.app.screen.height
 
         let x = (mouseX - this.camera.x) / (TILE_SIZE * this.camera.zoom),
             y = (mouseY - this.camera.y) / (TILE_SIZE * this.camera.zoom);
@@ -85,19 +103,10 @@ export class GameEngine {
             Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
         );
 
-        if (distance > 2) {
+        if (distance > PLAYER_RANGE) {
             return false;
         }
 
-        const mined = this.player.interactWithTile(tile);
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
-        if (mined) {
-            let chunk = tile?.chunk;
-            if (chunk == undefined || tile == null) return;
-            // Rafraîchir le rendu si une ressource a été minée
-            this.renderer.updateTile(chunk, tile);
-            // const visibleChunks = this.world.getChunksInVisibleRange(this.player);
-            // this.renderer.render(visibleChunks);
-        }
     }
 }
