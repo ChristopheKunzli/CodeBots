@@ -108,7 +108,6 @@ const exampleCode: string =
         engine.update(delta.deltaTime);
     });
 
-    //TODO : adjust guiScale based on screen size (64 is good for 1920x1080)
     const guiScale = 64;
     const spritesheets = await getSpritesheets();
 
