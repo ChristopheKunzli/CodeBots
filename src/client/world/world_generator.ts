@@ -65,7 +65,7 @@ export class WorldGenerator implements IWorldGenerator {
                         tile.absY = absY;
                         tile.variation = this.rng();
                         if (res < -0.75) {
-                            tile.content = new Tree(tile);
+                            tile.setContent = new Tree(tile);
                         }
                     }
                 }
@@ -73,9 +73,9 @@ export class WorldGenerator implements IWorldGenerator {
                     if (res > 0.75) {
                         const resourceVal = this.resourceNoiseFunc(absX * RESOURCE_FREQUENCY, absY * RESOURCE_FREQUENCY);
 
-                        if (resourceVal < -0.33) tile.content = new Stone(tile);
-                        else if (resourceVal < 0.33) tile.content = new IronStone(tile);
-                        else tile.content = new CopperStone(tile);
+                        if (resourceVal < -0.33) tile.setContent = new Stone(tile);
+                        else if (resourceVal < 0.33) tile.setContent = new IronStone(tile);
+                        else tile.setContent = new CopperStone(tile);
                     }
                 }
                 chunk.tiles[y][x] = tile;
