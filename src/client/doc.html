@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Jersey+10&display=swap"
+        rel="stylesheet"
+    />
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr"
+        crossorigin="anonymous"
+    />
+
+    <link rel="stylesheet" type="text/css" href="./doc/style.css"/>
+
+
+    <title>CodeBots - Documentation</title>
+</head>
+
+<body class="bg-body">
+    <div class="container-fluid main bg-body p-4">
+        <div class="row text-center my-5 title-header">
+            <h1 class="display-3 fw-bold">📖 Documentation</h1>
+            <p class="lead">Liste des expressions valides pour programmer vos codebots.</p>
+            <a class="btn btn-primary discover-btn border-0" href="/">
+                <h2 class="p-0 m-0 h3">Jouer</h2>
+            </a>
+        </div>
+
+        <div class="row my-5">
+            <h2 class="fw-bold mb-4">Instructions disponibles</h2>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Variables</h5>
+                    <p>
+                        <code>var x = &lt;expression&gt;;</code>
+                         → Déclaration d'une variable.
+                    </p>
+                    <p>
+                        <code>var x = &lt;expression&gt;;</code>
+                         → Réaffectation d'une variable.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Types</h5>
+                    <ul class="mb-0">
+                        <li>
+                            <code>5</code>
+                             → Integer.
+                        </li>
+                        <li>
+                            <code>"hello"</code>
+                             → Chaîne de caractères.
+                        </li>
+                        <li>
+                            <code>true</code> ou <code>false</code>
+                             → Booléen.
+                        </li>
+                        <li>
+                            <code>[1, 2, 3]</code>
+                             → Tableau.
+                        </li>
+                        <li>
+                            <code>{"key": "value"}</code>
+                             → Paires clé-valeur.
+                        </li>
+                        <li>
+                            <code>fn(a, b) { &lt;expressions&gt; }</code>
+                             → Fonction.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Opérateurs</h5>
+
+                    <p>
+                        Priorité des opérateurs du plus prioritaire au moins prioritaire.
+                        <ul>
+                            <li>
+                                <code>(&lt;expression&gt;)</code>
+                            </li>
+                            <li>
+                                <code>/</code> et <code>*</code>
+                            </li>
+                            <li>
+                                <code>+</code> et <code>-</code>
+                            </li>
+                            <li>
+                                <code>&lt;</code> et <code>&gt;</code>
+                            </li>
+                            <li>
+                                <code>==</code> et <code>!=</code>
+                            </li>
+                        </ul>
+                    </p>
+
+                    <p>
+                        Liste des opérateurs.
+                        <ul class="mb-0">
+                            <li>
+                                <code>5 + 3</code>
+                                → Addition.
+                            </li>
+                            <li>
+                                <code>10 - 2</code>
+                                → Soustraction.
+                            </li>
+                            <li>
+                                <code>4 * 1</code>
+                                → Multiplication.
+                            </li>
+                            <li>
+                                <code>9 / 7</code>
+                                → Division.
+                            </li>
+                            <li>
+                                <code>5 == 5</code>
+                                → Egalité.
+                            </li>
+                            <li>
+                                <code>3 != 4</code>
+                                → Non-égalité.
+                            </li>
+                            <li>
+                                <code>10 &lt; 20</code>
+                                → Infériorité.
+                            </li>
+                            <li>
+                                <code>15 &gt; 7</code>
+                                → Supériorité.
+                            </li>
+                            <li>
+                                <code>
+                                    !true
+                                </code>
+                                → Négation.
+                            </li>
+                        </ul>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Logique</h5>
+                    <ul class="mb-0">
+                        <li>
+                            <code>
+                                if (&lt;condition&gt;) { &lt;consequence&gt; } else { &lt;alternative&gt; }
+                            </code>
+                            → Condition.
+                        </li>
+                        <li>
+                            <code>
+                                while (&lt;condition&gt;) { &lt;expressions&gt; }
+                            </code>
+                            → Boucle.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Fonctions</h5>
+                    <ul class="mb-0">
+                        <li>
+                            <code>
+                                var add = fn(a, b) { return a + b; };
+                            </code>
+                            → Définir une fonction.
+                        </li>
+                        <li>
+                            <code>add(2, 3)</code>
+                             → Appel de fonction.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Tableaux</h5>
+                    <ul class="mb-0">
+                        <li>
+                            <code>var arr = [1, 2, 3, 4];</code>
+                            → Déclaration d'un tableau.
+                        </li>
+                        <li>
+                            <code>arr[1 + 1]</code>
+                            → Accès à un élément (<code>2</code>).
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Paires clé-valeur</h5>
+                    <ul class="mb-0">
+                        <li>
+                            <code>var pierre = {"nom": "Pierre", "pv": 100};</code>
+                            → Déclaration d'une hash map.
+                        </li>
+                        <li>
+                            <code>pierre["nom"];</code>
+                            → Retourne <code>"Pierre"</code>.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Fonctions existantes</h5>
+
+                    <p>
+                        Fonctions algorithmiques.
+                        <ul class="mb-0">
+                            <li>
+                                <code>len("abc")</code>
+                                 → Retourne <code>3</code>.
+                            </li>
+                            <li>
+                                <code>len([1,2,3])</code>
+                                 → Retourne <code>3</code>.
+                            </li>
+                            <li>
+                                <code>first([1,2,3])</code>
+                                 → Retourne <code>1</code>.
+                            </li>
+                            <li>
+                                <code>last([1,2,3])</code>
+                                 → Retourne <code>3</code>.
+                            </li>
+                            <li>
+                                <code>rest([1,2,3])</code>
+                                 → Retourne <code>[2,3]</code>.
+                            </li>
+                            <li>
+                                <code>push([1,2], 3)</code>
+                                 → Retourne <code>[1,2,3]</code>.
+                            </li>
+                        </ul>
+                    </p>
+
+                    <p>
+                        Fonctions de contrôle du Codebot.
+                        <ul class="mb-0">
+                            <li>
+                                <code>goto(&lt;position&gt;)</code>
+                                 → Déplace le robot jusqu'à la position indiquée.
+                            </li>
+                            <li>
+                                <code>find(&lt;resource&gt;)</code>
+                                 → Retourne la position de la resource demandée la plus proche.
+                            </li>
+                            <li>
+                                <code>wait(&lt;time&gt;)</code>
+                                 → Attend &lt;time&gt; ms.
+                            </li>
+                            <li>
+                                <code>print(...&lt;args&gt;)</code>
+                                 → Affiche les arguments.
+                            </li>
+                        </ul>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Exemple de programme</h5>
+
+                    <p>
+                        Répéter 3 fois : récolter et stocker du bois<br/>
+<pre>var i = 0;
+while (i < 3) {
+    var pos = find("wood");
+    goto(pos);
+    pick("wood");
+
+    goto("chest");
+    drop("wood");
+
+    var i = i + 1;
+}</pre>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+        crossorigin="anonymous"
+    ></script>
+</body>
+</html>
