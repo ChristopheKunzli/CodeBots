@@ -5,6 +5,7 @@ import type {AnimationName, TextureName} from "../spritesheet_atlas";
 import {EntityType} from "../types/entity_type";
 import { CODEBOT_SPEED, CODEBOT_INVENTORY_SIZE } from "../constants";
 import { Position } from "../types/position";
+import { World } from "../world/world";
 
 export class Codebot extends Entity {
     private customBuiltins: CustomBuiltins;
@@ -15,12 +16,12 @@ export class Codebot extends Entity {
     private onTargetReached: (() => void)|null;
     private static interpreter = new Interpreter();
 
-    constructor(){
-        super();
+    constructor(world: World){
+        super(world);
         this.program = "";
         this.isRunning = false;
         this.error = null;
-        this.customBuiltins = new CustomBuiltins(this);
+        this.customBuiltins = new CustomBuiltins(this, this.world);
         this.target = null;
         this.onTargetReached = null;
     }

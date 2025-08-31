@@ -11,16 +11,17 @@ import { Object } from "codebotsinterpreter/lib/object";
 import {Position} from "../types/position";
 import { RESOURCE_TYPES, ResourceType } from "../types/resource_type";
 import { HashPair } from "codebotsinterpreter/lib/object/hash_key";
+import { World } from "../world/world";
 
-type GetNearestResource = (from: Position, ressourceType: ResourceType) => Position|null;
 type Resource = (typeof RESOURCE_TYPES)[number];
 
 export default class CustomBuiltins {
     private codebot: Codebot;
-    public static getNearestResource: (GetNearestResource)|null = null;
+    private world: World;
 
-    constructor (codebot: Codebot) {
+    constructor (codebot: Codebot, world: World) {
         this.codebot = codebot;
+        this.world = world;
     }
 
     isValidItemType(itemType: string): itemType is ItemType {
@@ -237,7 +238,7 @@ export default class CustomBuiltins {
                 }
 
                 const codebotPosition = {x: this.codebot.posX, y: this.codebot.posY};
-                const position = CustomBuiltins.getNearestResource?.(codebotPosition, resource);
+                const position = this.world.getNearestResourceFromPosition(codebotPosition, resource);
                 if (!position) {
                     return new ErrorObject(`could not find resource ${args[0].inspect()}`);
                 }

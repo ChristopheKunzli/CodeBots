@@ -1,12 +1,13 @@
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
+import { World } from "../world/world";
 import { Entity } from "./entity";
 import {PLAYER_INVENTORY_SIZE, PLAYER_SPEED} from "../constants";
 
 export class Player extends Entity {
     private currentlyDisplayedAnimation: AnimationName;
-    constructor() {
-        super();
+    constructor(world:World) {
+        super(world);
         this.currentlyDisplayedAnimation = "player_idle";
     }
 

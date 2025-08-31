@@ -4,6 +4,9 @@ import { EntityType } from "../types/entity_type";
 import { InventorySlot } from "../types/inventory";
 import { Item } from "../types/item";
 import { Interactable } from "../world/interactables/interactable";
+import { Resource } from "../world/resources/resource";
+import Tile from "../world/tile";
+import { World } from "../world/world";
 import {INVENTORY_STACK_SIZE} from "../constants";
 
 type EntityState = {
@@ -17,15 +20,16 @@ export abstract class Entity extends Observable<EntityState> {
     private static idCounter = 1;
     public id: string;
     private inventory: InventorySlot[];
+    protected world: World;
+    constructor(world:World) {
 
-    constructor() {
         super({
             posX: 0,
             posY: 0,
             cX: -1,
             cY: -1,
         });
-
+        this.world = world;
         this.id = `entity_${Entity.idCounter++}`;
         this.inventory = Array.from({length: this.getInventorySize()}, () => null);
     }
@@ -126,6 +130,36 @@ export abstract class Entity extends Observable<EntityState> {
         this.state.cY = newCY;
     }
 
+    interactWithTile(tile:Tile): boolean {
+        if (tile && tile.content instanceof Resource) {
+            // this.lastMineTime = 0;
+            const resource = tile.content.mine();
+
+            if (resource) {
+                // Ressource épuisée
+
+                // Ajouter la ressource à l'inventaire
+                // this.addToInventory(resource);
+                return true;
+            }
+            return true; // Coup porté mais ressource pas encore épuisée
+        } else if (tile && tile.content instanceof Interactable) {
+            // tile.content.interact();
+        }
+
+        return false;
+    }
+
+    abstract getSpeed(): number;
+
+    abstract getAnimationName(): AnimationName;
+
+    abstract isAnimated(): boolean;
+
+    abstract getType(): EntityType;
+
+    abstract getInventorySize(): number;
+
     get posX(): number {
         return this.state.posX;
     }
@@ -150,17 +184,7 @@ export abstract class Entity extends Observable<EntityState> {
         this.state.posY = newPosY;
     }
 
-    abstract getSpeed(): number;
-
-    abstract getAnimationName(): AnimationName;
-
-    abstract isAnimated(): boolean;
-
-    abstract getType(): EntityType;
-
-    abstract getInventorySize(): number;
-
-    interact(i: Interactable){
+    interact(i: Interactable) {
 
     }
 }
