@@ -15,6 +15,7 @@ export class Codebot extends Entity {
     private target: Position|null;
     private onTargetReached: (() => void)|null;
     private static interpreter = new Interpreter();
+    private message: string|null;
 
     constructor(world: World){
         super(world);
@@ -24,6 +25,7 @@ export class Codebot extends Entity {
         this.customBuiltins = new CustomBuiltins(this, this.world);
         this.target = null;
         this.onTargetReached = null;
+        this.message = null;
     }
 
     getType(): EntityType {
@@ -44,6 +46,15 @@ export class Codebot extends Entity {
 
     hasError(): boolean {
         return this.error !== null;
+    }
+
+    setMessage(message: string|null) {
+        this.message = message;
+        this.notify();
+    }
+
+    getMessage(): string|null {
+        return this.message;
     }
 
     async setIsRunning(isRunning: boolean) {

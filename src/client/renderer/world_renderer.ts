@@ -5,11 +5,12 @@ import { TileType } from "../types/tile_type";
 import { ResourceType } from "../types/resource_type";
 import { TextureName, findAnimation, findTexture, getSpritesheets } from "../spritesheet_atlas";
 import { DecorationType } from "../types/decoration_type";
-import { ANIMATION_SPEED, RENDER_DISTANCE, TILE_SIZE } from "../constants";
+import { ANIMATION_SPEED, CAMERA_ZOOM, TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { Player } from "../entity/player";
+import { Codebot } from "../entity/codebot";
 
 
 export class WorldRenderer {
@@ -167,6 +168,68 @@ export class WorldRenderer {
                 sprite.play();
             } else {
                 sprite.stop();
+            }
+        });
+
+        if (entity instanceof Codebot) {
+            this.renderCodebotMessage(sprite, entity);
+        }
+    }
+
+    private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
+        let text = codebot.getMessage();
+
+        const dialogBoxTexture = findTexture(this.spriteSheet, "dialog_box");
+        if (!dialogBoxTexture) {
+            throw new Error("could not find texture");
+        }
+
+        const padding = 5;
+
+        const message = new PIXI.Text({
+            text: text ?? "",
+            style: {
+                fontFamily: `"Jersey 10", sans-serif`,
+                fontStyle: "normal",
+                fontSize: 16,
+                fill: "black",
+            },
+            x: padding,
+            resolution: CAMERA_ZOOM,
+        });
+
+        const panel = new PIXI.NineSliceSprite({
+            texture: dialogBoxTexture,
+            leftWidth: 3,
+            rightWidth: 9,
+            topHeight: 3,
+            bottomHeight: 10,
+            width: message.width + 2 * padding,
+            height: message.height + 2 * padding,
+            x: -message.width,
+            y: -(message.height + 2 * padding + TILE_SIZE),
+            zIndex: 10000,
+        });
+
+        panel.addChild(message);
+        sprite.addChild(panel);
+
+        panel.visible = text !== null;
+
+        codebot.observe(() => {
+            if (text !== codebot.getMessage()) {
+                text = codebot.getMessage();
+
+                if (text) {
+                    panel.visible = true;
+                    message.text = text;
+                    panel.width = message.width + 2 * padding;
+                    panel.height = message.height + 2 * padding;
+                    panel.x = -message.width;
+                    panel.y = -(message.height + 2 * padding + TILE_SIZE);
+                } else {
+                    panel.visible = false;
+                }
             }
         });
     }

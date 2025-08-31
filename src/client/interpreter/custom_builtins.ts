@@ -15,6 +15,8 @@ import { World } from "../world/world";
 
 type Resource = (typeof RESOURCE_TYPES)[number];
 
+let printTimeout: NodeJS.Timeout|null = null;
+
 export default class CustomBuiltins {
     private codebot: Codebot;
     private world: World;
@@ -257,11 +259,30 @@ export default class CustomBuiltins {
                 // TODO
                 throw new Error("not implemented");
             }),
-            "setCraft": new BuiltinObject(async (...args) => {
+            "craft": new BuiltinObject(async (...args) => {
                 // (item) => void : parametrer la workbench
 
                 throw new Error("not implemented");
             }),
+            "smelt": new BuiltinObject(async (...args) => {
+                // (item) => void : parametrer la workbench
+
+                throw new Error("not implemented");
+            }),
+            "print": new BuiltinObject(async (...args) => {
+                // (item) => void : parametrer la workbench
+
+                const message = args.map((arg) => arg.inspect()).join("\n");
+
+                this.codebot.setMessage(message);
+
+                if (printTimeout) {
+                    clearTimeout(printTimeout);
+                }
+                printTimeout = setTimeout(() => this.codebot.setMessage(null), 2000);
+
+                return NULL;
+            })
         };
     }
 }

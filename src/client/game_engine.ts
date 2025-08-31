@@ -61,10 +61,12 @@ export class GameEngine {
         // TODO test only
         codebot.setProgram(`
             wait(1000);
+            print("test");
             var position = find("wood");
             goto(position);
             wait(1000);
             var position = find("iron");
+            print("yahou");
             goto(position);
             wait(1000);
             var position = find("stone");
