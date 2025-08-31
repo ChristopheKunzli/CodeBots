@@ -31,11 +31,9 @@ export class MultilineInput extends Graphics {
     public contentHeight = 0;
     private measureText: Text;
 
-    // scrollbar contract (update, setOnScroll, scrollTo)
     private _scrollbar: ScrollBar;
     private _baseY = 0;
 
-    // auto-scroll options
     public autoScrollToCaret = true;
     private _snapToBottomOnAppend = true;
     private _justAppended = false; // internal marker set before render when adding at end

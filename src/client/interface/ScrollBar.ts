@@ -153,12 +153,11 @@ export class ScrollBar {
 
     public scrollTo(scrollTop: number) {
         const maxScroll = Math.max(0, this.contentHeight - this.viewportHeight);
-        const st = Math.max(0, Math.min(maxScroll, scrollTop));
         const minY = this.y;
         const maxY = this.y + (this.h - this.thumb.height);
+        const st = Math.max(0, Math.min(maxScroll, scrollTop));
         const denom = (maxScroll === 0) ? 1 : maxScroll;
-        const t = st / denom;
-        const thumbY = minY + t * Math.max(0, maxY - minY);
+        const thumbY = minY + (st / denom) * Math.max(0, maxY - minY);
         this.thumb.y = thumbY;
         this.applyScrollFromThumb();
     }
