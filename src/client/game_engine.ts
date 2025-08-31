@@ -21,7 +21,6 @@ export class GameEngine {
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(this.world, app);
         this.camera = new Camera();
-        this.camera.zoom = 2;
 
         this.keys = new Set<string>();
 
