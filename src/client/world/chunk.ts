@@ -35,6 +35,6 @@ export class Chunk {
     }
 
     isWalkable(x: number, y: number): boolean | undefined {
-        return this.tiles[y][x].content?.walkable;
+        return this.tiles[y][x].getContent?.walkable;
     }
 }

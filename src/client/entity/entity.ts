@@ -2,6 +2,7 @@ import Observable from "../observer/observable";
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { Interactable } from "../world/interactables/interactable";
+import { Item } from "../world/items/item";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
@@ -14,10 +15,10 @@ type EntityState = {
 };
 
 export abstract class Entity extends Observable<EntityState> {
-
+    public itemInHand: Item;
     private static idCounter = 1;
     public id: string;
-    private inventory: [];
+    private inventory: Item[] = [];
     protected world: World;
     constructor(world:World) {
 
@@ -33,9 +34,9 @@ export abstract class Entity extends Observable<EntityState> {
     }
 
     interactWithTile(tile:Tile): boolean {
-        if (tile && tile.content instanceof Resource) {
+        if (tile && tile.getContent instanceof Resource) {
             // this.lastMineTime = 0;
-            const resource = tile.content.mine();
+            const resource = tile.getContent.mine();
 
             if (resource) {
                 // Ressource épuisée
@@ -45,8 +46,8 @@ export abstract class Entity extends Observable<EntityState> {
                 return true;
             }
             return true; // Coup porté mais ressource pas encore épuisée
-        } else if (tile && tile.content instanceof Interactable) {
-            // tile.content.interact();
+        } else {
+            this.itemInHand.use(tile);
         }
 
         return false;
