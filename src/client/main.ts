@@ -8,34 +8,11 @@ import {ChestInterface, CoreInterface, CraftingInterface, ItemBar, RobotInterfac
 const exampleRecipes: Recipe[] = [
     {inputs: [{spriteName: "wood_log", quantity: 1}], output: {spriteName: "wood_plank", quantity: 4}},
     {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
-    {
-        inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}],
-        output: {spriteName: "crate", quantity: 1}
-    },
-    {
-        inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {
-            spriteName: "iron_ore",
-            quantity: 1
-        }], output: {spriteName: "furnace_off", quantity: 1}
-    },
-    {
-        inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {
-            spriteName: "nail",
-            quantity: 16
-        }], output: {spriteName: "pickaxe", quantity: 1}
-    },
-    {
-        inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {
-            spriteName: "nail",
-            quantity: 8
-        }], output: {spriteName: "shovel", quantity: 1}
-    },
-    {
-        inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {
-            spriteName: "nail",
-            quantity: 16
-        }], output: {spriteName: "axe", quantity: 1}
-    },
+    {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
+    {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
+    {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "pickaxe", quantity: 1}},
+    {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
+    {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
 ];
 
 const exampleCoreSteps: CoreStep[] = [
