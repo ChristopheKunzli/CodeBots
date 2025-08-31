@@ -118,7 +118,7 @@ const exampleCode: string =
     const coreInterface = new CoreInterface(app, spritesheets, guiScale, exampleCoreSteps);
     const robotInterface = new RobotInterface(app, spritesheets, guiScale, exampleCode);
 
-    chestInterface.show();
+    //chestInterface.show();
     //craftingInterface.show();
     //coreInterface.show();
     //robotInterface.show();
