@@ -4,7 +4,7 @@ import { WorldRenderer } from "./renderer/world_renderer";
 import { World } from "./world/world";
 import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
-import { CHUNK_SIZE, TILE_SIZE } from "./constants";
+import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -85,7 +85,7 @@ export class GameEngine {
             Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
         );
 
-        if (distance > 2) {
+        if (distance > PLAYER_RANGE) {
             return false;
         }
 
