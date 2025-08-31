@@ -270,8 +270,6 @@ export default class CustomBuiltins {
                 throw new Error("not implemented");
             }),
             "print": new BuiltinObject(async (...args) => {
-                // (item) => void : parametrer la workbench
-
                 const message = args.map((arg) => arg.inspect()).join("\n");
 
                 this.codebot.setMessage(message);

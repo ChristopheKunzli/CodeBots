@@ -54,7 +54,7 @@ export class Codebot extends Entity {
     }
 
     getMessage(): string|null {
-        return this.message;
+        return this.error ?? this.message;
     }
 
     async setIsRunning(isRunning: boolean) {
@@ -62,10 +62,6 @@ export class Codebot extends Entity {
 
         if (this.isRunning) {
             this.error = await Codebot.interpreter.evaluate(this.program, this.customBuiltins.builtins);
-            if (this.hasError()) {
-                console.error(this.error);
-            }
-
             this.isRunning = false;
             this.notify();
         }
