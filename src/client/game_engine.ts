@@ -5,6 +5,7 @@ import { World } from "./world/world";
 import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
+import { CraftingTableItem } from "./world/items/crafting_table_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -21,7 +22,6 @@ export class GameEngine {
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(this.world, app);
         this.camera = new Camera();
-        this.camera.zoom = 2;
 
         this.keys = new Set<string>();
 
@@ -42,6 +42,7 @@ export class GameEngine {
         this.renderer.container.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
+        this.player.itemInHand = new CraftingTableItem();
         this.renderer.renderEntity(this.player);
     }
 
@@ -91,13 +92,13 @@ export class GameEngine {
 
         const mined = this.player.interactWithTile(tile);
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
-        if (mined) {
+
             let chunk = tile?.chunk;
             if (chunk == undefined || tile == null) return;
             // Rafraîchir le rendu si une ressource a été minée
             this.renderer.updateTile(chunk, tile);
             // const visibleChunks = this.world.getChunksInVisibleRange(this.player);
             // this.renderer.render(visibleChunks);
-        }
+
     }
 }
