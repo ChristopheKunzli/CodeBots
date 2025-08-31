@@ -90,24 +90,24 @@ const exampleItemBar: Item[] = [
 ];
 
 const exampleCode: string =
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
-    "\nRepeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood"
+    "1Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n2Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n3Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n4Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n5Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n6Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n7Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n8Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n9Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n10Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n11Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n12Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n13Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n14Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n15Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n16Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n17Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
+    "\n18Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood"
 ;
 
 (async () => {

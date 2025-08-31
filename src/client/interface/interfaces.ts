@@ -2,27 +2,24 @@ import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprit
 import {findTexture, TextureName} from "../spritesheet_atlas";
 import {CoreStep, Item, Recipe} from "../types/item";
 import {ScrollBar} from "./ScrollBar";
+import {MultilineInput} from "./MultilineInput";
 
-export abstract class BaseInterface {
+export abstract class BaseInterface extends Container {
     protected app: Application;
     protected container: Container;
     protected spritesheets: Spritesheet[];
-    protected scale: number;
+    protected guiScale: number;
 
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
+        super();
         this.app = app;
-        this.container = new Container();
+        //this.container = new Container();
         this.spritesheets = spritesheets;
-        this.scale = scale;
-        this.app.stage.addChild(this.container);
+        this.guiScale = scale;
+        //this.app.stage.addChild(this);
     }
 
     public abstract draw(): void;
-
-    public destroy(): void {
-        this.app.stage.removeChild(this.container);
-        this.container.destroy();
-    }
 
     /**
      * Creates a close button and positions it at the top-right corner of the given container.
@@ -213,10 +210,10 @@ export class CraftingInterface extends BaseInterface {
 
         // paddings & layout
         const padding = 18;
-        const rowHeight = Math.max(56, Math.round(this.scale * 1.05)) + 10; // vertical space per recipe (+ 10 to allow displaying item name)
+        const rowHeight = Math.max(56, Math.round(this.guiScale * 1.05)) + 10; // vertical space per recipe (+ 10 to allow displaying item name)
         const vGap = 12;
-        const leftOutputSize = Math.round(this.scale * 1.05); // big left output slot
-        const smallSlotSize = Math.round(this.scale * 0.85);  // small input slots
+        const leftOutputSize = Math.round(this.guiScale * 1.05); // big left output slot
+        const smallSlotSize = Math.round(this.guiScale * 0.85);  // small input slots
         const hGap = 12;
 
         // compute viewport (the visible area that will be clipped)
@@ -385,7 +382,7 @@ export class CoreInterface extends BaseInterface {
 
             const item = step.items[i];
             const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
-            itemSprite.width = itemSprite.height = Math.round(this.scale * 1.05);
+            itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);
             this.drawItem({spriteName: item.spriteName, quantity: item.goal}, itemSprite, false, false);
             const progressText = new Text({
@@ -401,8 +398,8 @@ export class CoreInterface extends BaseInterface {
             progressText.y = itemSprite.y + (itemSprite.height - progressText.height) / 2;
             row.addChild(progressText);
 
-            const barWidth = this.scale * 2;
-            const barHeight = this.scale / 4;
+            const barWidth = this.guiScale * 2;
+            const barHeight = this.guiScale / 4;
             const barX = progressText.x;
             const barY = itemSprite.y + itemSprite.height - barHeight;
             const progressBarBg = new Graphics();
@@ -448,8 +445,8 @@ export class ItemBar extends BaseInterface {
 
         const slotCount = 6;
         const spaceBetweenSquares = 20;
-        const barWidth = this.scale * slotCount + ((slotCount - 1) * spaceBetweenSquares);
-        const barHeight = this.scale;
+        const barWidth = this.guiScale * slotCount + ((slotCount - 1) * spaceBetweenSquares);
+        const barHeight = this.guiScale;
 
         itemBar.width = barWidth;
         itemBar.height = barHeight;
@@ -461,8 +458,8 @@ export class ItemBar extends BaseInterface {
 
         for (let i = 0; i < slotCount; ++i) {
             const lightSquare = new Sprite(texture);
-            lightSquare.width = this.scale;
-            lightSquare.height = this.scale;
+            lightSquare.width = this.guiScale;
+            lightSquare.height = this.guiScale;
             lightSquare.x = i * (lightSquare.width + spaceBetweenSquares);
             lightSquare.y = 0;
 
@@ -494,14 +491,14 @@ export class RobotInterface extends BaseInterface {
         const padding = 18;
         const robotInterface = this.createCenteredContainer(width, height, "dark_frame", 4);
 
-        const scrollbarW = 18;
-        const scrollbarH = height - padding * 2;
-
         const viewport = new Container();
         const viewportX = padding;
         const viewportY = padding;
         const viewportW = width - padding * 2;
         const viewportH = height - padding * 2;
+
+        const scrollbarW = 18;
+        const scrollbarH = height - padding * 2;
 
         viewport.x = viewportX;
         viewport.y = viewportY;
@@ -518,41 +515,30 @@ export class RobotInterface extends BaseInterface {
         robotInterface.addChild(maskG);
         viewport.mask = maskG;
 
-        //TODO replace with a multiline input box
-        const codeArea = new Graphics();
-        const codeAreaW = viewportW * 0.75;
+        const codeAreaW = viewportW * 0.8 - scrollbarW;
         const codeAreaH = viewportH;
+        const codeArea = new MultilineInput(codeAreaW, codeAreaH, this.code);
 
         codeArea.x = viewportX;
         codeArea.y = viewportY;
-        codeArea.width = codeAreaW;
-        codeArea.height = codeAreaH;
-
         viewport.addChild(codeArea);
 
-        const codeText = new Text({
-            text: this.code,
-            style: {
-                fill: '#ffffff',
-                fontSize: 14,
-                fontFamily: 'Jersey',
-                stroke: '#000000',
-            },
-            resolution: 2,
-        });
-        codeText.x = codeText.y = padding / 4;
-        codeArea.addChild(codeText);
+        const scrollbarX = codeArea.x + codeAreaW + scrollbarW + padding / 2;
+        const scrollbarY = codeArea.y;
 
-        const contentHeight = codeText.height + padding / 2;
+        const scrollbar = new ScrollBar(
+            codeArea,
+            codeArea.contentHeight,
+            codeAreaH,
+            robotInterface,
+            scrollbarX,
+            scrollbarY,
+            scrollbarW,
+            scrollbarH,
+            this.app
+        );
 
-        //draw border around content
-        codeArea.lineStyle(2, "black", 1);
-        codeArea.beginFill(0x2a2727, 0.25);//almost transparent fill
-        codeArea.drawRect(0, 0, codeAreaW, contentHeight);
-        codeArea.endFill();
-
-        const scrollbarX = codeArea.x + codeAreaW + scrollbarW + padding / 4;
-        new ScrollBar(codeArea, contentHeight, codeAreaH, robotInterface, scrollbarX, padding, scrollbarW, scrollbarH, this.app);
+        codeArea.setScrollBar(scrollbar);
 
         //measure available space to add itemSlot and power button
         const bounds = robotInterface.getLocalBounds();
