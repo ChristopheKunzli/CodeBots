@@ -5,3 +5,4 @@ export const CHUNK_LOAD_RADIUS = 4;
 export const MAP_FREQUENCY = 0.08;
 export const RESOURCE_FREQUENCY = 0.02;
 export const CAMERA_ZOOM = 2;
+export const PLAYER_RANGE = 2;
