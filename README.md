@@ -13,7 +13,7 @@ You can find our Codebot interpreter package [here](https://github.com/LeonardJo
 - [X] Mise en place des outils de développement (Issue tracker … etc.)
 - [X] Mise en place d’un environnement de déploiement
 - [X] Mise en place d’un pipeline de livraison et de déploiement (CI/CD)
-- [ ] Démonstration du déploiement d’une modification
+- [X] Démonstration du déploiement d’une modification
 
 ## 1. Description du projet
 
@@ -92,7 +92,47 @@ Repeat:
 
     - Persistence : sauvegarde locale ou en ligne
 
-## 3. Mockup
+## 3. Contributions et déploiement
+
+Prérequis :
+
+- Node.js v24+
+
+### Lancer le projet en mode développement:
+
+```bash
+npm install
+npm run dev:client
+```
+
+### Comment contribuer:
+
+- Forker le repo (si pas membre de l'équipe)
+- Créer une branche a partir de dev pour votre feature
+- Faire une pull request vers dev une fois la feature terminée et testée
+    - Faire valider la pull request par au moins un membre de l'équipe
+    - S'assurer que les tests passent
+    - Le code est automatiquement déployé sur l'environnement de dev
+- Une fois la feature stable, faire une pull request de dev vers main
+    - Faire valider la pull request par au moins un membre de l'équipe
+    - S'assurer que les tests passent
+    - Le code est automatiquement déployé sur l'environnement stable
+
+### Comment déployer sa propre instance:
+Vous pouvez utiliser les fichiers terraform pour déployer votre propre instance de Codebots sur Azure.
+
+- créer un fichier `terraform/terrafrom.tfvars`
+- ajouter votre subscription id: `subscription_id = ` [cf](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
+- `cd terraform`
+- `terraform apply`
+
+Terraform va alors créer une instance de "linux_web_app" pour chaque environment (dev et main)
+
+### Configurer le déploiement automatique sur sa propre instance:
+- Depuis Github dans Settings -> Environments, créer 2 environements: `Production` et `Development`
+- Pour chacun des environements, définir le secret `AZURE_WEBAPP_PUBLISH_PROFILE` avec le contenu du profile Azure de la web app correspondant à l'environement [cf](https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service)
+
+## 4. Mockup
 
 Les mockups ont été réalisés
 sur [Figma](https://www.figma.com/design/tnGuliOxWSMdlvZOj1Epsm/Game?node-id=0-1&p=f&t=2IQgDc3RoBgWTm9V-0)
@@ -101,7 +141,7 @@ Storyboards:
 
 ![Mockup](./res/storyboard.png)
 
-## 4. Description des choix techniques
+## 5. Description des choix techniques
 
 - PixiJS: librairie pour gérer le rendu 2D.
 
@@ -119,7 +159,7 @@ Storyboards:
 
 - Déploiement : Azure Web App Service.
 
-## 5. Description du processus de travail
+## 6. Description du processus de travail
 
 - Méthodologie agile (Kanban) : tâches visibles dans GitHub Projects
 
@@ -131,7 +171,7 @@ Storyboards:
     - Push bloqués sur dev et main
     - Code reviews via pull requests.
 
-## 6. Environnement de déploiement
+## 7. Environnement de déploiement
 
 ### Application
 
@@ -154,7 +194,7 @@ main.
 
 De cette manière, nous pouvons facilement l'intégrer dans notre projet principal en tant que dépendance NPM.
 
-## 7. Game art
+## 8. Game art
 
 La plupart des assets graphiques ont été créés par Schouwey Zaid à l'aide de [Piskel](https://www.piskelapp.com/).
 
