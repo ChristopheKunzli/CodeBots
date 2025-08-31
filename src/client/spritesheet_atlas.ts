@@ -38,7 +38,7 @@ export type TextureName =
     "path_l_2" |
     "path_t" |
     "path_x" |
-    "furnace_off" |
+    "furnace" |
     "furnace_on_1" |
     "furnace_on_2" |
     "furnace_on_3" |
@@ -174,7 +174,7 @@ const atlas = [
         "path_l_2",
         "path_t",
         "path_x",
-        "furnace_off",
+        "furnace",
         "furnace_on_1",
         "furnace_on_2",
         "furnace_on_3",

@@ -3,6 +3,8 @@ import {findTexture, TextureName} from "../spritesheet_atlas";
 import {CoreStep, Item, Recipe} from "../types/item";
 import {ScrollBar} from "./ScrollBar";
 import {MultilineInput} from "./MultilineInput";
+import { InventorySlot } from '../types/inventory';
+import Inventory from '../inventory/inventory';
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
@@ -81,8 +83,11 @@ export abstract class BaseInterface extends Container {
      * @param borderDimension
      */
     protected createFrame = (width: number, height: number, textureName: TextureName, borderDimension: number): NineSliceSprite => {
+        const texture = findTexture(this.spritesheets, textureName);
+        if (!texture) throw new Error(`could not find texture ${textureName}`)
+
         return new NineSliceSprite({
-            texture: findTexture(this.spritesheets, textureName),
+            texture,
             leftWidth: borderDimension,
             topHeight: borderDimension,
             rightWidth: borderDimension,
@@ -100,7 +105,7 @@ export abstract class BaseInterface extends Container {
      * @param drawNameOnHover whether to show the item name below the slot when hovering over the item
      * (note : this requires the container to leave enough space below the slotto show the text)
      */
-    protected drawItem = (item: Item, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
+    protected drawItem = (item: Item|null, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
         if (!item) return;
 
         const itemTexture = findTexture(this.spritesheets, item.spriteName);
@@ -450,11 +455,11 @@ export class CoreInterface extends BaseInterface {
 }
 
 export class ItemBar extends BaseInterface {
-    private items: Item[];
+    private items: InventorySlot[];
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory) {
         super(app, spritesheets, scale);
-        this.items = items;
+        this.items = inventory.items;
         this.draw();
     }
 
@@ -498,7 +503,7 @@ export class RobotInterface extends BaseInterface {
     private code: string;
     private item: Item | null;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item = null) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item|null = null) {
         super(app, spritesheets, scale);
         this.code = code;
         this.item = item;

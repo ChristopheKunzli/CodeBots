@@ -10,6 +10,8 @@ import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
+import { Player } from "../entity/player";
+import { ItemBar } from "../interface/interfaces";
 
 
 export class WorldRenderer {
@@ -301,7 +303,7 @@ export class WorldRenderer {
             }
 
             case InteractableType.FURNACE: {
-                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace_off"));
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace"));
                 this.middleLayer.addChild(sprite);
                 sprite.anchor.set(0.5, 0.5);
                 break;
@@ -397,5 +399,8 @@ export class WorldRenderer {
         sprite.zIndex = sprite.y;
     }
 
-
+    public renderPlayerItemBar(player: Player) {
+        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory);
+        itemBar.show();
+    }
 }

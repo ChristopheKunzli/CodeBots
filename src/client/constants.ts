@@ -6,4 +6,4 @@ export const MAP_FREQUENCY = 0.08;
 export const RESOURCE_FREQUENCY = 0.02;
 export const PLAYER_RANGE = 4;
 export const CAMERA_ZOOM = 2;
-
+export const INVENTORY_STACK_SIZE = 99;

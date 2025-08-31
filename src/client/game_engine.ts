@@ -44,6 +44,7 @@ export class GameEngine {
         this.player = new Player(this.world);
         this.player.itemInHand = new CraftingTableItem();
         this.renderer.renderEntity(this.player);
+        this.renderer.renderPlayerItemBar(this.player);
     }
 
     update(delta: number) {
