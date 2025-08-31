@@ -9,6 +9,7 @@ import { TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
+import { InteractableType } from "../types/interactable_type";
 
 
 export class WorldRenderer {
@@ -153,7 +154,7 @@ export class WorldRenderer {
         tileRenderer.decorationSprite?.destroy();
         // recreate them
         this.getTextureForTile(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
-        if (tile.content) {
+        if (tile.getContent) {
             this.getTextureForMiddleLayer(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
         }
     }
@@ -179,7 +180,7 @@ export class WorldRenderer {
             for (let x = 0; x < chunk.size; x++) {
                 const tile = chunk.tiles[y][x];
                 this.getTextureForTile(tile, chunk, x, y);
-                if (tile.content) {
+                if (tile.getContent) {
                     this.getTextureForMiddleLayer(tile, chunk, x, y);
 
                 } else if (tile.decoration != null) {
@@ -281,7 +282,7 @@ export class WorldRenderer {
     private getTextureForMiddleLayer(tile: Tile, chunk: Chunk, x: number, y: number) {
         let sprite: PIXI.Sprite;
         let offsetY = 0;
-        switch (tile.content?.tileContentType) {
+        switch (tile.getContent?.tileContentType) {
             case ResourceType.WOOD: {
                 const treeTypes: TextureName[] = ["tree_1", "tree_2", "tree_3", "tree_4"];
                 const spriteIndex = Math.floor(tile.variation * treeTypes.length);
@@ -292,6 +293,26 @@ export class WorldRenderer {
                 break;
 
             };
+            case InteractableType.CRAFTING_TABLE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.FURNACE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace_off"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.CHEST: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
             case ResourceType.STONE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
