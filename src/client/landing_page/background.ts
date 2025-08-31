@@ -22,4 +22,9 @@ import {GameEngine} from "../game_engine";
     await engine.initialize();
 
     engine.update(0);
+
+    window.addEventListener("resize", () => {
+        app.renderer.resize(container.clientWidth, container.clientHeight);
+        engine.update(0);
+    });
 })();
