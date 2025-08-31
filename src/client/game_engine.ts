@@ -20,7 +20,6 @@ export class GameEngine {
         this.world = new World(generator);
         this.renderer = new WorldRenderer(this.world);
         this.camera = new Camera();
-        this.camera.zoom = 2;
 
         this.keys = new Set<string>();
 
