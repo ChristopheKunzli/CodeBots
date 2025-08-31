@@ -1,5 +1,5 @@
 export enum InteractableType {
-    CHEST,
-    FURNACE,
-    CRAFTING_TABLE,
+    CHEST = "Chest",
+    FURNACE = "Furnace",
+    CRAFTING_TABLE = "Crafting_table",
 }

@@ -293,12 +293,26 @@ export class WorldRenderer {
                 break;
 
             };
-            // case InteractableType.CRAFTING_TABLE: {
-            //     // sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
-            //     // this.middleLayer.addChild(sprite);
-            //     // sprite.anchor.set(0.5, 0.5);
-            //     break;
-            // }
+            case InteractableType.CRAFTING_TABLE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.FURNACE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace_off"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.CHEST: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
             case ResourceType.STONE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
