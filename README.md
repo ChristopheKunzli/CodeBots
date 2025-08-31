@@ -13,7 +13,7 @@ You can find our Codebot interpreter package [here](https://github.com/LeonardJo
 - [X] Mise en place des outils de développement (Issue tracker … etc.)
 - [X] Mise en place d’un environnement de déploiement
 - [X] Mise en place d’un pipeline de livraison et de déploiement (CI/CD)
-- [ ] Démonstration du déploiement d’une modification
+- [X] Démonstration du déploiement d’une modification
 
 ## 1. Description du projet
 
@@ -98,14 +98,14 @@ Prérequis :
 
 - Node.js v24+
 
-### Lancer le projet en local:
+### Lancer le projet en mode développement:
 
 ```bash
 npm install
-npm run dev
+npm run dev:client
 ```
 
-### Comment contribuer (et déployer):
+### Comment contribuer:
 
 - Forker le repo (si pas membre de l'équipe)
 - Créer une branche a partir de dev pour votre feature
@@ -117,6 +117,20 @@ npm run dev
     - Faire valider la pull request par au moins un membre de l'équipe
     - S'assurer que les tests passent
     - Le code est automatiquement déployé sur l'environnement stable
+
+### Comment déployer sa propre instance:
+Vous pouvez utiliser les fichiers terraform pour déployer votre propre instance de Codebots sur Azure.
+
+- créer un fichier `terraform/terrafrom.tfvars`
+- ajouter votre subscription id: `subscription_id = ` [cf](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
+- `cd terraform`
+- `terraform apply`
+
+Terraform va alors créer une instance de "linux_web_app" pour chaque environment (dev et main)
+
+### Configurer le déploiement automatique sur sa propre instance:
+- Depuis Github dans Settings -> Environments, créer 2 environements: `Production` et `Development`
+- Pour chacun des environements, définir le secret `AZURE_WEBAPP_PUBLISH_PROFILE` avec le contenu du profile Azure de la web app correspondant à l'environement [cf](https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service)
 
 ## 4. Mockup
 
