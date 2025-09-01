@@ -12,12 +12,4 @@ export class Stone extends Resource{
     getItem(): Item {
         return new StoneItem(this.getRandomQuantity());
     }
-
-    getMinQuantity(): number {
-        return 5;
-    }
-
-    getMaxQuantity(): number {
-        return 10;
-    }
 }

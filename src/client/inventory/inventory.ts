@@ -29,7 +29,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return this.state;
     }
 
-    canAddItem(item: Item): number {
+    canAddItem(item: Item): boolean {
         const space = this.items.reduce((acc, slot) => {
             if (!slot) {
                 return acc + INVENTORY_STACK_SIZE;
@@ -42,10 +42,10 @@ export default class Inventory extends Observable<InventorySlot[]> {
             return acc;
         }, 0);
 
-        return Math.min(item.quantity, space);
+        return Math.min(item.quantity, space) === item.quantity;
     }
 
-    canRemoveItem(item: Item): number {
+    canRemoveItem(item: Item): boolean {
         const available = this.items.reduce((acc, slot) => {
             if (slot?.spriteName === item.spriteName) {
                 return acc + slot.quantity;
@@ -54,7 +54,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
             return acc;
         }, 0);
 
-        return Math.min(item.quantity, available);
+        return Math.min(item.quantity, available) === item.quantity;
     }
 
     addItem(item: Item): number {
@@ -88,8 +88,8 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return item.quantity - remaining;
     }
 
-    removeItem(item: Item): number {
-        let remaining = item.quantity;
+    removeItem(item: Item, quantity = item.quantity): number {
+        let remaining = quantity;
 
         for (let i = 0; i < this.items.length; i++) {
             const slot = this.items[i];

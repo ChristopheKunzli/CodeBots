@@ -2,8 +2,9 @@ import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
+import { InteractableType } from "../types/interactable_type";
+import { InteractionResult } from "../types/interaction_result";
 import { Interactable } from "../world/interactables/interactable";
-import { Item } from "../world/items/item";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
@@ -20,8 +21,7 @@ export abstract class Entity extends Observable<EntityState> {
     public id: string;
     public inventory: Inventory;
     protected world: World;
-
-    constructor(world:World) {
+    constructor(world: World) {
         super({
             posX: 0,
             posY: 0,
@@ -34,27 +34,35 @@ export abstract class Entity extends Observable<EntityState> {
         this.id = `entity_${Entity.idCounter++}`;
     }
 
-    interactWithTile(tile:Tile): boolean {
-        if (tile && tile.getContent instanceof Resource) {
-            // this.lastMineTime = 0;
-            const item = tile.getContent.mine();
+    interactWithTile(tile: Tile): InteractionResult {
+        const content = tile?.getContent;
 
+        if (content instanceof Resource) {
+            const item = content.mine();
             if (item) {
-                // Ressource épuisée
-
-                // Ajouter la ressource à l'inventaire
                 this.inventory.addItem(item);
-                return true;
+                return { type: "MINED", tile };
             }
-            return true; // Coup porté mais ressource pas encore épuisée
-        // } else if (tile && tile.getContent instanceof Interactable) {
-        //     // tile.content.interact();
-        } else {
-            const used = this.inventory.itemInHand?.use(tile);
-            // TODO remove item if true
+            return { type: "NONE", tile };
         }
 
-        return false;
+        if (content instanceof Interactable) {
+            return {
+                type: "OPENED_UI",
+                tile,
+                interactableType: content.tileContentType as InteractableType
+            };
+        }
+
+        const itemInHand = this.inventory.itemInHand;
+        if (itemInHand) {
+            const used = itemInHand.use(tile);
+            if (used) {
+                this.inventory.removeItem(itemInHand, 1);
+            }
+        }
+
+        return { type: "NONE", tile };
     }
 
     abstract getSpeed(): number;

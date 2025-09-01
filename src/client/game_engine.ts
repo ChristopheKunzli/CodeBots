@@ -7,6 +7,11 @@ import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
 import Tile from "./world/tile";
 import { CraftingTableItem } from "./world/items/crafting_table_item";
+import { InteractableType } from "./types/interactable_type";
+import { Recipe } from "./types/recipe";
+import { WoodLogItem } from "./world/items/wood_log_item";
+import { StoneItem } from "./world/items/stone_item";
+import { FurnaceItem } from "./world/items/furnace_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -56,10 +61,38 @@ export class GameEngine {
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
-        this.renderer.renderPlayerItemBar(this.player);
+
+        const recipes: Recipe[] = [
+            {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
+            {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
+            // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
+            // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "pickaxe", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
+        ];
+        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
 
         // TODO remove
         this.player.inventory.addItem(new CraftingTableItem(1));
+    }
+
+    craftEvent(recipe:Recipe){
+        if (!this.player.inventory.canAddItem(recipe.output)) {
+            return;
+        }
+        for(const itemNeeded of recipe.inputs){
+            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            if(!canCraft)
+                return;
+        }
+
+        for(const itemNeeded of recipe.inputs){
+            this.player.inventory.removeItem(itemNeeded);
+        }
+
+        this.player.inventory.addItem(recipe.output);
     }
 
     update(delta: number) {
@@ -93,14 +126,28 @@ export class GameEngine {
             return;
         }
 
-        const mined = this.player.interactWithTile(tile);
-        if (mined) {
-            let chunk = tile?.chunk;
-            if (chunk == undefined || tile == null) return;
-            // Rafraîchir le rendu si une ressource a été minée
-            this.renderer.updateTile(chunk, tile);
-            // const visibleChunks = this.world.getChunksInVisibleRange(this.player);
-            // this.renderer.render(visibleChunks);
+        const result = this.player.interactWithTile(tile);
+
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    this.renderer.renderCraftingInterface();
+                }
+                else if (result.interactableType === InteractableType.FURNACE) {
+
+                }
+                break;
+
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
         }
     }
 

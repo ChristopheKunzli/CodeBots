@@ -31,11 +31,6 @@ export const ITEM_TYPES: TextureName[] = [
 
 export type ItemType = (typeof ITEM_TYPES)[number];
 
-export type Recipe = {
-    inputs: Item[],
-    output: Item
-}
-
 export type CoreItem = {
     spriteName: TextureName
     currentGathered: number

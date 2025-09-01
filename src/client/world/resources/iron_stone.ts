@@ -12,11 +12,4 @@ export class IronStone extends Resource{
     getItem(): Item {
         return new IronItem(this.getRandomQuantity());
     }
-
-    getMinQuantity(): number {
-        return 5;
-    }
-    getMaxQuantity(): number {
-        return 10;
-    }
 }

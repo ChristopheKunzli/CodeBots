@@ -1,7 +1,7 @@
 import {Application} from 'pixi.js';
 
 import {GameEngine} from './game_engine';
-import {CoreStep, Item, Recipe} from "./types/item";
+import {CoreStep} from "./types/item";
 import {getSpritesheets} from "./spritesheet_atlas";
 import {ChestInterface, CoreInterface, CraftingInterface, ItemBar, RobotInterface} from "./interface/interfaces";
 
@@ -86,11 +86,13 @@ import {ChestInterface, CoreInterface, CraftingInterface, ItemBar, RobotInterfac
 //     "\n17Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
 //     "\n18Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood"
 // ;
+import { initDevtools } from '@pixi/devtools';
+
 
 (async () => {
     // Create a new application
     const app = new Application();
-
+    initDevtools({ app });
     // Initialize the application
     await app.init({
         background: '#1099bb',

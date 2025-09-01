@@ -1,3 +1,4 @@
+import { YIELDED_RESOURCE_MULTIPLICATOR } from "../../constants";
 import { ResourceType } from "../../types/resource_type";
 import { Item } from "../items/item";
 import Tile from "../tile";
@@ -18,12 +19,16 @@ export abstract class Resource extends TileContent {
     abstract getItem(): Item;
 
     getRandomQuantity(): number {
-        return Math.floor(Math.random() * (this.getMaxQuantity() - this.getMinQuantity()) + this.getMinQuantity());
+        return YIELDED_RESOURCE_MULTIPLICATOR * Math.floor(Math.random() * (this.getMaxQuantity() - this.getMinQuantity()) + this.getMinQuantity());
     }
 
-    abstract getMinQuantity(): number;
+    getMinQuantity(): number {
+        return 5;
+    }
 
-    abstract getMaxQuantity(): number;
+    getMaxQuantity(): number {
+        return 10;
+    }
 
     mine(): Item | null {
         this.hp -= 50;

@@ -12,12 +12,4 @@ export class CopperStone extends Resource{
     getItem(): Item {
         return new CopperItem(this.getRandomQuantity());
     }
-
-    getMinQuantity(): number {
-        return 5;
-    }
-
-    getMaxQuantity(): number {
-        return 10;
-    }
 }
