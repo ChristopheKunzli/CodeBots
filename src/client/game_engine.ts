@@ -13,17 +13,17 @@ import { WoodLogItem } from "./world/items/wood_log_item";
 import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
 import {
-    Tool,
-    AxeItem,
-    PickaxeItem,
-    ShovelItem,
-    WoodMaterial,
-    StoneMaterial,
-    IronMaterial,
-    CopperMaterial
-} from "./world/items/tool";
+    Tool
+} from "./world/items/tools/tool";
 import { CopperItem } from "./world/items/copper_item";
 import { IronItem } from "./world/items/iron_item";
+import { AxeItem } from "./world/items/tools/axeItem";
+import { PickaxeItem } from "./world/items/tools/pickaxeItem";
+import { ShovelItem } from "./world/items/tools/shovelItem";
+import { WoodMaterial } from "./world/items/tools/woodMaterial";
+import { StoneMaterial } from "./world/items/tools/stoneMaterial";
+import { CopperMaterial } from "./world/items/tools/copperMaterial";
+import { IronMaterial } from "./world/items/tools/ironMaterial";
 
 export class GameEngine {
     public app: PIXI.Application;

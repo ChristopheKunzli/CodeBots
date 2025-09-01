@@ -2,7 +2,7 @@ import { INVENTORY_STACK_SIZE } from "../constants";
 import Observable from "../observer/observable";
 import { InventorySlot } from "../types/inventory";
 import { Item } from "../world/items/item";
-import { Tool } from "../world/items/tool";
+import { Tool } from "../world/items/tools/tool";
 
 export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;

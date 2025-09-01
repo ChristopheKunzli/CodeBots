@@ -3,7 +3,7 @@ import { ResourceType } from "../../types/resource_type";
 import { Item } from "../items/item";
 import Tile from "../tile";
 import { TileContent } from "../tile_content";
-import { Tool } from "../items/tool";
+import { Tool } from "../items/tools/tool";
 
 export abstract class Resource extends TileContent {
     private hp: number;

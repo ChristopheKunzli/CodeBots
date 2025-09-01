@@ -8,7 +8,7 @@ import { Interactable } from "../world/interactables/interactable";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
-import { Tool } from "../world/items/tool";
+import { Tool } from "../world/items/tools/tool";
 import { Item } from "../world/items/item";
 
 type EntityState = {
