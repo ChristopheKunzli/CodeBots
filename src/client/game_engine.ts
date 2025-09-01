@@ -33,6 +33,18 @@ export class GameEngine {
             this.keys.delete(e.key.toLowerCase())
         );
 
+        window.addEventListener("wheel", (e) => {
+            if (e.deltaY < 0) {
+                this.keys.add("scrollup");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrollup");
+            } else if (e.deltaY > 0) {
+                this.keys.add("scrolldown");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrolldown");
+            }
+        });
+
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
