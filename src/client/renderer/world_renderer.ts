@@ -10,6 +10,8 @@ import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
+import { CraftingInterface } from "../interface/interfaces";
+import { Recipe } from "../types/recipe";
 
 
 export class WorldRenderer {
@@ -26,6 +28,7 @@ export class WorldRenderer {
         };
         frames: {};
     }>[];
+    private craftingInterface: CraftingInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -57,6 +60,10 @@ export class WorldRenderer {
         this.spriteSheet = await getSpritesheets();
     }
 
+    initializeUI(recipes:Recipe[]){
+        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,1,recipes);
+    }
+
     public render(chunks: Chunk[]) {
         const newChunkKeys = new Set(chunks.map(c => c.key));
         // 1. Unload ceux qui ne sont plus dans newChunkKeys
@@ -74,6 +81,10 @@ export class WorldRenderer {
                 this.renderChunk(chunk);
             }
         }
+    }
+
+    public renderCraftingInterface(){
+        this.craftingInterface.show();
     }
 
     public renderEntity(entity: Entity) {

@@ -1,8 +1,9 @@
 import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
 import {findTexture, TextureName} from "../spritesheet_atlas";
-import {CoreStep, Item, Recipe} from "../types/item";
+import {CoreStep} from "../types/item";
 import {ScrollBar} from "./ScrollBar";
 import {MultilineInput} from "./MultilineInput";
+import { Item } from '../world/items/item';
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
@@ -295,7 +296,7 @@ export class CraftingInterface extends BaseInterface {
             outSprite.interactive = true;
             outSprite.on('pointerdown', () => {
                 //TODO craft item on click
-                console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
+                // console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
             })
             row.addChild(outSprite);
             this.drawItem(recipe.output, outSprite);
