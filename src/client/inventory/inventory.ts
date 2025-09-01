@@ -78,10 +78,12 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
             if (!this.items[i]) {
                 const toAdd = Math.min(INVENTORY_STACK_SIZE, remaining);
-                this.items[i] = new (Object.getPrototypeOf(item).constructor)(item.spriteName, toAdd);
+                this.items[i] = new (Object.getPrototypeOf(item).constructor)(toAdd);
                 remaining -= toAdd;
             }
         }
+
+        this.notify();
 
         return item.quantity - remaining;
     }
@@ -105,6 +107,8 @@ export default class Inventory extends Observable<InventorySlot[]> {
                 if (remaining <= 0) break;
             }
         }
+
+        this.notify();
 
         return item.quantity - remaining;
     }

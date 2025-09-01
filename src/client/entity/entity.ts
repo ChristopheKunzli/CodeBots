@@ -37,18 +37,21 @@ export abstract class Entity extends Observable<EntityState> {
     interactWithTile(tile:Tile): boolean {
         if (tile && tile.getContent instanceof Resource) {
             // this.lastMineTime = 0;
-            const resource = tile.getContent.mine();
+            const item = tile.getContent.mine();
 
-            if (resource) {
+            if (item) {
                 // Ressource épuisée
 
                 // Ajouter la ressource à l'inventaire
-                // this.addToInventory(resource);
+                this.inventory.addItem(item);
                 return true;
             }
             return true; // Coup porté mais ressource pas encore épuisée
-        } else if (tile && tile.getContent instanceof Interactable) {
-            // tile.content.interact();
+        // } else if (tile && tile.getContent instanceof Interactable) {
+        //     // tile.content.interact();
+        } else {
+            const used = this.inventory.itemInHand?.use(tile);
+            // TODO remove item if true
         }
 
         return false;

@@ -59,7 +59,7 @@ export class GameEngine {
         this.renderer.renderPlayerItemBar(this.player);
 
         // TODO remove
-        this.player.inventory.addItem(new CraftingTableItem());
+        this.player.inventory.addItem(new CraftingTableItem(1));
     }
 
     update(delta: number) {

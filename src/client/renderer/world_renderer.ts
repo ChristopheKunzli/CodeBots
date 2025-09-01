@@ -285,6 +285,7 @@ export class WorldRenderer {
         sprite.roundPixels = true;
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;
         sprite.y = (chunk.cy * chunk.size + y) * TILE_SIZE + TILE_SIZE / 2;
+        sprite.on("click", () => this.onInteractionWithTile(tile));
         this.tileLayer.addChild(sprite);
 
         const tileSprite = this.chunkContent.get(chunk.key)?.get(`${x}_${y}`);
@@ -404,6 +405,9 @@ export class WorldRenderer {
         sprite.roundPixels = true;
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;
         sprite.y = (chunk.cy * chunk.size + y) * TILE_SIZE + TILE_SIZE / 2;
+
+        sprite.interactive = true;
+        sprite.on("click", () => this.onInteractionWithTile(tile));
 
         const tileSprite = this.chunkContent.get(chunk.key)?.get(`${x}_${y}`);
         if (tileSprite) {
