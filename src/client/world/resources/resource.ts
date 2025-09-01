@@ -34,7 +34,6 @@ export abstract class Resource extends TileContent {
 
     mine(tool: Tool | null): Item | null {
         const damage = BASE_DAMAGE * (tool ? tool.efficiency(this.tileContentType as ResourceType) : 1);
-        console.log(`Mining ${this.tileContentType} with ${tool ? tool.spriteName : "bare hands"} for ${damage} damage.`);
         this.hp -= damage;
         this.tile.chunk.chunkUpdated(this.tile);
         if (this.hp <= 0) {
