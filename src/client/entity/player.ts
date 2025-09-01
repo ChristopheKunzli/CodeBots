@@ -44,6 +44,16 @@ export class Player extends Entity {
             this.notify();
         }
 
+        if (keys.has("scrollup")) {
+            this.inventory.setItemInHandIndex((this.inventory.getItemInHandIndex() + 1) % this.getInventorySize());
+        }
+
+        if (keys.has("scrolldown")) {
+            const size = this.getInventorySize();
+            const index = ((this.inventory.getItemInHandIndex() - 1) % size + size) % size;
+            this.inventory.setItemInHandIndex(index);
+        }
+
         for (const key of keys) {
             if (/^\d$/.test(key)) {
                 const number = parseInt(key, 10);
