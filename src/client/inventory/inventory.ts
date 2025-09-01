@@ -31,6 +31,10 @@ export default class Inventory extends Observable<InventorySlot[]> {
     }
 
     canAddItem(item: Item): boolean {
+        if (!item.isStackable) {
+            return this.items.some(slot => slot === null);
+        }
+
         const space = this.items.reduce((acc, slot) => {
             if (!slot) {
                 return acc + INVENTORY_STACK_SIZE;

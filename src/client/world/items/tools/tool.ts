@@ -10,7 +10,7 @@ export abstract class Tool extends Item {
     private strongAgainst: ResourceType[];
 
     protected constructor(spriteName: TextureName, material: ToolMaterial, strongAgainst: ResourceType[]) {
-        super(spriteName, 1);
+        super(spriteName, 1, false);
         this.material = material;
         this.strongAgainst = strongAgainst;
     }
