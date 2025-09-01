@@ -2,6 +2,7 @@ import { INVENTORY_STACK_SIZE } from "../constants";
 import Observable from "../observer/observable";
 import { InventorySlot } from "../types/inventory";
 import { Item } from "../world/items/item";
+import { Tool } from "../world/items/tool";
 
 export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;
@@ -58,10 +59,12 @@ export default class Inventory extends Observable<InventorySlot[]> {
     }
 
     addItem(item: Item): number {
+        const isTool = item instanceof Tool;
         let remaining = item.quantity;
 
         // fill existing stacks
         for (const slot of this.items) {
+            if (isTool) break;
             if (remaining <= 0) break;
             if (!slot) continue;
 
@@ -78,7 +81,11 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
             if (!this.items[i]) {
                 const toAdd = Math.min(INVENTORY_STACK_SIZE, remaining);
-                this.items[i] = new (Object.getPrototypeOf(item).constructor)(toAdd);
+                if (isTool) {
+                    this.items[i] = item;
+                } else {
+                    this.items[i] = new (Object.getPrototypeOf(item).constructor)(toAdd);
+                }
                 remaining -= toAdd;
             }
         }

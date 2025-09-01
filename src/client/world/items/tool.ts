@@ -1,19 +1,29 @@
-import Tile from "../tile";
 import { Item } from "./item";
 import { ResourceType } from "../../types/resource_type";
+import { ItemType } from "../../types/item";
+import Tile from "../tile";
 import { TextureName } from "../../spritesheet_atlas";
 
 type MaterialType = "wood" | "stone" | "copper" | "iron";
 
-class ToolMaterial {
-    materialType: MaterialType;
-    coefficient: number;
+abstract class ToolMaterial {
+    private readonly _materialType: MaterialType;
+    private readonly _coefficient: number;
 
-    constructor(materialType: MaterialType, coefficient: number) {
-        this.materialType = materialType;
-        this.coefficient = coefficient;
+    public get coefficient(): number {
+        return this._coefficient;
+    }
+
+    public get materialType(): MaterialType {
+        return this._materialType;
+    }
+
+    protected constructor(materialType: MaterialType, coefficient: number) {
+        this._materialType = materialType;
+        this._coefficient = coefficient;
     }
 }
+
 
 abstract class Tool extends Item {
     private material: ToolMaterial;

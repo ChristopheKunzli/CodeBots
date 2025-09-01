@@ -12,7 +12,18 @@ import { Recipe } from "./types/recipe";
 import { WoodLogItem } from "./world/items/wood_log_item";
 import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
-import { Tool, AxeItem, PickaxeItem, ShovelItem, WoodMaterial, StoneMaterial, IronMaterial} from "./world/items/tool";
+import {
+    Tool,
+    AxeItem,
+    PickaxeItem,
+    ShovelItem,
+    WoodMaterial,
+    StoneMaterial,
+    IronMaterial,
+    CopperMaterial
+} from "./world/items/tool";
+import { CopperItem } from "./world/items/copper_item";
+import { IronItem } from "./world/items/iron_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -66,7 +77,10 @@ export class GameEngine {
         const recipes: Recipe[] = [
             {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
             {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
-            {inputs: [], output: new PickaxeItem(new WoodMaterial())}
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new PickaxeItem(new StoneMaterial())},
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new AxeItem( new StoneMaterial())},
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new ShovelItem( new StoneMaterial())},
+
             // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
             // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
             // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
