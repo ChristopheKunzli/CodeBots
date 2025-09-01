@@ -9,8 +9,8 @@ export class CoreInterface extends BaseInterface {
     private steps: CoreStep[];
     private currentStepIndex: number;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], currentStepIndex: number = 0) {
-        super(app, spritesheets, scale);
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], currentStepIndex: number = 0, hudLayer: Container) {
+        super(app, spritesheets, scale, hudLayer);
         this.steps = steps;
         this.currentStepIndex = currentStepIndex;
         this.draw();

@@ -6,19 +6,17 @@ import Inventory from '../inventory/inventory';
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
     private slots: Sprite[];
-    private container: Container;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
-        super(app, spritesheets, scale);
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer: Container) {
+        super(app, spritesheets, scale, hudLayer);
         this.inventory = inventory;
         this.slots = [];
-        this.container = container;
         this.draw();
     }
 
     protected draw(): void {
         const itemBar = new Container();
-        this.container.addChild(itemBar);
+        this.hudLayer.addChild(itemBar);
 
         const {items} = this.inventory;
 

@@ -5,12 +5,13 @@ import { TileType } from "../types/tile_type";
 import { ResourceType } from "../types/resource_type";
 import { TextureName, findAnimation, findTexture, getSpritesheets } from "../spritesheet_atlas";
 import { DecorationType } from "../types/decoration_type";
-import { ANIMATION_SPEED, CAMERA_ZOOM, TILE_SIZE } from "../constants";
+import { ANIMATION_SPEED, CAMERA_ZOOM, GUI_SCALE, TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
 import { CraftingInterface } from "../interface/crafting_interface";
+import { RobotInterface } from "../interface/robot_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
@@ -44,8 +45,14 @@ export class WorldRenderer {
     private world: World;
     private app: PIXI.Application;
     private onInteractionWithTile: (tile: Tile) => void;
+    private onAddCodebot: (x: number, y: number) => void;
 
-    constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
+    constructor(
+        world: World,
+        app: PIXI.Application,
+        onInteractionWithTile: (tile: Tile) => void,
+        onAddCodebot: (x: number, y: number) => void,
+    ) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
@@ -67,6 +74,7 @@ export class WorldRenderer {
         this.container.addChild(this.hudLayer);
 
         this.onInteractionWithTile = onInteractionWithTile;
+        this.onAddCodebot = onAddCodebot;
     }
 
     private setCursor() {
@@ -77,12 +85,12 @@ export class WorldRenderer {
 
     async initialize() {
         this.spriteSheet = await getSpritesheets();
-            this.setCursor();
+        this.setCursor();
     }
 
     initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
-        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
-        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet, GUI_SCALE, recipes, this.hudLayer, onClickOnCraftLine);
+        const itemBar = new ItemBar(this.app, this.spriteSheet, GUI_SCALE, player.inventory, this.hudLayer);
         itemBar.show()
     }
 
@@ -156,7 +164,6 @@ export class WorldRenderer {
         this.middleLayer.addChild(sprite);
         let animationName = entity.getAnimationName();
         entity.observe((state) => {
-            sprite.zIndex = sprite.y;
             if (animationName !== entity.getAnimationName()) {
                 sprite.textures = findAnimation(this.spriteSheet, entity.getAnimationName())!;
                 animationName = entity.getAnimationName();
@@ -164,6 +171,7 @@ export class WorldRenderer {
 
             sprite.x = state.posX * TILE_SIZE;
             sprite.y = state.posY * TILE_SIZE + TILE_SIZE;
+            sprite.zIndex = sprite.y;
 
             if (entity.isAnimated()) {
                 sprite.play();
@@ -173,8 +181,19 @@ export class WorldRenderer {
         });
 
         if (entity instanceof Codebot) {
+            sprite.interactive = true;
+            sprite.cursor = "hover";
+            sprite
+                .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+                .on("pointerout", () => sprite.filters = null)
+                .on("click", () => this.renderCodebotInterface(entity));
             this.renderCodebotMessage(sprite, entity);
         }
+    }
+
+    private renderCodebotInterface(codebot: Codebot) {
+        const robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, this.hudLayer);
+        robotInterface.show();
     }
 
     private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
@@ -454,6 +473,11 @@ export class WorldRenderer {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
                 this.overTileLayer.addChild(sprite);
                 break;
+            };
+            case InteractableType.CODEBOT: {
+                this.onAddCodebot(x, y);
+                tile.setContent = null;
+                return;
             };
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));

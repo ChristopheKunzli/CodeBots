@@ -21,10 +21,10 @@ export abstract class Entity extends Observable<EntityState> {
     public id: string;
     public inventory: Inventory;
     protected world: World;
-    constructor(world: World) {
+    constructor(world: World, x: number, y: number) {
         super({
-            posX: 0,
-            posY: 0,
+            posX: x,
+            posY: y,
             cX: -1,
             cY: -1,
         });

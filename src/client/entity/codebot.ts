@@ -9,7 +9,7 @@ import { World } from "../world/world";
 
 export class Codebot extends Entity {
     private customBuiltins: CustomBuiltins;
-    private program: string;
+    public program: string;
     private isRunning: boolean;
     private error: string|null;
     private target: Position|null;
@@ -17,8 +17,8 @@ export class Codebot extends Entity {
     private static interpreter = new Interpreter();
     private message: string|null;
 
-    constructor(world: World){
-        super(world);
+    constructor(world: World, x: number, y: number){
+        super(world, x, y);
         this.program = "";
         this.isRunning = false;
         this.error = null;
@@ -38,10 +38,6 @@ export class Codebot extends Entity {
         }
 
         return "codebot";
-    }
-
-    setProgram(program: string) {
-        this.program = program;
     }
 
     hasError(): boolean {
@@ -65,6 +61,10 @@ export class Codebot extends Entity {
             this.isRunning = false;
             this.notify();
         }
+    }
+
+    getIsRunning(): boolean {
+        return this.isRunning;
     }
 
     getSpeed(): number {

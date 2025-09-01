@@ -13,6 +13,7 @@ import { WoodLogItem } from "./world/items/wood_log_item";
 import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
 import { Codebot } from "./entity/codebot";
+import { CodebotItem } from "./world/items/codebot_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -28,7 +29,12 @@ export class GameEngine {
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
+        this.renderer = new WorldRenderer(
+            this.world,
+            app,
+            this.handleInteractWithTile.bind(this),
+            this.addCodebot.bind(this),
+        );
         this.camera = new Camera();
         this.codebots = [];
 
@@ -78,38 +84,18 @@ export class GameEngine {
 
         this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
 
-        // TODO remove
-        this.player.inventory.addItem(new CraftingTableItem(1));
 
         this.renderer.renderPlayerCoordinate(this.player);
 
         // TODO test only
-        this.addCodebot();
+        this.player.inventory.addItem(new CraftingTableItem(1));
+        this.player.inventory.addItem(new CodebotItem(1));
     }
 
-    addCodebot() {
-        const codebot = new Codebot(this.world);
+    addCodebot(x: number, y: number) {
+        const codebot = new Codebot(this.world, x, y);
         this.codebots.push(codebot);
         this.renderer.renderEntity(codebot);
-
-        // TODO test only
-        codebot.setProgram(`
-            wait(1000);
-            print("test");
-            var position = find("wood");
-            goto(position);
-            wait(1000);
-            var position = find("iron");
-            print("yahou");
-            goto(position);
-            wait(1000);
-            var position = find("stone");
-            goto(position);
-            wait(1000);
-            var position = find("coal");
-            goto(position);
-        `);
-        codebot.setIsRunning(true);
     }
 
     craftEvent(recipe:Recipe){

@@ -13,3 +13,4 @@ export const ANIMATION_SPEED = 0.1;
 export const PLAYER_SPEED = 10;
 export const CODEBOT_SPEED = 5;
 export const CODEBOT_INVENTORY_SIZE = 3;
+export const GUI_SCALE = 64;

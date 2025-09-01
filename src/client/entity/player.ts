@@ -7,7 +7,7 @@ import {PLAYER_INVENTORY_SIZE, PLAYER_SPEED} from "../constants";
 export class Player extends Entity {
     private currentlyDisplayedAnimation: AnimationName;
     constructor(world:World) {
-        super(world);
+        super(world, 0, 0);
         this.currentlyDisplayedAnimation = "player_idle";
     }
 

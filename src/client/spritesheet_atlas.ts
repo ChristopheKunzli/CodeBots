@@ -90,6 +90,7 @@ export type TextureName =
     "tree_4" |
     "power" |
     "close" |
+    "help" |
     "light_square" |
     "dark_square" |
     "light_frame" |
@@ -227,7 +228,8 @@ const atlas = [
         "codebot_error_3",
         "codebot_error_4",
         "power",
-        "close"
+        "close",
+        "help",
     ], {
         codebot: ["codebot_1", "codebot_2", "codebot_3", "codebot_4"],
         codebot_error: ["codebot_error_1", "codebot_error_2", "codebot_error_3", "codebot_error_4"],
