@@ -3,8 +3,8 @@ import Tile from "../tile";
 import { Item } from "./item";
 
 export class FurnaceItem extends Item {
-    constructor() {
-        super("furnace", 1);
+    constructor(quantity: number) {
+        super("furnace", quantity);
     }
 
     public use(tile:Tile): boolean {

@@ -308,8 +308,6 @@ export class CraftingInterface extends BaseInterface {
             outSprite.interactive = true;
             outSprite.on('pointerdown', () => {
                 this.onClickOnCraftLine(recipe);
-
-                console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
             })
             row.addChild(outSprite);
             this.drawItem(recipe.output, outSprite);

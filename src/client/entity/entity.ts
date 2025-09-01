@@ -38,9 +38,9 @@ export abstract class Entity extends Observable<EntityState> {
         const content = tile?.getContent;
 
         if (content instanceof Resource) {
-            const resource = content.mine();
-            if (resource) {
-                // TODO: this.addToInventory(resource);
+            const item = content.mine();
+            if (item) {
+                this.inventory.addItem(item);
                 return { type: "MINED", tile };
             }
             return { type: "NONE", tile };
@@ -53,7 +53,15 @@ export abstract class Entity extends Observable<EntityState> {
                 interactableType: content.tileContentType as InteractableType
             };
         }
-        this.inventory.itemInHand?.use(tile);
+
+        const itemInHand = this.inventory.itemInHand;
+        if (itemInHand) {
+            const used = itemInHand.use(tile);
+            if (used) {
+                this.inventory.removeItem(itemInHand, 1);
+            }
+        }
+
         return { type: "NONE", tile };
     }
 

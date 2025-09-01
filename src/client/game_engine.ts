@@ -5,11 +5,11 @@ import { World } from "./world/world";
 import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
+import Tile from "./world/tile";
 import { CraftingTableItem } from "./world/items/crafting_table_item";
 import { InteractableType } from "./types/interactable_type";
 import { Recipe } from "./types/recipe";
-import { ResourceType } from "./types/resource_type";
-import { WoodItem } from "./world/items/wood_item";
+import { WoodLogItem } from "./world/items/wood_log_item";
 import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
 
@@ -26,7 +26,7 @@ export class GameEngine {
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app);
+        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
         this.camera = new Camera();
 
         this.keys = new Set<string>();
@@ -63,8 +63,8 @@ export class GameEngine {
         this.renderer.renderEntity(this.player);
 
         const recipes: Recipe[] = [
-            {inputs:  [new WoodItem()], output: new CraftingTableItem()},
-            {inputs:  [new StoneItem()], output: new FurnaceItem()},
+            {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
+            {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
             // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
             // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
             // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
@@ -75,21 +75,24 @@ export class GameEngine {
         this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
 
         // TODO remove
-        this.player.inventory.addItem(new CraftingTableItem());
-        this.player.inventory.addItem(new StoneItem());
+        this.player.inventory.addItem(new CraftingTableItem(1));
     }
 
     craftEvent(recipe:Recipe){
-        
+        if (!this.player.inventory.canAddItem(recipe.output)) {
+            return;
+        }
         for(const itemNeeded of recipe.inputs){
             let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
             if(!canCraft)
                 return;
         }
+
         for(const itemNeeded of recipe.inputs){
-            this.player.inventory.removeItem(itemNeeded)
+            this.player.inventory.removeItem(itemNeeded);
         }
-        this.player.inventory.addItem(recipe.output)
+
+        this.player.inventory.addItem(recipe.output);
     }
 
     update(delta: number) {
@@ -114,12 +117,43 @@ export class GameEngine {
         this.renderer.gameContainer.y = this.camera.y;
     }
 
-    private handleMouseClick(event: MouseEvent) {
+    private handleInteractWithTile(tile: Tile) {
+        const distance = Math.sqrt(
+            Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
+        );
 
+        if (distance > PLAYER_RANGE) {
+            return;
+        }
+
+        const result = this.player.interactWithTile(tile);
+
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    this.renderer.renderCraftingInterface();
+                }
+                else if (result.interactableType === InteractableType.FURNACE) {
+
+                }
+                break;
+
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
+    }
+
+    private handleMouseClick(event: MouseEvent) {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
-
-        this.app.screen.height
 
         let x = (mouseX - this.camera.x) / (TILE_SIZE * this.camera.zoom),
             y = (mouseY - this.camera.y) / (TILE_SIZE * this.camera.zoom);
@@ -136,30 +170,6 @@ export class GameEngine {
             return false;
         }
 
-        const result = this.player.interactWithTile(tile);
-
-        switch (result.type) {
-            case "MINED":
-                if (result.tile) {
-                    this.renderer.renderMiningEffect(result.tile.absX, result.tile.absY);
-                    this.renderer.updateTile(result.tile.chunk, result.tile);
-                }
-                break;
-
-            case "OPENED_UI":
-                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
-                    this.renderer.renderCraftingInterface();
-                }
-                else if (result.interactableType === InteractableType.FURNACE) {
-                    
-                }
-                break;
-
-            case "NONE":
-                this.renderer.updateTile(result.tile!.chunk, tile);
-            default:
-                break;
-        }
-
+        this.renderer.renderMiningEffect(tile.absX, tile.absY);
     }
 }

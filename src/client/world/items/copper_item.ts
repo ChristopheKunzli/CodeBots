@@ -1,9 +1,9 @@
 import Tile from "../tile";
 import { Item } from "./item";
 
-export class StoneItem extends Item{
+export class CopperItem extends Item{
     constructor(quantity: number) {
-        super("stone_ore", quantity);
+        super("copper_ore", quantity);
     }
 
     public use(tile: Tile): boolean {
