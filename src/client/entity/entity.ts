@@ -8,6 +8,8 @@ import { Interactable } from "../world/interactables/interactable";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
+import { Tool } from "../world/items/tool";
+import { Item } from "../world/items/item";
 
 type EntityState = {
     posX: number;
@@ -21,6 +23,7 @@ export abstract class Entity extends Observable<EntityState> {
     public id: string;
     public inventory: Inventory;
     protected world: World;
+
     constructor(world: World) {
         super({
             posX: 0,
@@ -37,13 +40,15 @@ export abstract class Entity extends Observable<EntityState> {
     interactWithTile(tile: Tile): InteractionResult {
         const content = tile?.getContent;
 
+        const itemInHand : Item | null = this.inventory.itemInHand;
+
         if (content instanceof Resource) {
-            const item = content.mine();
+            const item = content.mine(itemInHand instanceof Tool ? itemInHand : null);
             if (item) {
                 this.inventory.addItem(item);
-                return { type: "MINED", tile };
+                return {type: "MINED", tile};
             }
-            return { type: "NONE", tile };
+            return {type: "NONE", tile};
         }
 
         if (content instanceof Interactable) {
@@ -54,7 +59,6 @@ export abstract class Entity extends Observable<EntityState> {
             };
         }
 
-        const itemInHand = this.inventory.itemInHand;
         if (itemInHand) {
             const used = itemInHand.use(tile);
             if (used) {
@@ -62,7 +66,7 @@ export abstract class Entity extends Observable<EntityState> {
             }
         }
 
-        return { type: "NONE", tile };
+        return {type: "NONE", tile};
     }
 
     abstract getSpeed(): number;

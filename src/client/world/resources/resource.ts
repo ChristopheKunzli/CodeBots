@@ -1,16 +1,18 @@
-import { YIELDED_RESOURCE_MULTIPLICATOR } from "../../constants";
+import { BASE_DAMAGE, YIELDED_RESOURCE_MULTIPLICATOR } from "../../constants";
 import { ResourceType } from "../../types/resource_type";
 import { Item } from "../items/item";
 import Tile from "../tile";
 import { TileContent } from "../tile_content";
+import { Tool } from "../items/tool";
 
 export abstract class Resource extends TileContent {
     private hp: number;
+
     constructor(
-        walkable:boolean,
+        walkable: boolean,
         resource: ResourceType,
         hp: number,
-        tile:Tile
+        tile: Tile
     ) {
         super(resource, walkable, tile);
         this.hp = hp;
@@ -30,8 +32,10 @@ export abstract class Resource extends TileContent {
         return 10;
     }
 
-    mine(): Item | null {
-        this.hp -= 50;
+    mine(tool: Tool | null): Item | null {
+        const damage = BASE_DAMAGE * (tool ? tool.efficiency(this.tileContentType as ResourceType) : 1);
+
+        this.hp -= damage;
         this.tile.chunk.chunkUpdated(this.tile);
         if (this.hp <= 0) {
             this.tile.setContent = null;
