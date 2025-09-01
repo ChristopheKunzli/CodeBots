@@ -1,0 +1,11 @@
+export const CHUNK_SIZE = 8;
+export const TILE_SIZE = 16;
+export const RENDER_DISTANCE = 4;
+export const CHUNK_LOAD_RADIUS = 4;
+export const MAP_FREQUENCY = 0.08;
+export const RESOURCE_FREQUENCY = 0.02;
+export const PLAYER_RANGE = 4;
+export const CAMERA_ZOOM = 2;
+export const INVENTORY_STACK_SIZE = 99;
+export const PLAYER_INVENTORY_SIZE = 7;
+export const YIELDED_RESOURCE_MULTIPLICATOR = 10;
