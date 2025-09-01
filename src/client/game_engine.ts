@@ -32,6 +32,18 @@ export class GameEngine {
             this.keys.delete(e.key.toLowerCase())
         );
 
+        window.addEventListener("wheel", (e) => {
+            if (e.deltaY < 0) {
+                this.keys.add("scrollup");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrollup");
+            } else if (e.deltaY > 0) {
+                this.keys.add("scrolldown");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrolldown");
+            }
+        });
+
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
@@ -39,11 +51,14 @@ export class GameEngine {
 
     async initialize() {
         await this.renderer.initialize();
-        this.renderer.container.scale.set(this.camera.zoom);
+        this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
-        this.player.itemInHand = new CraftingTableItem();
         this.renderer.renderEntity(this.player);
+        this.renderer.renderPlayerItemBar(this.player);
+
+        // TODO remove
+        this.player.inventory.addItem(new CraftingTableItem());
     }
 
     update(delta: number) {
@@ -64,8 +79,8 @@ export class GameEngine {
         }
 
         this.camera.follow(this.player, this.app.screen.width, this.app.screen.height);
-        this.renderer.container.x = this.camera.x;
-        this.renderer.container.y = this.camera.y;
+        this.renderer.gameContainer.x = this.camera.x;
+        this.renderer.gameContainer.y = this.camera.y;
     }
 
     private handleMouseClick(event: MouseEvent) {

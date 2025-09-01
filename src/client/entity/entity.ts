@@ -1,3 +1,4 @@
+import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
@@ -15,20 +16,20 @@ type EntityState = {
 };
 
 export abstract class Entity extends Observable<EntityState> {
-    public itemInHand: Item;
     private static idCounter = 1;
     public id: string;
-    private inventory: Item[] = [];
+    public inventory: Inventory;
     protected world: World;
-    constructor(world:World) {
 
-        let t: Observable<EntityState>;
+    constructor(world:World) {
         super({
             posX: 0,
             posY: 0,
             cX: -1,
             cY: -1,
         });
+
+        this.inventory = new Inventory(this.getInventorySize());
         this.world = world;
         this.id = `entity_${Entity.idCounter++}`;
     }
@@ -47,7 +48,7 @@ export abstract class Entity extends Observable<EntityState> {
             }
             return true; // Coup porté mais ressource pas encore épuisée
         } else {
-            this.itemInHand.use(tile);
+            this.inventory.itemInHand?.use(tile);
         }
 
         return false;
