@@ -5,8 +5,14 @@ import { World } from "./world/world";
 import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
+import Tile from "./world/tile";
+import { CraftingTableItem } from "./world/items/crafting_table_item";
+import { InteractableType } from "./types/interactable_type";
+import { Recipe } from "./types/recipe";
+import { WoodLogItem } from "./world/items/wood_log_item";
+import { StoneItem } from "./world/items/stone_item";
+import { FurnaceItem } from "./world/items/furnace_item";
 import { Codebot } from "./entity/codebot";
-import CustomBuiltins from "./interpreter/custom_builtins";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -22,7 +28,7 @@ export class GameEngine {
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app);
+        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
         this.camera = new Camera();
         this.codebots = [];
 
@@ -35,17 +41,45 @@ export class GameEngine {
             this.keys.delete(e.key.toLowerCase())
         );
 
+        window.addEventListener("wheel", (e) => {
+            if (e.deltaY < 0) {
+                this.keys.add("scrollup");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrollup");
+            } else if (e.deltaY > 0) {
+                this.keys.add("scrolldown");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrolldown");
+            }
+        });
+
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
     }
 
     async initialize() {
+        await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
-        await this.renderer.initialize();
         this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
+
+        const recipes: Recipe[] = [
+            {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
+            {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
+            // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
+            // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "pickaxe", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
+            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
+        ];
+
+        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
+
+        // TODO remove
+        this.player.inventory.addItem(new CraftingTableItem(1));
 
         this.renderer.renderPlayerCoordinate(this.player);
 
@@ -78,6 +112,23 @@ export class GameEngine {
         codebot.setIsRunning(true);
     }
 
+    craftEvent(recipe:Recipe){
+        if (!this.player.inventory.canAddItem(recipe.output)) {
+            return;
+        }
+        for(const itemNeeded of recipe.inputs){
+            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            if(!canCraft)
+                return;
+        }
+
+        for(const itemNeeded of recipe.inputs){
+            this.player.inventory.removeItem(itemNeeded);
+        }
+
+        this.player.inventory.addItem(recipe.output);
+    }
+
     update(delta: number) {
         const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
         entities.forEach((entity) => entity.update(this.keys, delta));
@@ -100,12 +151,43 @@ export class GameEngine {
         this.renderer.gameContainer.y = this.camera.y;
     }
 
-    private handleMouseClick(event: MouseEvent) {
+    private handleInteractWithTile(tile: Tile) {
+        const distance = Math.sqrt(
+            Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
+        );
 
+        if (distance > PLAYER_RANGE) {
+            return;
+        }
+
+        const result = this.player.interactWithTile(tile);
+
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    this.renderer.renderCraftingInterface();
+                }
+                else if (result.interactableType === InteractableType.FURNACE) {
+
+                }
+                break;
+
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
+    }
+
+    private handleMouseClick(event: MouseEvent) {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
-
-        this.app.screen.height
 
         let x = (mouseX - this.camera.x) / (TILE_SIZE * this.camera.zoom),
             y = (mouseY - this.camera.y) / (TILE_SIZE * this.camera.zoom);
@@ -122,15 +204,6 @@ export class GameEngine {
             return false;
         }
 
-        const mined = this.player.interactWithTile(tile);
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
-        if (mined) {
-            let chunk = tile?.chunk;
-            if (chunk == undefined || tile == null) return;
-            // Rafraîchir le rendu si une ressource a été minée
-            this.renderer.updateTile(chunk, tile);
-            // const visibleChunks = this.world.getChunksInVisibleRange(this.player);
-            // this.renderer.render(visibleChunks);
-        }
     }
 }

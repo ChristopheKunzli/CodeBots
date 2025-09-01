@@ -1,4 +1,8 @@
-export const ITEM_TYPES = [
+
+import { TextureName } from "../spritesheet_atlas";
+import {Item} from "../world/items/item";
+
+export const ITEM_TYPES: TextureName[] = [
     "furnace",
     "workbench",
     "crate",
@@ -16,10 +20,10 @@ export const ITEM_TYPES = [
     "shovel",
     "axe",
     "iron_rod",
-    "iron_nail",
+    "nail",
     "iron_frame",
     "iron_plate",
-    "iron_reinforced_plate",
+    "reinforced_iron_plate",
     "codebot_item",
     "cement",
     "concrete",
@@ -27,7 +31,14 @@ export const ITEM_TYPES = [
 
 export type ItemType = (typeof ITEM_TYPES)[number];
 
-export type Item = {
-    type: ItemType;
-    amount: number;
-};
+export type CoreItem = {
+    spriteName: TextureName
+    currentGathered: number
+    goal: number
+}
+
+export type CoreStep = {
+    stepNumber: number,
+    items: CoreItem[]
+}
+

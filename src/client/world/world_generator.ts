@@ -7,6 +7,7 @@ import * as Simplex from "simplex-noise"
 import Tile from "./tile";
 import { IronStone } from "./resources/iron_stone";
 import { CopperStone } from "./resources/copper_stone";
+import { CoalStone } from "./resources/coal_stone";
 import { IWorldGenerator } from "./i_world_generator";
 import { DecorationType } from "../types/decoration_type";
 import { MAP_FREQUENCY, RESOURCE_FREQUENCY } from "../constants";
@@ -65,7 +66,7 @@ export class WorldGenerator implements IWorldGenerator {
                         tile.absY = absY;
                         tile.variation = this.rng();
                         if (res < -0.75) {
-                            tile.content = new Tree(tile);
+                            tile.setContent = new Tree(tile);
                         }
                     }
                 }
@@ -73,9 +74,10 @@ export class WorldGenerator implements IWorldGenerator {
                     if (res > 0.75) {
                         const resourceVal = this.resourceNoiseFunc(absX * RESOURCE_FREQUENCY, absY * RESOURCE_FREQUENCY);
 
-                        if (resourceVal < -0.33) tile.content = new Stone(tile);
-                        else if (resourceVal < 0.33) tile.content = new IronStone(tile);
-                        else tile.content = new CopperStone(tile);
+                        if (resourceVal < -0.5) tile.setContent = new Stone(tile);
+                        else if (resourceVal < 0) tile.setContent = new IronStone(tile);
+                        else if (resourceVal < 0.5) tile.setContent = new CoalStone(tile);
+                        else tile.setContent = new CopperStone(tile);
                     }
                 }
                 chunk.tiles[y][x] = tile;

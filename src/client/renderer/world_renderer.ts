@@ -9,13 +9,17 @@ import { ANIMATION_SPEED, CAMERA_ZOOM, TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
+import { InteractableType } from "../types/interactable_type";
+import { CraftingInterface } from "../interface/crafting_interface";
+import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
+import { ItemBar } from "../interface/item_bar";
+import { OutlineFilter } from "pixi-filters";
 import { Codebot } from "../entity/codebot";
 
 
 export class WorldRenderer {
     public container: PIXI.Container;
-    public gameContainer: PIXI.Container;
     private spriteSheet: PIXI.Spritesheet<{
         meta: {
             image: string;
@@ -28,18 +32,20 @@ export class WorldRenderer {
         };
         frames: {};
     }>[];
+    private craftingInterface: CraftingInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
     private foregroundLayer: PIXI.Container;
-    private hudContainer: PIXI.Container;
+    private hudLayer: PIXI.Container;
+    public gameContainer: PIXI.Container;
     private chunkContent: Map<string, Map<String, TileRenderer>> = new Map();
     private currentlyRenderingChunks: Set<string> = new Set();
     private world: World;
     private app: PIXI.Application;
-    spriteMap: Map<Tile, PIXI.Sprite> = new Map();
+    private onInteractionWithTile: (tile: Tile) => void;
 
-    constructor(world: World, app: PIXI.Application) {
+    constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
@@ -48,7 +54,8 @@ export class WorldRenderer {
         this.overTileLayer = new PIXI.Container();
         this.middleLayer = new PIXI.Container();
         this.foregroundLayer = new PIXI.Container();
-        this.hudContainer = new PIXI.Container();
+        this.hudLayer = new PIXI.Container();
+        this.gameContainer = new PIXI.Container();
         this.tileLayer.sortableChildren = false;
         this.middleLayer.sortableChildren = true;
         this.foregroundLayer.sortableChildren = true;
@@ -57,39 +64,29 @@ export class WorldRenderer {
         this.gameContainer.addChild(this.overTileLayer);
         this.gameContainer.addChild(this.middleLayer);
         this.gameContainer.addChild(this.foregroundLayer);
-        this.container.addChild(this.hudContainer);
+        this.container.addChild(this.hudLayer);
+
+        this.onInteractionWithTile = onInteractionWithTile;
+    }
+
+    private setCursor() {
+        const getCursor = (name: string) => `url('/assets/${name}.png'),auto`;
+        this.app.renderer.events.cursorStyles.default = getCursor("cursor");
+        this.app.renderer.events.cursorStyles.hover = getCursor("pointer");
     }
 
     async initialize() {
         this.spriteSheet = await getSpritesheets();
+            this.setCursor();
     }
 
-    public printDebugGrid() {
-        const grid = new PIXI.Graphics();
-
-        const cols = 100;
-        const rows = 100;
-
-        for (let i = -cols; i <= cols; i++) {
-            grid.moveTo(i * TILE_SIZE, -rows * TILE_SIZE);
-            grid.lineTo(i * TILE_SIZE, rows * TILE_SIZE);
-        }
-
-        for (let j = -rows; j <= rows; j++) {
-            grid.moveTo(-rows * TILE_SIZE, j * TILE_SIZE);
-            grid.lineTo(cols * TILE_SIZE, j * TILE_SIZE);
-        }
-
-        grid.stroke({
-            width: 1,
-            color: 0xffffff,
-            alpha: 0.5,
-        });
-
-        this.foregroundLayer.addChild(grid);
+    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
+        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
+        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        itemBar.show()
     }
 
-    public async render(chunks: Chunk[]) {
+    public render(chunks: Chunk[]) {
         const newChunkKeys = new Set(chunks.map(c => c.key));
         // 1. Unload ceux qui ne sont plus dans newChunkKeys
         for (const key of this.currentlyRenderingChunks) {
@@ -106,6 +103,10 @@ export class WorldRenderer {
                 this.renderChunk(chunk);
             }
         }
+    }
+
+    public renderCraftingInterface(){
+        this.craftingInterface.show();
     }
 
     public renderPlayerCoordinate(player: Player) {
@@ -134,7 +135,7 @@ export class WorldRenderer {
                 coordinateText.text = getTextFromCoordinate(player);
             });
 
-            this.hudContainer.addChild(coordinateText);
+            this.hudLayer.addChild(coordinateText);
         });
     }
 
@@ -274,7 +275,7 @@ export class WorldRenderer {
         tileRenderer.decorationSprite?.destroy();
         // recreate them
         this.getTextureForTile(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
-        if (tile.content) {
+        if (tile.getContent) {
             this.getTextureForMiddleLayer(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
         }
     }
@@ -300,7 +301,7 @@ export class WorldRenderer {
             for (let x = 0; x < chunk.size; x++) {
                 const tile = chunk.tiles[y][x];
                 this.getTextureForTile(tile, chunk, x, y);
-                if (tile.content) {
+                if (tile.getContent) {
                     this.getTextureForMiddleLayer(tile, chunk, x, y);
 
                 } else if (tile.decoration != null) {
@@ -388,6 +389,8 @@ export class WorldRenderer {
         sprite.roundPixels = true;
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;
         sprite.y = (chunk.cy * chunk.size + y) * TILE_SIZE + TILE_SIZE / 2;
+        sprite.interactive = true;
+        sprite.on("click", () => this.onInteractionWithTile(tile));
         this.tileLayer.addChild(sprite);
 
         const tileSprite = this.chunkContent.get(chunk.key)?.get(`${x}_${y}`);
@@ -402,7 +405,7 @@ export class WorldRenderer {
     private getTextureForMiddleLayer(tile: Tile, chunk: Chunk, x: number, y: number) {
         let sprite: PIXI.Sprite;
         let offsetY = 0;
-        switch (tile.content?.tileContentType) {
+        switch (tile.getContent?.tileContentType) {
             case ResourceType.WOOD: {
                 const treeTypes: TextureName[] = ["tree_1", "tree_2", "tree_3", "tree_4"];
                 const spriteIndex = Math.floor(tile.variation * treeTypes.length);
@@ -412,6 +415,26 @@ export class WorldRenderer {
                 break;
 
             };
+            case InteractableType.CRAFTING_TABLE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.FURNACE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.CHEST: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
             case ResourceType.STONE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
@@ -427,6 +450,11 @@ export class WorldRenderer {
                 this.overTileLayer.addChild(sprite);
                 break;
             };
+            case ResourceType.COAL: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
+                this.overTileLayer.addChild(sprite);
+                break;
+            };
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
                 this.middleLayer.addChild(sprite);
@@ -435,6 +463,14 @@ export class WorldRenderer {
         }
 
         sprite.anchor.set(0.5, 1);
+
+        sprite.interactive = true;
+        sprite.cursor = "hover";
+        sprite
+            .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+            .on("pointerout", () => sprite.filters = null)
+            .on("click", () => this.onInteractionWithTile(tile));
+
         sprite.roundPixels = true;
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;
         sprite.y = (chunk.cy * chunk.size + y) * TILE_SIZE + TILE_SIZE + offsetY;
@@ -480,6 +516,9 @@ export class WorldRenderer {
         sprite.x = (chunk.cx * chunk.size + x) * TILE_SIZE + TILE_SIZE / 2;
         sprite.y = (chunk.cy * chunk.size + y) * TILE_SIZE + TILE_SIZE / 2;
 
+        sprite.interactive = true;
+        sprite.on("click", () => this.onInteractionWithTile(tile));
+
         const tileSprite = this.chunkContent.get(chunk.key)?.get(`${x}_${y}`);
         if (tileSprite) {
             tileSprite.contentSprite = sprite;
@@ -489,6 +528,4 @@ export class WorldRenderer {
 
         sprite.zIndex = sprite.y;
     }
-
-
 }

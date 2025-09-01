@@ -23,15 +23,16 @@
     },
     "dependencies": {
         "@hono/node-server": "^1.19.0",
+        "@pixi/devtools": "^2.0.1",
         "@types/jquery": "^3.5.32",
         "@types/rellax": "^1.7.7",
         "codebotsinterpreter": "^1.0.7",
         "hono": "^4.9.2",
         "jquery": "^3.7.1",
+        "pixi-filters": "^6.1.4",
         "pixi.js": "^8.12.0",
         "rellax": "^1.12.1",
         "seedrandom": "^3.0.5",
-        "simplex-noise": "^4.0.3",
-        "@pixi/devtools": "^2.0.1"
+        "simplex-noise": "^4.0.3"
     }
 }

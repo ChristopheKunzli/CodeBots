@@ -6,12 +6,13 @@ import StringObject from "codebotsinterpreter/lib/object/string_object";
 import HashObject from "codebotsinterpreter/lib/object/hash_object";
 import {NULL} from "codebotsinterpreter/lib/evaluator";
 import type {Codebot} from "../entity/codebot";
-import {Item, ITEM_TYPES, ItemType} from "../types/item";
+import {ITEM_TYPES, ItemType} from "../types/item";
 import { Object } from "codebotsinterpreter/lib/object";
 import {Position} from "../types/position";
 import { RESOURCE_TYPES, ResourceType } from "../types/resource_type";
 import { HashPair } from "codebotsinterpreter/lib/object/hash_key";
 import { World } from "../world/world";
+import { Item } from "../world/items/item";
 
 type Resource = (typeof RESOURCE_TYPES)[number];
 
@@ -34,59 +35,61 @@ export default class CustomBuiltins {
         return RESOURCE_TYPES.includes(resourceType as Resource);
     }
 
-    parsePosition(object: Object): Position|string {
+    parsePosition(object: Object): Position|ErrorObject {
         if (!(object instanceof HashObject)) {
-            return `unsupported argument type: ${object.type()}`;
+            return new ErrorObject(`unsupported argument type: ${object.type()}`);
         }
 
         const x = object.pairs.get(new StringObject("x").hashKey().toString())?.value;
 
         if (!(x instanceof IntegerObject)) {
-            return `invalid x: ${x?.type()}`;
+            return new ErrorObject(`invalid x: ${x?.type()}`);
         }
 
         const y = object.pairs.get(new StringObject("y").hashKey().toString())?.value;
 
         if (!(y instanceof IntegerObject)) {
-            return `invalid x: ${y?.type()}`;
+            return new ErrorObject(`invalid x: ${y?.type()}`);
         }
 
         return {x: x.value, y: y.value};
     }
 
-    parseItem(object: Object): Item|string {
+    parseItem(object: Object): Item|ErrorObject {
         if (!(object instanceof HashObject)) {
-            return `unsupported argument type: ${object.type()}`;
+            return new ErrorObject(`unsupported argument type: ${object.type()}`);
         }
 
         const type = object.pairs.get(new StringObject("type").hashKey().toString())?.value;
 
         if (!(type instanceof StringObject)) {
-            return `unsupported argument type: ${type?.type()}`;
+            return new ErrorObject(`unsupported argument type: ${type?.type()}`);
         }
         if (!this.isValidItemType(type.value)) {
-            return `invalid item type: ${type.value}`;
+            return new ErrorObject(`invalid item type: ${type.value}`);
         }
 
         const amount = object.pairs.get(new StringObject("amount").hashKey().toString())?.value;
 
         if (amount && !(amount instanceof IntegerObject)) {
-            return `unsupported argument type: ${amount?.type()}`;
+            return new ErrorObject(`unsupported argument type: ${amount?.type()}`);
         }
 
-        return {
-            type: type.value,
-            amount: amount?.value ?? 1,
-        };
+        // TODO
+        throw new Error("not implemented");
+        // return {
+        //     type: type.value,
+        //     amount: amount?.value ?? 1,
+        // };
     }
 
-    parseResource(object: Object): ResourceType|string {
+    parseResource(object: Object): ResourceType|ErrorObject {
         if (!(object instanceof StringObject)) {
-            return `unsupported argument type: ${object.type()}`;
+            return new ErrorObject(`unsupported argument type: ${object.type()}`);
         }
 
         if (!this.isValidResourceType(object.value)) {
-            return `invalid resource type: ${object.value}`;
+            return new ErrorObject(`invalid resource type: ${object.value}`);
         }
 
         return ResourceType[object.value.toUpperCase()];
@@ -119,8 +122,8 @@ export default class CustomBuiltins {
 
                 const position = this.parsePosition(args[0]);
 
-                if (typeof position === "string") {
-                    return new ErrorObject(position);
+                if (position instanceof ErrorObject) {
+                    return position;
                 }
 
                 await this.codebot.moveTo(position);
@@ -133,18 +136,18 @@ export default class CustomBuiltins {
                 }
 
                 const item = this.parseItem(args[0]);
-                if (typeof item === "string") {
-                    return new ErrorObject(item);
+                if (item instanceof ErrorObject) {
+                    return item;
                 }
 
-                return new BooleanObject(this.codebot.canAddItem(item) === item.amount);
+                return new BooleanObject(this.codebot.inventory.canAddItem(item));
             }),
             "isEmpty": new BuiltinObject(async (...args) => {
                 if (args.length !== 0) {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 0`);
                 }
 
-                return new BooleanObject(this.codebot.isEmpty());
+                return new BooleanObject(this.codebot.inventory.isEmpty());
             }),
             "wait": new BuiltinObject(async (...args) => {
                 if (args.length !== 1) {
@@ -168,11 +171,11 @@ export default class CustomBuiltins {
                 }
 
                 const item = this.parseItem(args[0]);
-                if (typeof item === "string") {
-                    return new ErrorObject(item);
+                if (item instanceof ErrorObject) {
+                    return item;
                 }
 
-                return new BooleanObject(this.codebot.canRemoveItem(item) === item.amount);
+                return new BooleanObject(this.codebot.inventory.canRemoveItem(item));
             }),
             "deposit": new BuiltinObject(async (...args) => {
                 // (item) => void
@@ -181,15 +184,15 @@ export default class CustomBuiltins {
                 }
 
                 const item = this.parseItem(args[0]);
-                if (typeof item === "string") {
-                    return new ErrorObject(item);
+                if (item instanceof ErrorObject) {
+                    return item;
                 }
 
-                if (!this.codebot.canRemoveItem(item)) {
+                if (!this.codebot.inventory.canRemoveItem(item)) {
                     return new ErrorObject("unable to deposit such amount");
                 }
 
-                this.codebot.removeItem(item);
+                this.codebot.inventory.removeItem(item);
 
                 // TODO
                 throw new Error("not implemented");
@@ -201,15 +204,15 @@ export default class CustomBuiltins {
                 }
 
                 const item = this.parseItem(args[0]);
-                if (typeof item === "string") {
-                    return new ErrorObject(item);
+                if (item instanceof ErrorObject) {
+                    return item;
                 }
 
-                if (!this.codebot.canAddItem(item)) {
+                if (!this.codebot.inventory.canAddItem(item)) {
                     return new ErrorObject("unable to take such amount");
                 }
 
-                this.codebot.addItem(item);
+                this.codebot.inventory.addItem(item);
 
                 // TODO
                 throw new Error("not implemented");
@@ -221,8 +224,8 @@ export default class CustomBuiltins {
                 }
 
                 const item = this.parseItem(args[0]);
-                if (typeof item === "string") {
-                    return new ErrorObject(item);
+                if (item instanceof ErrorObject) {
+                    return item;
                 }
 
                 // TODO
@@ -235,8 +238,8 @@ export default class CustomBuiltins {
                 }
 
                 const resource = this.parseResource(args[0]);
-                if (typeof resource === "string") {
-                    return new ErrorObject(resource);
+                if (resource instanceof ErrorObject) {
+                    return resource;
                 }
 
                 const codebotPosition = {x: this.codebot.posX, y: this.codebot.posY};

@@ -205,7 +205,7 @@ La plupart des assets graphiques ont été créés par Schouwey Zaid à l'aide d
 Les éléments de GUI proviennent du pack
 gratuit : [Tiny Wonder GUI Pack](https://butterymilk.itch.io/tiny-wonder-gui-pack).
 
-![spirtesheet](./src/client/public/assets/gui.png)
+![spirtesheet](./src/client/public/assets/gui_spritesheet.png)
 
 Le personnage vient du pack gratuit : [pixelrpg](https://snoblin.itch.io/pixel-rpg-free-npc).
 

@@ -39,7 +39,7 @@ export type TextureName =
     "path_l_2" |
     "path_t" |
     "path_x" |
-    "furnace_off" |
+    "furnace" |
     "furnace_on_1" |
     "furnace_on_2" |
     "furnace_on_3" |
@@ -96,6 +96,7 @@ export type TextureName =
     "dark_frame" |
     "scroll" |
     "bar"|
+    "selected_slot"|
     "dialog_box"|
     "idle1"|
     "idle2"|
@@ -180,7 +181,7 @@ const atlas = [
         "path_l_2",
         "path_t",
         "path_x",
-        "furnace_off",
+        "furnace",
         "furnace_on_1",
         "furnace_on_2",
         "furnace_on_3",
@@ -244,6 +245,7 @@ const atlas = [
         "dark_frame",
         "scroll",
         "bar",
+        "selected_slot",
         "dialog_box",
     ]),
     generateAtlas("/assets/character.png", { w: 5, h: 5 }, { w: 16, h: 16 }, [

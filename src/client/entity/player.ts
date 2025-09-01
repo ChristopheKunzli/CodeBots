@@ -1,4 +1,4 @@
-import { AnimationName, TextureName } from "../spritesheet_atlas";
+import { AnimationName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { World } from "../world/world";
 import { Entity } from "./entity";
@@ -41,6 +41,25 @@ export class Player extends Entity {
             else if(this.currentlyDisplayedAnimation == "player_walk_up" ||this.currentlyDisplayedAnimation == "player_idle_back") this.currentlyDisplayedAnimation = "player_idle_back";
             else this.currentlyDisplayedAnimation = "player_idle";
             this.notify();
+        }
+
+        if (keys.has("scrollup")) {
+            this.inventory.setItemInHandIndex((this.inventory.getItemInHandIndex() + 1) % this.getInventorySize());
+        }
+
+        if (keys.has("scrolldown")) {
+            const size = this.getInventorySize();
+            const index = ((this.inventory.getItemInHandIndex() - 1) % size + size) % size;
+            this.inventory.setItemInHandIndex(index);
+        }
+
+        for (const key of keys) {
+            if (/^\d$/.test(key)) {
+                const number = parseInt(key, 10);
+                if (number > 0 && number <= this.getInventorySize()) {
+                    this.inventory.setItemInHandIndex(number - 1);
+                }
+            }
         }
     }
 
