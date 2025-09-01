@@ -1,11 +1,28 @@
 import { INVENTORY_STACK_SIZE } from "../constants";
 import Observable from "../observer/observable";
 import { InventorySlot } from "../types/inventory";
-import { Item } from "../types/item";
+import { Item } from "../world/items/item";
 
 export default class Inventory extends Observable<InventorySlot[]> {
+    private itemInHandIndex: number;
+
     constructor(size: number) {
         super(Array.from({length: size}, () => null));
+
+        this.itemInHandIndex = 0;
+    }
+
+    get itemInHand(): InventorySlot {
+        return this.items[this.itemInHandIndex];
+    }
+
+    setItemInHandIndex(index: number) {
+        this.itemInHandIndex = index;
+        this.notify();
+    }
+
+    getItemInHandIndex(): number {
+        return this.itemInHandIndex;
     }
 
     get items(): InventorySlot[] {
@@ -61,7 +78,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
             if (!this.items[i]) {
                 const toAdd = Math.min(INVENTORY_STACK_SIZE, remaining);
-                this.items[i] = {spriteName: item.spriteName, quantity: toAdd};
+                this.items[i] = new (Object.getPrototypeOf(item).constructor)(item.spriteName, toAdd);
                 remaining -= toAdd;
             }
         }

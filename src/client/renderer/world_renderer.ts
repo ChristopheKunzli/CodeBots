@@ -32,6 +32,8 @@ export class WorldRenderer {
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
     private foregroundLayer: PIXI.Container;
+    private hudLayer: PIXI.Container;
+    public gameContainer: PIXI.Container;
     private chunkContent: Map<string, Map<String, TileRenderer>> = new Map();
     private currentlyRenderingChunks: Set<string> = new Set();
     private world: World;
@@ -46,13 +48,17 @@ export class WorldRenderer {
         this.overTileLayer = new PIXI.Container();
         this.middleLayer = new PIXI.Container();
         this.foregroundLayer = new PIXI.Container();
+        this.hudLayer = new PIXI.Container();
+        this.gameContainer = new PIXI.Container();
         this.tileLayer.sortableChildren = false;
         this.middleLayer.sortableChildren = true;
         this.foregroundLayer.sortableChildren = true;
-        this.container.addChild(this.tileLayer);
-        this.container.addChild(this.overTileLayer);
-        this.container.addChild(this.middleLayer);
-        this.container.addChild(this.foregroundLayer);
+        this.container.addChild(this.gameContainer);
+        this.gameContainer.addChild(this.tileLayer);
+        this.gameContainer.addChild(this.overTileLayer);
+        this.gameContainer.addChild(this.middleLayer);
+        this.gameContainer.addChild(this.foregroundLayer);
+        this.container.addChild(this.hudLayer);
     }
 
     async initialize() {
@@ -400,7 +406,7 @@ export class WorldRenderer {
     }
 
     public renderPlayerItemBar(player: Player) {
-        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory);
+        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         itemBar.show();
     }
 }

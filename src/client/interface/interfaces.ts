@@ -1,10 +1,11 @@
 import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
 import {findTexture, TextureName} from "../spritesheet_atlas";
-import {CoreStep, Item, Recipe} from "../types/item";
+import {CoreStep, Recipe} from "../types/item";
+import { Item } from '../world/items/item';
 import {ScrollBar} from "./ScrollBar";
 import {MultilineInput} from "./MultilineInput";
-import { InventorySlot } from '../types/inventory';
 import Inventory from '../inventory/inventory';
+import { CoreItem } from '../world/items/core_item';
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
@@ -126,9 +127,11 @@ export abstract class BaseInterface extends Container {
             const quantityText = new Text({
                 text: item.quantity > 1 ? item.quantity.toString() : '',
                 style: {
-                    fill: '#000000',
+                    fontFamily: `"Jersey 10", sans-serif`,
+                    fontWeight: "400",
+                    fontStyle: "normal",
                     fontSize: 8,
-                    fontFamily: 'Jersey',
+                    fill: '#000000',
                 },
                 resolution: 4,
             });
@@ -407,7 +410,8 @@ export class CoreInterface extends BaseInterface {
             const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
             itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);
-            this.drawItem({spriteName: item.spriteName, quantity: item.goal}, itemSprite, false, false);
+            // TODO ??
+            this.drawItem(new CoreItem(item.spriteName, item.goal), itemSprite, false, false);
             const progressText = new Text({
                 text: `${item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.goal}`,
                 style: {
@@ -455,21 +459,26 @@ export class CoreInterface extends BaseInterface {
 }
 
 export class ItemBar extends BaseInterface {
-    private items: InventorySlot[];
+    private inventory: Inventory;
+    private slots: Sprite[];
+    private container: Container;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
         super(app, spritesheets, scale);
-        this.items = inventory.items;
+        this.inventory = inventory;
+        this.slots = [];
+        this.container = container;
         this.draw();
     }
 
     protected draw(): void {
         const itemBar = new Container();
-        this.app.stage.addChild(itemBar);
+        this.container.addChild(itemBar);
 
-        const slotCount = 6;
+        const {items} = this.inventory;
+
         const spaceBetweenSquares = 20;
-        const barWidth = this.guiScale * slotCount + ((slotCount - 1) * spaceBetweenSquares);
+        const barWidth = this.guiScale * items.length + ((items.length - 1) * spaceBetweenSquares);
         const barHeight = this.guiScale;
 
         itemBar.width = barWidth;
@@ -480,21 +489,46 @@ export class ItemBar extends BaseInterface {
 
         const texture = findTexture(this.spritesheets, "light_square");
 
-        for (let i = 0; i < slotCount; ++i) {
+        for (let i = 0; i < items.length; ++i) {
             const lightSquare = new Sprite(texture);
             lightSquare.width = this.guiScale;
             lightSquare.height = this.guiScale;
             lightSquare.x = i * (lightSquare.width + spaceBetweenSquares);
             lightSquare.y = 0;
 
-            this.drawItem(this.items[i], lightSquare, true, false);
+            this.drawItem(items[i], lightSquare, true, false);
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                //TODO manage item bar click
-                console.log(`Clicked on bar item slot ${i + 1}`);
+                this.inventory.setItemInHandIndex(i);
             });
+
             itemBar.addChild(lightSquare);
+
+            this.slots[i] = lightSquare;
+        }
+
+        this.drawSlots();
+        this.inventory.observe(this.drawSlots.bind(this));
+    }
+
+    drawSlots()  {
+        for (let i = 0; i < this.inventory.items.length; ++i) {
+            const item = this.inventory.items[i];
+            const slot = this.slots[i];
+            slot.children = [];
+
+            if (i === this.inventory.getItemInHandIndex()) {
+                const selectedTexture = findTexture(this.spritesheets, "selected_slot");
+                if (!selectedTexture) {
+                    throw new Error("could not find texture");
+                }
+                const selected = new Sprite(selectedTexture);
+
+                slot.addChild(selected);
+            }
+
+            this.drawItem(item, slot, true, false);
         }
     }
 }

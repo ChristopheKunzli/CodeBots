@@ -19,7 +19,6 @@ export abstract class Entity extends Observable<EntityState> {
     private static idCounter = 1;
     public id: string;
     public inventory: Inventory;
-    public itemInHand: Item;
     protected world: World;
 
     constructor(world:World) {
@@ -49,7 +48,7 @@ export abstract class Entity extends Observable<EntityState> {
             }
             return true; // Coup porté mais ressource pas encore épuisée
         } else {
-            this.itemInHand.use(tile);
+            this.inventory.itemInHand?.use(tile);
         }
 
         return false;

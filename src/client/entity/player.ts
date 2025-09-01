@@ -1,3 +1,4 @@
+import { PLAYER_INVENTORY_SIZE } from "../constants";
 import { AnimationName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { World } from "../world/world";
@@ -42,6 +43,15 @@ export class Player extends Entity {
             else this.currentlyDisplayedAnimation = "player_idle";
             this.notify();
         }
+
+        for (const key of keys) {
+            if (/^\d$/.test(key)) {
+                const number = parseInt(key, 10);
+                if (number > 0 && number <= this.getInventorySize()) {
+                    this.inventory.setItemInHandIndex(number - 1);
+                }
+            }
+        }
     }
 
     getSpeed(): number {
@@ -57,6 +67,6 @@ export class Player extends Entity {
         return EntityType.PLAYER;
     }
     getInventorySize(): number {
-        return 10;
+        return PLAYER_INVENTORY_SIZE;
     }
 }

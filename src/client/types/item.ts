@@ -1,5 +1,6 @@
 
 import { TextureName } from "../spritesheet_atlas";
+import {Item} from "../world/items/item";
 
 export const ITEM_TYPES: TextureName[] = [
     "furnace",
@@ -29,11 +30,6 @@ export const ITEM_TYPES: TextureName[] = [
 ] as const;
 
 export type ItemType = (typeof ITEM_TYPES)[number];
-
-export type Item = {
-    spriteName: ItemType;
-    quantity: number;
-};
 
 export type Recipe = {
     inputs: Item[],
