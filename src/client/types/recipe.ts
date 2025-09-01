@@ -1,10 +1,8 @@
 import { Item } from "../world/items/item"
+import { ItemType } from "./item"
 import { ResourceType } from "./resource_type"
 
 export type Recipe = {
-    inputs: [{
-        resource:ResourceType,
-        quantity:number,
-    }],
-    output: {item:Item, quantity:number}
+    inputs: Item[],
+    output: Item
 }

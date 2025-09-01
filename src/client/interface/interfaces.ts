@@ -1,14 +1,18 @@
 import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
 import {findTexture, TextureName} from "../spritesheet_atlas";
 import {CoreStep} from "../types/item";
+import { Item } from '../world/items/item';
 import {ScrollBar} from "./ScrollBar";
 import {MultilineInput} from "./MultilineInput";
-import { Item } from '../world/items/item';
+import Inventory from '../inventory/inventory';
+import { CoreItem } from '../world/items/core_item';
+import { Recipe } from '../types/recipe';
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
+    protected hudLayer:Container;
 
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
         super();
@@ -82,8 +86,11 @@ export abstract class BaseInterface extends Container {
      * @param borderDimension
      */
     protected createFrame = (width: number, height: number, textureName: TextureName, borderDimension: number): NineSliceSprite => {
+        const texture = findTexture(this.spritesheets, textureName);
+        if (!texture) throw new Error(`could not find texture ${textureName}`)
+
         return new NineSliceSprite({
-            texture: findTexture(this.spritesheets, textureName),
+            texture,
             leftWidth: borderDimension,
             topHeight: borderDimension,
             rightWidth: borderDimension,
@@ -101,7 +108,7 @@ export abstract class BaseInterface extends Container {
      * @param drawNameOnHover whether to show the item name below the slot when hovering over the item
      * (note : this requires the container to leave enough space below the slotto show the text)
      */
-    protected drawItem = (item: Item, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
+    protected drawItem = (item: Item|null, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
         if (!item) return;
 
         const itemTexture = findTexture(this.spritesheets, item.spriteName);
@@ -122,9 +129,11 @@ export abstract class BaseInterface extends Container {
             const quantityText = new Text({
                 text: item.quantity > 1 ? item.quantity.toString() : '',
                 style: {
-                    fill: '#000000',
+                    fontFamily: `"Jersey 10", sans-serif`,
+                    fontWeight: "400",
+                    fontStyle: "normal",
                     fontSize: 8,
-                    fontFamily: 'Jersey',
+                    fill: '#000000',
                 },
                 resolution: 4,
             });
@@ -166,8 +175,9 @@ export abstract class BaseInterface extends Container {
 export class ChestInterface extends BaseInterface {
     private items: Item[];
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[], hudLayer:Container) {
         super(app, spritesheets, scale);
+        this.hudLayer = hudLayer;
         this.items = items;
         this.draw();
     }
@@ -214,10 +224,12 @@ export class ChestInterface extends BaseInterface {
 
 export class CraftingInterface extends BaseInterface {
     private readonly recipes: Recipe[];
-
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[]) {
+    private onClickOnCraftLine: (recipe:Recipe)=>void;
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[], hudLayer:Container, onClickOnCraftLine: (recipe:Recipe)=>void) {
         super(app, spritesheets, scale);
+        this.onClickOnCraftLine = onClickOnCraftLine;
         this.recipes = recipes;
+        this.hudLayer = hudLayer;
         this.draw();
     }
 
@@ -295,8 +307,9 @@ export class CraftingInterface extends BaseInterface {
             outSprite.y = (rowHeight - leftOutputSize) / 2;
             outSprite.interactive = true;
             outSprite.on('pointerdown', () => {
-                //TODO craft item on click
-                // console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
+                this.onClickOnCraftLine(recipe);
+
+                console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
             })
             row.addChild(outSprite);
             this.drawItem(recipe.output, outSprite);
@@ -403,7 +416,8 @@ export class CoreInterface extends BaseInterface {
             const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
             itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);
-            this.drawItem({spriteName: item.spriteName, quantity: item.goal}, itemSprite, false, false);
+            // TODO ??
+            this.drawItem(new CoreItem(item.spriteName, item.goal), itemSprite, false, false);
             const progressText = new Text({
                 text: `${item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.goal}`,
                 style: {
@@ -451,21 +465,26 @@ export class CoreInterface extends BaseInterface {
 }
 
 export class ItemBar extends BaseInterface {
-    private items: Item[];
+    private inventory: Inventory;
+    private slots: Sprite[];
+    private container: Container;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
         super(app, spritesheets, scale);
-        this.items = items;
+        this.inventory = inventory;
+        this.slots = [];
+        this.container = container;
         this.draw();
     }
 
     protected draw(): void {
         const itemBar = new Container();
-        this.app.stage.addChild(itemBar);
+        this.container.addChild(itemBar);
 
-        const slotCount = 6;
+        const {items} = this.inventory;
+
         const spaceBetweenSquares = 20;
-        const barWidth = this.guiScale * slotCount + ((slotCount - 1) * spaceBetweenSquares);
+        const barWidth = this.guiScale * items.length + ((items.length - 1) * spaceBetweenSquares);
         const barHeight = this.guiScale;
 
         itemBar.width = barWidth;
@@ -476,21 +495,46 @@ export class ItemBar extends BaseInterface {
 
         const texture = findTexture(this.spritesheets, "light_square");
 
-        for (let i = 0; i < slotCount; ++i) {
+        for (let i = 0; i < items.length; ++i) {
             const lightSquare = new Sprite(texture);
             lightSquare.width = this.guiScale;
             lightSquare.height = this.guiScale;
             lightSquare.x = i * (lightSquare.width + spaceBetweenSquares);
             lightSquare.y = 0;
 
-            this.drawItem(this.items[i], lightSquare, true, false);
+            this.drawItem(items[i], lightSquare, true, false);
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                //TODO manage item bar click
-                console.log(`Clicked on bar item slot ${i + 1}`);
+                this.inventory.setItemInHandIndex(i);
             });
+
             itemBar.addChild(lightSquare);
+
+            this.slots[i] = lightSquare;
+        }
+
+        this.drawSlots();
+        this.inventory.observe(this.drawSlots.bind(this));
+    }
+
+    drawSlots()  {
+        for (let i = 0; i < this.inventory.items.length; ++i) {
+            const item = this.inventory.items[i];
+            const slot = this.slots[i];
+            slot.children = [];
+
+            if (i === this.inventory.getItemInHandIndex()) {
+                const selectedTexture = findTexture(this.spritesheets, "selected_slot");
+                if (!selectedTexture) {
+                    throw new Error("could not find texture");
+                }
+                const selected = new Sprite(selectedTexture);
+
+                slot.addChild(selected);
+            }
+
+            this.drawItem(item, slot, true, false);
         }
     }
 }
@@ -499,7 +543,7 @@ export class RobotInterface extends BaseInterface {
     private code: string;
     private item: Item | null;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item = null) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item|null = null) {
         super(app, spritesheets, scale);
         this.code = code;
         this.item = item;

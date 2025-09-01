@@ -9,6 +9,9 @@ import { CraftingTableItem } from "./world/items/crafting_table_item";
 import { InteractableType } from "./types/interactable_type";
 import { Recipe } from "./types/recipe";
 import { ResourceType } from "./types/resource_type";
+import { WoodItem } from "./world/items/wood_item";
+import { StoneItem } from "./world/items/stone_item";
+import { FurnaceItem } from "./world/items/furnace_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -35,6 +38,18 @@ export class GameEngine {
             this.keys.delete(e.key.toLowerCase())
         );
 
+        window.addEventListener("wheel", (e) => {
+            if (e.deltaY < 0) {
+                this.keys.add("scrollup");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrollup");
+            } else if (e.deltaY > 0) {
+                this.keys.add("scrolldown");
+                this.player.update(this.keys, 0);
+                this.keys.delete("scrolldown");
+            }
+        });
+
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
@@ -42,14 +57,14 @@ export class GameEngine {
 
     async initialize() {
         await this.renderer.initialize();
-        this.renderer.container.scale.set(this.camera.zoom);
+        this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
-        this.player.itemInHand = new CraftingTableItem();
         this.renderer.renderEntity(this.player);
 
         const recipes: Recipe[] = [
-            {inputs:  [{resource:ResourceType.WOOD, quantity: 4}], output: {item:new CraftingTableItem(), quantity:1}},
+            {inputs:  [new WoodItem()], output: new CraftingTableItem()},
+            {inputs:  [new StoneItem()], output: new FurnaceItem()},
             // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
             // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
             // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
@@ -57,7 +72,24 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
-        this.renderer.initializeUI(recipes);
+        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
+
+        // TODO remove
+        this.player.inventory.addItem(new CraftingTableItem());
+        this.player.inventory.addItem(new StoneItem());
+    }
+
+    craftEvent(recipe:Recipe){
+        
+        for(const itemNeeded of recipe.inputs){
+            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            if(!canCraft)
+                return;
+        }
+        for(const itemNeeded of recipe.inputs){
+            this.player.inventory.removeItem(itemNeeded)
+        }
+        this.player.inventory.addItem(recipe.output)
     }
 
     update(delta: number) {
@@ -78,8 +110,8 @@ export class GameEngine {
         }
 
         this.camera.follow(this.player, this.app.screen.width, this.app.screen.height);
-        this.renderer.container.x = this.camera.x;
-        this.renderer.container.y = this.camera.y;
+        this.renderer.gameContainer.x = this.camera.x;
+        this.renderer.gameContainer.y = this.camera.y;
     }
 
     private handleMouseClick(event: MouseEvent) {
