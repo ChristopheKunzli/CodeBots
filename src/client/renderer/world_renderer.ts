@@ -15,7 +15,9 @@ import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
-
+import { ChestInterface } from "../interface/chest_interface";
+import Inventory from "../inventory/inventory";
+import { Item } from "../world/items/item";
 
 export class WorldRenderer {
     public container: PIXI.Container;
@@ -43,6 +45,7 @@ export class WorldRenderer {
     private world: World;
     private app: PIXI.Application;
     private onInteractionWithTile: (tile: Tile) => void;
+    private itemBar: ItemBar;
 
     constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
         this.app = app;
@@ -80,8 +83,8 @@ export class WorldRenderer {
 
     initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
         this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
-        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
-        itemBar.show();
+        this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        this.itemBar.show();
     }
 
     public render(chunks: Chunk[]) {
@@ -101,6 +104,13 @@ export class WorldRenderer {
                 this.renderChunk(chunk);
             }
         }
+    }
+
+
+    renderChestInterface(chestInventory: Inventory, onClickEvent: (item:Item)=>void){
+        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64, chestInventory.items.filter(item => item != null), this.hudLayer);
+        chestInterface.show();
+        this.itemBar.onClickEvent = onClickEvent;
     }
 
     public renderCraftingInterface(){

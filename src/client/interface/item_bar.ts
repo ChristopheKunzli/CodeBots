@@ -2,9 +2,11 @@ import {Application, Container, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
+import { Item } from '../world/items/item';
 
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
+    public onClickEvent: (item:Item)=>void;
     private slots: Sprite[];
     private container: Container;
 
@@ -14,6 +16,7 @@ export class ItemBar extends BaseInterface {
         this.slots = [];
         this.container = container;
         this.draw();
+        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this);
     }
 
     protected draw(): void {
@@ -45,7 +48,7 @@ export class ItemBar extends BaseInterface {
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                this.inventory.setItemInHandIndex(i);
+                items[i] && this.onClickEvent(items[i]!);
             });
 
             itemBar.addChild(lightSquare);
