@@ -1,4 +1,4 @@
-type MaterialType = "wood" | "stone" | "copper" | "iron";
+export type MaterialType = "wood" | "stone" | "copper" | "iron";
 
 export abstract class ToolMaterial {
     private readonly _materialType: MaterialType;
