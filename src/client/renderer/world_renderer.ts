@@ -10,10 +10,10 @@ import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
-import { CraftingInterface } from "../interface/interfaces";
+import { CraftingInterface } from "../interface/crafting_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
-import { ItemBar } from "../interface/interfaces";
+import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
 
 

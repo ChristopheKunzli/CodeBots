@@ -1,5 +1,5 @@
 import {Graphics, Text, TextStyle} from "pixi.js";
-import {ScrollBar} from "./ScrollBar";
+import {ScrollBar} from "./scroll_bar";
 
 export class MultilineInput extends Graphics {
     public lines: string[] = [];
