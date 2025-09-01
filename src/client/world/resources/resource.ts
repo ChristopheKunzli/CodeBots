@@ -21,7 +21,7 @@ export abstract class Resource extends TileContent {
         this.hp -= 50;
         this.tile.chunk.chunkUpdated(this.tile);
         if (this.hp <= 0) {
-            this.tile.content = null;
+            this.tile.setContent = null;
 
             return this.resource;
         }

@@ -1,7 +1,9 @@
+import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { Interactable } from "../world/interactables/interactable";
+import { Item } from "../world/items/item";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
@@ -14,28 +16,28 @@ type EntityState = {
 };
 
 export abstract class Entity extends Observable<EntityState> {
-
     private static idCounter = 1;
     public id: string;
-    private inventory: [];
+    public inventory: Inventory;
     protected world: World;
-    constructor(world:World) {
 
-        let t: Observable<EntityState>;
+    constructor(world:World) {
         super({
             posX: 0,
             posY: 0,
             cX: -1,
             cY: -1,
         });
+
+        this.inventory = new Inventory(this.getInventorySize());
         this.world = world;
         this.id = `entity_${Entity.idCounter++}`;
     }
 
     interactWithTile(tile:Tile): boolean {
-        if (tile && tile.content instanceof Resource) {
+        if (tile && tile.getContent instanceof Resource) {
             // this.lastMineTime = 0;
-            const resource = tile.content.mine();
+            const resource = tile.getContent.mine();
 
             if (resource) {
                 // Ressource épuisée
@@ -45,7 +47,7 @@ export abstract class Entity extends Observable<EntityState> {
                 return true;
             }
             return true; // Coup porté mais ressource pas encore épuisée
-        } else if (tile && tile.content instanceof Interactable) {
+        } else if (tile && tile.getContent instanceof Interactable) {
             // tile.content.interact();
         }
 

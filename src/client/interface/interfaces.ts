@@ -1,0 +1,630 @@
+import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
+import {findTexture, TextureName} from "../spritesheet_atlas";
+import {CoreStep, Recipe} from "../types/item";
+import { Item } from '../world/items/item';
+import {ScrollBar} from "./ScrollBar";
+import {MultilineInput} from "./MultilineInput";
+import Inventory from '../inventory/inventory';
+import { CoreItem } from '../world/items/core_item';
+
+export abstract class BaseInterface extends Container {
+    protected app: Application;
+    protected spritesheets: Spritesheet[];
+    protected guiScale: number;
+
+    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
+        super();
+        this.app = app;
+        this.spritesheets = spritesheets;
+        this.guiScale = scale;
+        this.hide();
+    }
+
+    protected abstract draw(): void;
+
+    public hide(): void {
+        this.visible = false;
+    }
+
+    public show(): void {
+        this.visible = true;
+    }
+
+    /**
+     * Creates a close button and positions it at the top-right corner of the given container.
+     * @param container
+     */
+    protected createCloseButton = (container: Container): Sprite => {
+        const closeButton = new Sprite(findTexture(this.spritesheets, "close"));
+        const bounds = container.getLocalBounds();
+        closeButton.width = bounds.width * 0.05;
+        closeButton.height = bounds.width * 0.05;
+        closeButton.x = bounds.width - closeButton.width - 5;
+        closeButton.y = 5;
+        closeButton.interactive = true;
+        closeButton.on('pointerdown', () => {
+            this.hide();
+        });
+        closeButton.on('mouseover', () => {
+            closeButton.tint = 0xff0000;
+        })
+        closeButton.on('mouseout', () => {
+            closeButton.tint = 0xffffff;
+        })
+        return closeButton;
+    }
+
+    /**
+     * Creates a centered container with a frame and a close button.
+     * @param width
+     * @param height
+     * @param textureName
+     * @param borderDimension
+     */
+    protected createCenteredContainer = (width: number, height: number, textureName: TextureName, borderDimension: number): Container => {
+        const container = new Container();
+        container.width = width;
+        container.height = height;
+        container.x = this.app.screen.width / 2 - (width / 2);
+        container.y = this.app.screen.height / 2 - (height / 2);
+        container.addChild(this.createFrame(width, height, textureName, borderDimension));
+        container.addChild(this.createCloseButton(container));
+        this.addChild(container);
+        if (!this.app.stage.children.includes(this)) {
+            this.app.stage.addChild(this);
+        }
+        return container;
+    }
+
+    /**
+     * Creates a resizable frame using a nine-slice sprite.
+     * @param width
+     * @param height
+     * @param textureName
+     * @param borderDimension
+     */
+    protected createFrame = (width: number, height: number, textureName: TextureName, borderDimension: number): NineSliceSprite => {
+        const texture = findTexture(this.spritesheets, textureName);
+        if (!texture) throw new Error(`could not find texture ${textureName}`)
+
+        return new NineSliceSprite({
+            texture,
+            leftWidth: borderDimension,
+            topHeight: borderDimension,
+            rightWidth: borderDimension,
+            bottomHeight: borderDimension,
+            width: width,
+            height: height
+        });
+    }
+
+    /**
+     * Draws an item inside a given square container.
+     * @param item the item to draw
+     * @param container the square container to draw the item in
+     * @param drawQty whether to show the item quantity at the bottom-right of the slot
+     * @param drawNameOnHover whether to show the item name below the slot when hovering over the item
+     * (note : this requires the container to leave enough space below the slotto show the text)
+     */
+    protected drawItem = (item: Item|null, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
+        if (!item) return;
+
+        const itemTexture = findTexture(this.spritesheets, item.spriteName);
+        const itemSprite = new Sprite(itemTexture);
+
+        const bounds = container.getLocalBounds();
+
+        const length = bounds.height * 0.8;
+        itemSprite.width = length;
+        itemSprite.height = length;
+
+        itemSprite.x = (bounds.width - itemSprite.width) / 2;
+        itemSprite.y = (bounds.height - itemSprite.height) / 2;
+
+        container.addChild(itemSprite);
+
+        if (drawQty) {
+            const quantityText = new Text({
+                text: item.quantity > 1 ? item.quantity.toString() : '',
+                style: {
+                    fontFamily: `"Jersey 10", sans-serif`,
+                    fontWeight: "400",
+                    fontStyle: "normal",
+                    fontSize: 8,
+                    fill: '#000000',
+                },
+                resolution: 4,
+            });
+
+            quantityText.x = itemSprite.x + itemSprite.width - (quantityText.width * 1.1);
+            quantityText.y = itemSprite.y + itemSprite.height - (quantityText.height * 1.1);
+            container.addChild(quantityText);
+        }
+
+        if (drawNameOnHover) {
+            const nameText = new Text({
+                text: item.spriteName.replace(/_/g, ' ').toUpperCase() + (item.quantity > 1 ? ` x${item.quantity}` : ''),
+                style: {
+                    fill: '#ffffff',
+                    fontSize: 8,
+                    fontFamily: 'Jersey',
+                    stroke: '#000000',
+                },
+                resolution: 4,
+            });
+
+            nameText.x = 0
+            nameText.y = bounds.height;
+            nameText.visible = false;
+            container.addChild(nameText);
+
+            container.interactive = true;
+            container.on('mouseover', () => {
+                nameText.visible = true;
+            });
+
+            container.on('mouseout', () => {
+                nameText.visible = false;
+            });
+        }
+    }
+}
+
+export class ChestInterface extends BaseInterface {
+    private items: Item[];
+
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
+        super(app, spritesheets, scale);
+        this.items = items;
+        this.draw();
+    }
+
+    protected draw() {
+        const chestWidth = this.app.screen.width * 0.5;
+        const chestHeight = this.app.screen.height * 0.5;
+        const chestInventory = this.createCenteredContainer(chestWidth, chestHeight, "dark_frame", 4);
+
+        const slotsPerRow = 7, rows = 4;
+        const heightPadding = chestHeight * 0.05;
+        const widthPadding = chestWidth * 0.05;
+
+        const availableWidth = chestWidth - 2 * widthPadding;
+        const availableHeight = chestHeight - heightPadding;
+
+        const squareLength = Math.min(
+            availableWidth / slotsPerRow,
+            availableHeight / rows
+        ) * 0.8;
+
+        const spaceBetweenSquares = (availableWidth - (slotsPerRow * squareLength)) / (slotsPerRow + 1);
+        const spaceBetweenRows = (availableHeight - (rows * squareLength)) / (rows + 1);
+
+        for (let i = 0; i < slotsPerRow * rows; ++i) {
+            const darkSquare = new Sprite(findTexture(this.spritesheets, "dark_square"));
+            darkSquare.width = darkSquare.height = squareLength;
+
+            darkSquare.x = widthPadding + (i % slotsPerRow) * (squareLength + spaceBetweenSquares) + spaceBetweenSquares;
+            darkSquare.y = heightPadding + Math.floor(i / slotsPerRow) * (squareLength + spaceBetweenRows) + spaceBetweenRows;
+
+            darkSquare.interactive = true;
+            darkSquare.on('pointerdown', () => {
+                //TODO manage chest item click
+                console.log(`Clicked on chest item slot ${i + 1}`);
+            });
+
+            this.drawItem(this.items[i], darkSquare);
+            chestInventory.addChild(darkSquare);
+        }
+    }
+
+}
+
+export class CraftingInterface extends BaseInterface {
+    private readonly recipes: Recipe[];
+
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[]) {
+        super(app, spritesheets, scale);
+        this.recipes = recipes;
+        this.draw();
+    }
+
+    protected draw(): void {
+        const craftingWidth = this.app.screen.width * 0.5;
+        const craftingHeight = this.app.screen.height * 0.5;
+        const craftingInterface = this.createCenteredContainer(craftingWidth, craftingHeight, "dark_frame", 4);
+
+        // paddings & layout
+        const padding = 18;
+        const rowHeight = Math.max(56, Math.round(this.guiScale * 1.05)) + 10; // vertical space per recipe (+ 10 to allow displaying item name)
+        const vGap = 12;
+        const leftOutputSize = Math.round(this.guiScale * 1.05); // big left output slot
+        const smallSlotSize = Math.round(this.guiScale * 0.85);  // small input slots
+        const hGap = 12;
+
+        // compute viewport (the visible area that will be clipped)
+        const viewportX = padding;
+        const viewportY = padding;
+        const viewportW = craftingWidth - padding * 3 - 40; // leave space for scrollbar on right
+        const viewportH = craftingHeight - padding * 2;
+
+        // container that will be the area where rows are shown
+        const viewport = new Container();
+        viewport.x = viewportX;
+        viewport.y = viewportY;
+        viewport.width = viewportW;
+        viewport.height = viewportH;
+        craftingInterface.addChild(viewport);
+
+        // content container (holds the list of rows). We'll move content.y for scrolling.
+        const content = new Container();
+        viewport.addChild(content);
+
+        const stripe = new Graphics();
+        stripe.x = 0;
+        stripe.y = 0;
+        viewport.addChildAt(stripe, 0);
+
+        const totalRows = this.recipes.length;
+        const contentHeight = totalRows * (rowHeight + vGap);
+
+        //where the small slots begin relative to content (after the output slot)
+        const leftStartX = 6 + leftOutputSize + 6;
+
+        for (let i = 0; i < this.recipes.length; ++i) {
+            const recipe = this.recipes[i];
+            const row = new Container();
+            row.y = i * (rowHeight + vGap);
+            content.addChild(row);
+
+            const rowBg = new Graphics(); // invisible but catches events
+            rowBg.fill(0xffffff, 0);
+            rowBg.rect(0, 0, viewportW, rowHeight);
+            rowBg.endFill();
+            row.addChildAt(rowBg, 0);
+
+            // add darker bg color on hovering recipe
+            row.interactive = true;
+            row.on('mouseover', () => {
+                stripe.clear();
+                stripe.beginFill(0x000000, 0.1);
+                stripe.drawRect(0, row.y + content.y, viewportW, rowHeight);
+                stripe.endFill();
+            })
+
+            row.on('mouseout', () => {
+                stripe.clear();
+            })
+
+            // big output slot on left
+            const outSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
+            outSprite.width = outSprite.height = leftOutputSize;
+            outSprite.x = 6; // small left margin within the content
+            outSprite.y = (rowHeight - leftOutputSize) / 2;
+            outSprite.interactive = true;
+            outSprite.on('pointerdown', () => {
+                //TODO craft item on click
+                console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
+            })
+            row.addChild(outSprite);
+            this.drawItem(recipe.output, outSprite);
+
+            // small input slots
+            for (let s = 0; s < recipe.inputs.length; s++) {
+                const slotSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
+                slotSprite.width = smallSlotSize;
+                slotSprite.height = smallSlotSize;
+                slotSprite.x = leftStartX + s * (smallSlotSize + hGap);
+                //align vertically with bottom of output slot
+                slotSprite.y = outSprite.y + outSprite.height - slotSprite.height;
+                slotSprite.interactive = true;
+
+                const item = recipe.inputs[s] ?? null;
+                this.drawItem(item, slotSprite);
+
+                row.addChild(slotSprite);
+            }
+        }
+
+        // mask to clip content to viewport rectangle
+        const maskG = new Graphics();
+        maskG.beginFill(0xff0000);
+        maskG.drawRect(0, 0, viewportW, viewportH);
+        maskG.endFill();
+        maskG.x = viewport.x;
+        maskG.y = viewport.y;
+        craftingInterface.addChild(maskG);
+        viewport.mask = maskG;
+
+        const scrollbarX = craftingInterface.width * 0.9;
+        const scrollbarY = viewport.y;
+        const scrollbarW = 18;
+        const scrollbarH = viewportH;
+
+        new ScrollBar(content, contentHeight, viewportH, craftingInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
+    }
+}
+
+export class CoreInterface extends BaseInterface {
+    private steps: CoreStep[];
+    private currentStepIndex: number;
+
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], currentStepIndex: number = 0) {
+        super(app, spritesheets, scale);
+        this.steps = steps;
+        this.currentStepIndex = currentStepIndex;
+        this.draw();
+    }
+
+    protected draw(): void {
+        const step = this.steps[this.currentStepIndex];
+        if (!step) {
+            throw new Error("Invalid step index");
+        }
+
+        const width = this.app.screen.width * 0.5;
+        const height = this.app.screen.height * 0.5;
+        const padding = 18;
+        const coreInterface = this.createCenteredContainer(width, height, "dark_frame", 4);
+
+        const viewport = new Container();
+        const viewportX = padding;
+        const viewportY = padding;
+        const viewportW = width - padding * 2 - 40;
+        const viewportH = height - padding * 2;
+
+        viewport.x = viewportX;
+        viewport.y = viewportY;
+        viewport.width = viewportW;
+        viewport.height = viewportH;
+        coreInterface.addChild(viewport);
+
+        const maskG = new Graphics();
+        maskG.beginFill(0xff0000);
+        maskG.drawRect(0, 0, viewportW, viewportH);
+        maskG.endFill();
+        maskG.x = viewport.x;
+        maskG.y = viewport.y;
+        coreInterface.addChild(maskG);
+        viewport.mask = maskG;
+
+        // holds the list of rows and title
+        const content = new Container();
+        viewport.addChild(content);
+
+        const titleText = new Text({
+            text: `Etape ${step.stepNumber}`,
+            style: {
+                fill: '#ffffff',
+                fontSize: 32,
+                fontFamily: 'Jersey',
+                stroke: '#000000',
+            },
+        });
+        titleText.x = (viewportW - titleText.width) / 2;
+        content.addChild(titleText);
+
+        for (let i = 0; i < step.items.length; ++i) {
+            const row = new Container();
+
+            const item = step.items[i];
+            const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
+            itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
+            row.addChild(itemSprite);
+            // TODO ??
+            this.drawItem(new CoreItem(item.spriteName, item.goal), itemSprite, false, false);
+            const progressText = new Text({
+                text: `${item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.goal}`,
+                style: {
+                    fill: '#ffffff',
+                    fontSize: 12,
+                    fontFamily: 'Jersey',
+                    stroke: '#000000',
+                },
+            });
+            progressText.x = itemSprite.x + itemSprite.width + 12;
+            progressText.y = itemSprite.y + (itemSprite.height - progressText.height) / 2;
+            row.addChild(progressText);
+
+            const barWidth = this.guiScale * 2;
+            const barHeight = this.guiScale / 4;
+            const barX = progressText.x;
+            const barY = itemSprite.y + itemSprite.height - barHeight;
+            const progressBarBg = new Graphics();
+            progressBarBg.beginFill(0x555555);
+            progressBarBg.drawRect(barX, barY, barWidth, barHeight);
+            progressBarBg.endFill();
+            row.addChild(progressBarBg);
+
+            const progress = Math.min(1, item.currentGathered / item.goal);
+            const progressBar = new Graphics();
+            progressBar.beginFill(0xe42d38);
+            progressBar.drawRect(barX, barY, barWidth * progress, barHeight);
+            progressBar.endFill();
+            row.addChild(progressBar);
+
+            row.y = i * (itemSprite.height + 12) + titleText.height + padding;
+            row.x = (viewportW - row.width) / 2;
+
+            content.addChild(row);
+        }
+
+        const contentHeight = content.getLocalBounds().height + padding;
+        const scrollbarX = coreInterface.width * 0.9;
+        const scrollbarY = padding;
+        const scrollbarW = 18;
+        const scrollbarH = height - padding * 2;
+
+        new ScrollBar(content, contentHeight, viewportH, coreInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
+    }
+}
+
+export class ItemBar extends BaseInterface {
+    private inventory: Inventory;
+    private slots: Sprite[];
+    private container: Container;
+
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
+        super(app, spritesheets, scale);
+        this.inventory = inventory;
+        this.slots = [];
+        this.container = container;
+        this.draw();
+    }
+
+    protected draw(): void {
+        const itemBar = new Container();
+        this.container.addChild(itemBar);
+
+        const {items} = this.inventory;
+
+        const spaceBetweenSquares = 20;
+        const barWidth = this.guiScale * items.length + ((items.length - 1) * spaceBetweenSquares);
+        const barHeight = this.guiScale;
+
+        itemBar.width = barWidth;
+        itemBar.height = barHeight;
+
+        itemBar.x = this.app.screen.width / 2 - (barWidth / 2);
+        itemBar.y = this.app.screen.height - barHeight - 20;
+
+        const texture = findTexture(this.spritesheets, "light_square");
+
+        for (let i = 0; i < items.length; ++i) {
+            const lightSquare = new Sprite(texture);
+            lightSquare.width = this.guiScale;
+            lightSquare.height = this.guiScale;
+            lightSquare.x = i * (lightSquare.width + spaceBetweenSquares);
+            lightSquare.y = 0;
+
+            this.drawItem(items[i], lightSquare, true, false);
+
+            lightSquare.interactive = true;
+            lightSquare.on('pointerdown', () => {
+                this.inventory.setItemInHandIndex(i);
+            });
+
+            itemBar.addChild(lightSquare);
+
+            this.slots[i] = lightSquare;
+        }
+
+        this.drawSlots();
+        this.inventory.observe(this.drawSlots.bind(this));
+    }
+
+    drawSlots()  {
+        for (let i = 0; i < this.inventory.items.length; ++i) {
+            const item = this.inventory.items[i];
+            const slot = this.slots[i];
+            slot.children = [];
+
+            if (i === this.inventory.getItemInHandIndex()) {
+                const selectedTexture = findTexture(this.spritesheets, "selected_slot");
+                if (!selectedTexture) {
+                    throw new Error("could not find texture");
+                }
+                const selected = new Sprite(selectedTexture);
+
+                slot.addChild(selected);
+            }
+
+            this.drawItem(item, slot, true, false);
+        }
+    }
+}
+
+export class RobotInterface extends BaseInterface {
+    private code: string;
+    private item: Item | null;
+
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item|null = null) {
+        super(app, spritesheets, scale);
+        this.code = code;
+        this.item = item;
+        this.draw();
+    }
+
+    protected draw(): void {
+        const width = this.app.screen.width * 0.5;
+        const height = this.app.screen.height * 0.5;
+        const padding = 18;
+        const robotInterface = this.createCenteredContainer(width, height, "dark_frame", 4);
+
+        const viewport = new Container();
+        const viewportX = padding;
+        const viewportY = padding;
+        const viewportW = width - padding * 2;
+        const viewportH = height - padding * 2;
+
+        const scrollbarW = 18;
+        const scrollbarH = height - padding * 2;
+
+        viewport.x = viewportX;
+        viewport.y = viewportY;
+        viewport.width = viewportW;
+        viewport.height = viewportH;
+        robotInterface.addChild(viewport);
+
+        const maskG = new Graphics();
+        maskG.fill(0xff0000);
+        maskG.rect(0, 0, viewportW, viewportH);
+        maskG.fill();
+        maskG.x = viewport.x;
+        maskG.y = viewport.y;
+        robotInterface.addChild(maskG);
+        viewport.mask = maskG;
+
+        const codeAreaW = viewportW * 0.8 - scrollbarW;
+        const codeAreaH = viewportH;
+        const codeArea = new MultilineInput(codeAreaW, codeAreaH, this.code);
+
+        codeArea.x = viewportX;
+        codeArea.y = viewportY;
+        viewport.addChild(codeArea);
+
+        const scrollbarX = codeArea.x + codeAreaW + scrollbarW + padding / 2;
+        const scrollbarY = codeArea.y;
+
+        const scrollbar = new ScrollBar(
+            codeArea,
+            codeArea.contentHeight,
+            codeAreaH,
+            robotInterface,
+            scrollbarX,
+            scrollbarY,
+            scrollbarW,
+            scrollbarH,
+            this.app
+        );
+
+        codeArea.setScrollBar(scrollbar);
+
+        //measure available space to add itemSlot and power button
+        const bounds = robotInterface.getLocalBounds();
+        const availableWidth = bounds.width - scrollbarX - padding;
+        const size = availableWidth * 0.75;
+
+        //item slot on right
+        const itemSlot = new Sprite(findTexture(this.spritesheets, "light_square"));
+        itemSlot.width = itemSlot.height = size;
+        itemSlot.x = (scrollbarX + scrollbarW) + (availableWidth - size) / 2;
+        itemSlot.y = (bounds.height - size) / 2;
+        robotInterface.addChild(itemSlot);
+        this.drawItem(this.item, itemSlot, true, true);
+
+        //power button
+        const powerButton = new Sprite(findTexture(this.spritesheets, "power"));
+        const powerButtonSize = size * 0.5;
+        powerButton.width = powerButton.height = powerButtonSize;
+        powerButton.x = itemSlot.x + (itemSlot.width - powerButtonSize) / 2;
+        powerButton.y = itemSlot.y + itemSlot.height + (bounds.height - (itemSlot.y + itemSlot.height) - powerButtonSize) / 2;
+        powerButton.interactive = true;
+        powerButton.on('pointerdown', () => {
+            //TODO manage robot power button click
+            console.log(`Clicked on robot power button`);
+            powerButton.tint = powerButton.tint === 0xff0000 ? 0xffffff : 0xff0000;
+        });
+        robotInterface.addChild(powerButton);
+    }
+}
+

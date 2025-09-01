@@ -9,6 +9,9 @@ import { TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
+import { InteractableType } from "../types/interactable_type";
+import { Player } from "../entity/player";
+import { ItemBar } from "../interface/interfaces";
 import { OutlineFilter } from "pixi-filters";
 
 
@@ -30,6 +33,8 @@ export class WorldRenderer {
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
     private foregroundLayer: PIXI.Container;
+    private hudLayer: PIXI.Container;
+    public gameContainer: PIXI.Container;
     private chunkContent: Map<string, Map<String, TileRenderer>> = new Map();
     private currentlyRenderingChunks: Set<string> = new Set();
     private world: World;
@@ -44,13 +49,17 @@ export class WorldRenderer {
         this.overTileLayer = new PIXI.Container();
         this.middleLayer = new PIXI.Container();
         this.foregroundLayer = new PIXI.Container();
+        this.hudLayer = new PIXI.Container();
+        this.gameContainer = new PIXI.Container();
         this.tileLayer.sortableChildren = false;
         this.middleLayer.sortableChildren = true;
         this.foregroundLayer.sortableChildren = true;
-        this.container.addChild(this.tileLayer);
-        this.container.addChild(this.overTileLayer);
-        this.container.addChild(this.middleLayer);
-        this.container.addChild(this.foregroundLayer);
+        this.container.addChild(this.gameContainer);
+        this.gameContainer.addChild(this.tileLayer);
+        this.gameContainer.addChild(this.overTileLayer);
+        this.gameContainer.addChild(this.middleLayer);
+        this.gameContainer.addChild(this.foregroundLayer);
+        this.container.addChild(this.hudLayer);
 
         this.onInteractionWithTile = onInteractionWithTile;
     }
@@ -162,7 +171,7 @@ export class WorldRenderer {
         tileRenderer.decorationSprite?.destroy();
         // recreate them
         this.getTextureForTile(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
-        if (tile.content) {
+        if (tile.getContent) {
             this.getTextureForMiddleLayer(tile, chunk, tile.absX - chunk.cx * chunk.size, tile.absY - chunk.cy * chunk.size);
         }
     }
@@ -188,7 +197,7 @@ export class WorldRenderer {
             for (let x = 0; x < chunk.size; x++) {
                 const tile = chunk.tiles[y][x];
                 this.getTextureForTile(tile, chunk, x, y);
-                if (tile.content) {
+                if (tile.getContent) {
                     this.getTextureForMiddleLayer(tile, chunk, x, y);
 
                 } else if (tile.decoration != null) {
@@ -290,7 +299,7 @@ export class WorldRenderer {
     private getTextureForMiddleLayer(tile: Tile, chunk: Chunk, x: number, y: number) {
         let sprite: PIXI.Sprite;
         let offsetY = 0;
-        switch (tile.content?.tileContentType) {
+        switch (tile.getContent?.tileContentType) {
             case ResourceType.WOOD: {
                 const treeTypes: TextureName[] = ["tree_1", "tree_2", "tree_3", "tree_4"];
                 const spriteIndex = Math.floor(tile.variation * treeTypes.length);
@@ -300,6 +309,26 @@ export class WorldRenderer {
                 break;
 
             };
+            case InteractableType.CRAFTING_TABLE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.FURNACE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
+
+            case InteractableType.CHEST: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
+                this.middleLayer.addChild(sprite);
+                sprite.anchor.set(0.5, 0.5);
+                break;
+            }
             case ResourceType.STONE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
@@ -386,5 +415,8 @@ export class WorldRenderer {
         sprite.zIndex = sprite.y;
     }
 
-
+    public renderPlayerItemBar(player: Player) {
+        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        itemBar.show();
+    }
 }

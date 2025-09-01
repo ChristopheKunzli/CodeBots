@@ -38,7 +38,7 @@ export type TextureName =
     "path_l_2" |
     "path_t" |
     "path_x" |
-    "furnace_off" |
+    "furnace" |
     "furnace_on_1" |
     "furnace_on_2" |
     "furnace_on_3" |
@@ -72,6 +72,7 @@ export type TextureName =
     "iron_frame" |
     "iron_plate" |
     "reinforced_iron_plate" |
+    "codebot_item" |
     "cement" |
     "concrete" |
     "codebot_1" |
@@ -90,6 +91,7 @@ export type TextureName =
     "dark_frame" |
     "scroll" |
     "bar"|
+    "selected_slot"|
     "idle1"|
     "idle2"|
     "idle_right_1"|
@@ -173,7 +175,7 @@ const atlas = [
         "path_l_2",
         "path_t",
         "path_x",
-        "furnace_off",
+        "furnace",
         "furnace_on_1",
         "furnace_on_2",
         "furnace_on_3",
@@ -207,6 +209,7 @@ const atlas = [
         "iron_frame",
         "iron_plate",
         "reinforced_iron_plate",
+        "codebot_item",
         "cement",
         "concrete",
         "codebot_1",
@@ -222,13 +225,14 @@ const atlas = [
         "tree_3",
         "tree_4",
     ]),
-    generateAtlas("/assets/gui_spritesheet.png", {w: 4, h: 2}, {w: 30, h: 30}, [
+    generateAtlas("/assets/gui_spritesheet.png", {w: 3, h: 3}, {w: 30, h: 30}, [
         "light_square",
         "dark_square",
         "light_frame",
         "dark_frame",
         "scroll",
         "bar",
+        "selected_slot",
     ]),
     generateAtlas("/assets/character.png", { w: 5, h: 5 }, { w: 16, h: 16 }, [
         "idle1",
