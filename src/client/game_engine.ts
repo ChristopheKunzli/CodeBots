@@ -14,6 +14,7 @@ import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
 import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
+import { IronItem } from "./world/items/iron_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -74,6 +75,7 @@ export class GameEngine {
         const recipes: Recipe[] = [
             {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
             {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
+            {inputs:  [new IronItem(25)], output: new CodebotItem(1)},
             // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
             // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
             // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
@@ -117,7 +119,7 @@ export class GameEngine {
 
     update(delta: number) {
         const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
-        entities.forEach((entity) => entity.update(this.keys, delta));
+        entities.forEach((entity) => entity.update(this.renderer.isInInterface() ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);

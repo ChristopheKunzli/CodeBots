@@ -1,4 +1,4 @@
-import {Application, Container, Graphics, Sprite, Spritesheet} from 'pixi.js';
+import {Application, Container, DestroyOptions, Graphics, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import {ScrollBar} from "./scroll_bar";
 import {MultilineInput} from "./multiline_input";
@@ -17,6 +17,7 @@ export class RobotInterface extends BaseInterface {
 
     private handleClose() {
         this.codebot.program = this.codeArea.getText();
+        this.destroy();
     }
 
     protected draw(): void {
@@ -118,5 +119,9 @@ export class RobotInterface extends BaseInterface {
             .on('mouseout', () => helpButton.tint = 0xffffff)
             .on('pointerdown', () => window.open("/doc", "_blank"));
         robotInterface.addChild(helpButton);
+    }
+
+    destroy(): void {
+        this.codeArea.destroy();
     }
 }

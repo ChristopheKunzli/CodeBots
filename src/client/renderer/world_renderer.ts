@@ -34,6 +34,7 @@ export class WorldRenderer {
         frames: {};
     }>[];
     private craftingInterface: CraftingInterface;
+    private robotInterface: RobotInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -192,8 +193,12 @@ export class WorldRenderer {
     }
 
     private renderCodebotInterface(codebot: Codebot) {
-        const robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, this.hudLayer);
-        robotInterface.show();
+        this.robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, this.hudLayer);
+        this.robotInterface.show();
+    }
+
+    public isInInterface(): boolean {
+        return this.craftingInterface?.visible || this.robotInterface?.visible;
     }
 
     private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
