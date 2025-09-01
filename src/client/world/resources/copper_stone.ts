@@ -6,7 +6,7 @@ import {CopperItem} from "../items/copper_item";
 
 export class CopperStone extends Resource{
     constructor(tile:Tile){
-        super(true,ResourceType.COPPER,100, tile);
+        super(true,ResourceType.COPPER,400, tile);
     }
 
     getItem(): Item {
