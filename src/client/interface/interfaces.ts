@@ -1,16 +1,18 @@
 import {Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
 import {findTexture, TextureName} from "../spritesheet_atlas";
-import {CoreStep, Recipe} from "../types/item";
+import {CoreStep} from "../types/item";
 import { Item } from '../world/items/item';
 import {ScrollBar} from "./ScrollBar";
 import {MultilineInput} from "./MultilineInput";
 import Inventory from '../inventory/inventory';
 import { CoreItem } from '../world/items/core_item';
+import { Recipe } from '../types/recipe';
 
 export abstract class BaseInterface extends Container {
     protected app: Application;
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
+    protected hudLayer:Container;
 
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
         super();
@@ -173,8 +175,9 @@ export abstract class BaseInterface extends Container {
 export class ChestInterface extends BaseInterface {
     private items: Item[];
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[]) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[], hudLayer:Container) {
         super(app, spritesheets, scale);
+        this.hudLayer = hudLayer;
         this.items = items;
         this.draw();
     }
@@ -221,10 +224,12 @@ export class ChestInterface extends BaseInterface {
 
 export class CraftingInterface extends BaseInterface {
     private readonly recipes: Recipe[];
-
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[]) {
+    private onClickOnCraftLine: (recipe:Recipe)=>void;
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[], hudLayer:Container, onClickOnCraftLine: (recipe:Recipe)=>void) {
         super(app, spritesheets, scale);
+        this.onClickOnCraftLine = onClickOnCraftLine;
         this.recipes = recipes;
+        this.hudLayer = hudLayer;
         this.draw();
     }
 
@@ -302,7 +307,8 @@ export class CraftingInterface extends BaseInterface {
             outSprite.y = (rowHeight - leftOutputSize) / 2;
             outSprite.interactive = true;
             outSprite.on('pointerdown', () => {
-                //TODO craft item on click
+                this.onClickOnCraftLine(recipe);
+
                 console.log(`Craft item ${recipe.output.spriteName} x${recipe.output.quantity}`);
             })
             row.addChild(outSprite);

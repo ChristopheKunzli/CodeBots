@@ -2,8 +2,9 @@ import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
 import { AnimationName, TextureName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
+import { InteractableType } from "../types/interactable_type";
+import { InteractionResult } from "../types/interaction_result";
 import { Interactable } from "../world/interactables/interactable";
-import { Item } from "../world/items/item";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
@@ -20,8 +21,7 @@ export abstract class Entity extends Observable<EntityState> {
     public id: string;
     public inventory: Inventory;
     protected world: World;
-
-    constructor(world:World) {
+    constructor(world: World) {
         super({
             posX: 0,
             posY: 0,
@@ -34,24 +34,27 @@ export abstract class Entity extends Observable<EntityState> {
         this.id = `entity_${Entity.idCounter++}`;
     }
 
-    interactWithTile(tile:Tile): boolean {
-        if (tile && tile.getContent instanceof Resource) {
-            // this.lastMineTime = 0;
-            const resource = tile.getContent.mine();
+    interactWithTile(tile: Tile): InteractionResult {
+        const content = tile?.getContent;
 
+        if (content instanceof Resource) {
+            const resource = content.mine();
             if (resource) {
-                // Ressource épuisée
-
-                // Ajouter la ressource à l'inventaire
-                // this.addToInventory(resource);
-                return true;
+                // TODO: this.addToInventory(resource);
+                return { type: "MINED", tile };
             }
-            return true; // Coup porté mais ressource pas encore épuisée
-        } else {
-            this.inventory.itemInHand?.use(tile);
+            return { type: "NONE", tile };
         }
 
-        return false;
+        if (content instanceof Interactable) {
+            return {
+                type: "OPENED_UI",
+                tile,
+                interactableType: content.tileContentType as InteractableType
+            };
+        }
+        this.inventory.itemInHand?.use(tile);
+        return { type: "NONE", tile };
     }
 
     abstract getSpeed(): number;

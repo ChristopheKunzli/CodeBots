@@ -10,6 +10,8 @@ import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
+import { CraftingInterface } from "../interface/interfaces";
+import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/interfaces";
 
@@ -28,6 +30,7 @@ export class WorldRenderer {
         };
         frames: {};
     }>[];
+    private craftingInterface: CraftingInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -40,7 +43,7 @@ export class WorldRenderer {
     private app: PIXI.Application;
     spriteMap: Map<Tile, PIXI.Sprite> = new Map();
 
-    constructor(world: World, app: PIXI.Application) {
+    constructor(world: World, app: PIXI.Application, ) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
@@ -65,6 +68,12 @@ export class WorldRenderer {
         this.spriteSheet = await getSpritesheets();
     }
 
+    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
+        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
+        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        itemBar.show();
+    }
+
     public render(chunks: Chunk[]) {
         const newChunkKeys = new Set(chunks.map(c => c.key));
         // 1. Unload ceux qui ne sont plus dans newChunkKeys
@@ -82,6 +91,10 @@ export class WorldRenderer {
                 this.renderChunk(chunk);
             }
         }
+    }
+
+    public renderCraftingInterface(){
+        this.craftingInterface.show();
     }
 
     public renderEntity(entity: Entity) {
@@ -403,10 +416,5 @@ export class WorldRenderer {
         }
 
         sprite.zIndex = sprite.y;
-    }
-
-    public renderPlayerItemBar(player: Player) {
-        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
-        itemBar.show();
     }
 }

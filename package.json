@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@hono/node-server": "^1.19.0",
+        "@pixi/devtools": "^2.0.1",
         "@types/jquery": "^3.5.32",
         "@types/rellax": "^1.7.7",
         "codebotsinterpreter": "^1.0.4",
