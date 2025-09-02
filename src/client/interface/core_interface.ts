@@ -2,7 +2,7 @@ import {Application, Container, Graphics, Sprite, Spritesheet, Text} from 'pixi.
 import {findTexture} from "../spritesheet_atlas";
 import {CoreStep} from "../types/item";
 import {ScrollBar} from "./scroll_bar";
-import { CoreItem } from '../world/items/core_item';
+import { CoreItem } from '../world/items/stations/core_item';
 import { BaseInterface } from './base_interface';
 
 export class CoreInterface extends BaseInterface {
