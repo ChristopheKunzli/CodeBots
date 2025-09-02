@@ -9,8 +9,8 @@ export class CoreInterface extends BaseInterface {
     private steps: CoreStep[];
     private currentStepIndex: number;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], currentStepIndex: number = 0) {
-        super(app, spritesheets, scale);
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], hudLayer: Container, currentStepIndex: number = 0) {
+        super(app, spritesheets, scale, hudLayer);
         this.steps = steps;
         this.currentStepIndex = currentStepIndex;
         this.draw();
@@ -53,7 +53,7 @@ export class CoreInterface extends BaseInterface {
         viewport.addChild(content);
 
         const titleText = new Text({
-            text: `Etape ${step.stepNumber}`,
+            text: `Etape ${step.name}`,
             style: {
                 fill: '#ffffff',
                 fontSize: 32,
@@ -72,9 +72,9 @@ export class CoreInterface extends BaseInterface {
             itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);
             // TODO ??
-            this.drawItem(new CoreItem(item.spriteName, item.goal), itemSprite, false, false);
+            this.drawItem(new CoreItem(item.item.spriteName, item.item.quantity), itemSprite, false, false);
             const progressText = new Text({
-                text: `${item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.goal}`,
+                text: `${item.item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.item.quantity}`,
                 style: {
                     fill: '#ffffff',
                     fontSize: 12,
@@ -96,7 +96,7 @@ export class CoreInterface extends BaseInterface {
             progressBarBg.endFill();
             row.addChild(progressBarBg);
 
-            const progress = Math.min(1, item.currentGathered / item.goal);
+            const progress = Math.min(1, item.currentGathered / item.item.quantity);
             const progressBar = new Graphics();
             progressBar.beginFill(0xe42d38);
             progressBar.drawRect(barX, barY, barWidth * progress, barHeight);

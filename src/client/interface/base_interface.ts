@@ -8,11 +8,12 @@ export abstract class BaseInterface extends Container {
     protected guiScale: number;
     protected hudLayer:Container;
 
-    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
+    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container) {
         super();
         this.app = app;
         this.spritesheets = spritesheets;
         this.guiScale = scale;
+        this.hudLayer = hudLayer;
         this.hide();
     }
 

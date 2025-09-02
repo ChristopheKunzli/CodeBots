@@ -11,10 +11,12 @@ import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
 import { CraftingInterface } from "../interface/crafting_interface";
+import { CoreInterface } from "../interface/core_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
+import { CoreStep } from "../types/item";
 
 
 export class WorldRenderer {
@@ -32,6 +34,7 @@ export class WorldRenderer {
         frames: {};
     }>[];
     private craftingInterface: CraftingInterface;
+    private coreInterface: CoreInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -78,8 +81,9 @@ export class WorldRenderer {
         this.setCursor();
     }
 
-    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
+    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void, coreSteps: CoreStep[]){
         this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
+        this.coreInterface = new CoreInterface(this.app,this.spriteSheet, 64, coreSteps, this.hudLayer);
         const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         itemBar.show();
     }
@@ -105,6 +109,10 @@ export class WorldRenderer {
 
     public renderCraftingInterface(){
         this.craftingInterface.show();
+    }
+
+    public renderCoreInterface(){
+        this.coreInterface.show();
     }
 
     public renderEntity(entity: Entity) {
@@ -361,6 +369,11 @@ export class WorldRenderer {
             };
             case ResourceType.COAL: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
+                this.overTileLayer.addChild(sprite);
+                break;
+            };
+            case InteractableType.CORE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "core"))
                 this.overTileLayer.addChild(sprite);
                 break;
             };

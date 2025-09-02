@@ -21,6 +21,9 @@ import { WoodMaterial } from "./world/items/tools/woodMaterial";
 import { StoneMaterial } from "./world/items/tools/stoneMaterial";
 import { CopperMaterial } from "./world/items/tools/copperMaterial";
 import { IronMaterial } from "./world/items/tools/ironMaterial";
+import { Core } from "./world/interactables/core";
+import { CoalItem } from "./world/items/coal_item";
+import { CoreStep } from "./types/item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -98,8 +101,24 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
+        const coreSteps: CoreStep[] = [
+            {
+                name: "1",
+                items: [
+                    {item: new WoodLogItem(2500), currentGathered: 2500},
+                    {item: new StoneItem(800), currentGathered: 0},
+                    {item: new CoalItem(3000), currentGathered: 1843},
+                ],
+            },
+        ];
+
         if (!withoutHud) {
-            this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
+            this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this), coreSteps);
+        }
+
+        const tile  = this.world.getTileAt(1, 0);
+        if (tile) {
+            tile.setContent = new Core(tile);
         }
 
         // TODO remove
@@ -168,6 +187,8 @@ export class GameEngine {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
 
+                } else if (result.interactableType === InteractableType.CORE) {
+                    this.renderer.renderCoreInterface();
                 }
                 break;
 
