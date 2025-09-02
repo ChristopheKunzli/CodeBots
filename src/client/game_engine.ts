@@ -21,8 +21,10 @@ import { WoodMaterial } from "./world/items/tools/woodMaterial";
 import { StoneMaterial } from "./world/items/tools/stoneMaterial";
 import { CopperMaterial } from "./world/items/tools/copperMaterial";
 import { IronMaterial } from "./world/items/tools/ironMaterial";
-import { Core } from "./world/interactables/core";
+import { CopperIngotItem } from "./world/items/copper_ingot_item";
 import { CoalItem } from "./world/items/coal_item";
+import { IronIngotItem } from "./world/items/iron_ingot_item";
+import { Core } from "./world/interactables/core";
 import { CoreStep } from "./types/item";
 
 const coreSteps: CoreStep[] = [
@@ -112,8 +114,13 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
+        const furnaceRecipes: Recipe[] = [
+            {inputs: [new CopperItem(4), new CoalItem(4)], output: new CopperIngotItem(1)},
+            {inputs: [new IronItem(4), new CoalItem(4)], output: new IronIngotItem(1)},
+        ];
+
         if (!withoutHud) {
-            this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
+            this.renderer.initializeUI(recipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
         }
 
         const tile  = this.world.getTileAt(1, 0);
@@ -123,6 +130,7 @@ export class GameEngine {
 
         // TODO remove
         this.player.inventory.addItem(new CraftingTableItem(1));
+        this.player.inventory.addItem(new FurnaceItem(1));
     }
 
     craftEvent(recipe: Recipe) {
@@ -186,7 +194,7 @@ export class GameEngine {
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
-
+                    this.renderer.renderFurnaceInterface();
                 } else if (result.interactableType === InteractableType.CORE) {
                     this.renderer.renderCoreInterface(coreSteps, this.player);
                 }
