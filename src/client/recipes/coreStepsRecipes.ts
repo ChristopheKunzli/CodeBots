@@ -9,7 +9,7 @@ import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item"
 import { IronPlateItem } from "../world/items/craft_ingredients/iron_plate_item";
 import { ReinforcedIronPlateItem } from "../world/items/craft_ingredients/reinforced_iron_plate_item";
 import { NailItem } from "../world/items/craft_ingredients/nail_item";
-import { CodeBotItem } from "../world/items/CodeBotItem";
+import { CodebotItem } from "../world/items/codebot_item";
 
 export const coreStepsRecipes: CoreStep[] = [
     {
@@ -50,7 +50,7 @@ export const coreStepsRecipes: CoreStep[] = [
             {item: new IronPlateItem(3000), currentGathered: 0},
             {item: new ReinforcedIronPlateItem(1500), currentGathered: 0},
             {item: new NailItem(12000), currentGathered: 0},
-            {item: new CodeBotItem(100), currentGathered: 0}
+            {item: new CodebotItem(100), currentGathered: 0}
         ],
     }
 
