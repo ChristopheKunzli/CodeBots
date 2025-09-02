@@ -484,7 +484,7 @@ export class WorldRenderer {
                 break;
             };
             case InteractableType.CODEBOT: {
-                this.onAddCodebot(x, y);
+                this.onAddCodebot(tile.absX, tile.absY);
                 tile.setContent = null;
                 return;
             };
