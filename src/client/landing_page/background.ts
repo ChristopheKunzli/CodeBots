@@ -19,7 +19,7 @@ import {GameEngine} from "../game_engine";
     container.appendChild(app.canvas);
 
     const engine = new GameEngine(app);
-    await engine.initialize();
+    await engine.initialize(true);
 
     engine.update(0);
 

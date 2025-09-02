@@ -64,7 +64,7 @@ export class GameEngine {
         });
     }
 
-    async initialize() {
+    async initialize(withoutHud?: boolean) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
@@ -97,7 +97,10 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
-        this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
+
+        if (!withoutHud) {
+            this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
+        }
 
         // TODO remove
         this.player.inventory.addItem(new CraftingTableItem(1));
