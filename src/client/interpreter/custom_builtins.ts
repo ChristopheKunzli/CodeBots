@@ -308,11 +308,6 @@ export default class CustomBuiltins {
                 // TODO
                 throw new Error("not implemented");
             }),
-            "smelt": new BuiltinObject(async (...args) => {
-                // (item) => void : parametrer la workbench
-
-                throw new Error("not implemented");
-            }),
         };
     }
 }

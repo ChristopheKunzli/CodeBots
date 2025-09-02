@@ -21,6 +21,22 @@ import { WoodMaterial } from "./world/items/tools/woodMaterial";
 import { StoneMaterial } from "./world/items/tools/stoneMaterial";
 import { CopperMaterial } from "./world/items/tools/copperMaterial";
 import { IronMaterial } from "./world/items/tools/ironMaterial";
+import { CopperIngotItem } from "./world/items/copper_ingot_item";
+import { CoalItem } from "./world/items/coal_item";
+import { IronIngotItem } from "./world/items/iron_ingot_item";
+import { Core } from "./world/interactables/core";
+import { CoreStep } from "./types/item";
+
+const coreSteps: CoreStep[] = [
+    {
+        name: "Âge de Pierre",
+        items: [
+            {item: new WoodLogItem(2500), currentGathered: 0},
+            {item: new StoneItem(800), currentGathered: 0},
+            {item: new CoalItem(3000), currentGathered: 0},
+        ],
+    },
+];
 import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
 import { InteractionResult } from "./types/interaction_result";
@@ -35,6 +51,7 @@ export class GameEngine {
     private keys: Set<string>;
     private codebots: Codebot[];
     private recipes: Recipe[]
+    private furnaceRecipes: Recipe[]
 
     constructor(app: PIXI.Application) {
         this.app = app;
@@ -76,7 +93,7 @@ export class GameEngine {
         });
     }
 
-    async initialize() {
+    async initialize(withoutHud?: boolean) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
@@ -111,26 +128,32 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
-        this.renderer.initializeUI(this.recipes, this.player, (recipe) => this.craftEvent(recipe, this.player), this.handleItemBarClick.bind(this));
+        this.furnaceRecipes = [
+            {inputs: [new CopperItem(4), new CoalItem(4)], output: new CopperIngotItem(1)},
+            {inputs: [new IronItem(4), new CoalItem(4)], output: new IronIngotItem(1)},
+        ];
+
+        if (!withoutHud) {
+            this.renderer.initializeUI(
+                this.recipes,
+                this.furnaceRecipes,
+                this.player,
+                (recipe) => this.craftEvent(recipe, this.player),
+            );
+        }
+
+        const tile  = this.world.getTileAt(1, 0);
+        if (tile) {
+            tile.setContent = new Core(tile);
+        }
 
 
         this.renderer.renderPlayerCoordinate(this.player);
 
         // TODO test only
         this.player.inventory.addItem(new CraftingTableItem(1));
+        this.player.inventory.addItem(new FurnaceItem(1));
         this.player.inventory.addItem(new CodebotItem(1));
-    }
-
-    handleItemBarClick(i: number) {
-        this.player.inventory.setItemInHandIndex(i);
-        if (this.renderer.robotInterface?.visible) {
-            const {codebot} = this.renderer.robotInterface;
-            const {itemInHand} = this.player.inventory;
-            if (codebot.inventory.itemInHand === null && itemInHand) {
-                codebot.inventory.addItem(itemInHand);
-                this.player.inventory.removeItem(itemInHand);
-            }
-        }
     }
 
     addCodebot(x: number, y: number) {
@@ -142,16 +165,7 @@ export class GameEngine {
         );
         this.codebots.push(codebot);
         const sprite = this.renderer.renderEntity(codebot);
-        const handleRemoveItemInHand = () => {
-            const {itemInHand} = codebot.inventory;
-            if (!itemInHand || !this.player.inventory.canAddItem(itemInHand)) {
-                return;
-            }
-
-            this.player.inventory.addItem(itemInHand);
-            codebot.inventory.removeItem(itemInHand);
-        };
-        this.renderer.initializeCodebot(sprite, codebot, handleRemoveItemInHand);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
     }
 
     craftEvent(recipe: Recipe, entity: Entity) {
@@ -173,7 +187,7 @@ export class GameEngine {
 
     update(delta: number) {
         const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
-        entities.forEach((entity) => entity.update(this.renderer.isInInterface() ? new Set() : this.keys, delta));
+        entities.forEach((entity) => entity.update(this.renderer.robotInterface?.visible ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);
@@ -203,6 +217,13 @@ export class GameEngine {
             case "OPENED_UI":
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     const recipe = this.recipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.FURNACE) {
+                    const recipe = this.furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
                     if (!recipe) {
                         break;
                     }
@@ -239,7 +260,9 @@ export class GameEngine {
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
-
+                    this.renderer.renderFurnaceInterface();
+                } else if (result.interactableType === InteractableType.CORE) {
+                    this.renderer.renderCoreInterface(coreSteps, this.player);
                 }
                 break;
 

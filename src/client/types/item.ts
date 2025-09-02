@@ -41,13 +41,12 @@ export const ITEM_TYPES: TextureName[] = [
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type CoreItem = {
-    spriteName: TextureName
+    item: Item;
     currentGathered: number
-    goal: number
 }
 
 export type CoreStep = {
-    stepNumber: number,
-    items: CoreItem[]
+    name: string;
+    items: CoreItem[];
 }
 

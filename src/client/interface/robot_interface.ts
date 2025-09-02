@@ -10,8 +10,11 @@ export class RobotInterface extends BaseInterface {
     private codeArea: MultilineInput;
     private onRemoveItemInHand: () => void;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, onRemoveItemInHand: () => void, hudLayer: Container) {
-        super(app, spritesheets, scale, hudLayer, () => this.handleClose());
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, onRemoveItemInHand: () => void, hudLayer: Container, onClose?: () => void) {
+        super(app, spritesheets, scale, hudLayer, () => {
+            this.handleClose()
+            onClose?.();
+        });
         this.codebot = codebot;
         this.onRemoveItemInHand = onRemoveItemInHand;
         this.draw();
@@ -19,7 +22,6 @@ export class RobotInterface extends BaseInterface {
 
     private handleClose() {
         this.codebot.program = this.codeArea.getText();
-        this.destroy();
     }
 
     protected draw(): void {
