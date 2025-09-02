@@ -6,12 +6,14 @@ import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
 import Tile from "./world/tile";
-import { CraftingTableItem } from "./world/items/crafting_table_item";
+import { CraftingTableItem } from "./world/items/stations/crafting_table_item";
 import { InteractableType } from "./types/interactable_type";
 import { Recipe } from "./types/recipe";
-import { WoodLogItem } from "./world/items/wood_log_item";
-import { StoneItem } from "./world/items/stone_item";
-import { FurnaceItem } from "./world/items/furnace_item";
+import { FurnaceItem } from "./world/items/stations/furnace_item";
+import { Core } from "./world/interactables/core";
+import { craftingRecipes } from "./recipes/craftingRecipes";
+import { furnaceRecipes } from "./recipes/smeltingRecipes";
+import { coreStepsRecipes } from "./recipes/coreStepsRecipes";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -55,40 +57,38 @@ export class GameEngine {
         });
     }
 
-    async initialize() {
+    async initialize(withoutHud?: boolean) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
-        const recipes: Recipe[] = [
-            {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
-            {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
-            // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
-            // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "pickaxe", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
-        ];
-        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
+        if (!withoutHud) {
+            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
+        }
+
+        const tile  = this.world.getTileAt(1, 0);
+        if (tile) {
+            tile.setContent = new Core(tile);
+        }
 
         // TODO remove
         this.player.inventory.addItem(new CraftingTableItem(1));
+        this.player.inventory.addItem(new FurnaceItem(1));
     }
 
-    craftEvent(recipe:Recipe){
+    craftEvent(recipe: Recipe) {
         if (!this.player.inventory.canAddItem(recipe.output)) {
             return;
         }
-        for(const itemNeeded of recipe.inputs){
+        for (const itemNeeded of recipe.inputs) {
             let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
-            if(!canCraft)
+            if (!canCraft)
                 return;
         }
 
-        for(const itemNeeded of recipe.inputs){
+        for (const itemNeeded of recipe.inputs) {
             this.player.inventory.removeItem(itemNeeded);
         }
 
@@ -138,9 +138,10 @@ export class GameEngine {
             case "OPENED_UI":
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
-                }
-                else if (result.interactableType === InteractableType.FURNACE) {
-
+                } else if (result.interactableType === InteractableType.FURNACE) {
+                    this.renderer.renderFurnaceInterface();
+                } else if (result.interactableType === InteractableType.CORE) {
+                    this.renderer.renderCoreInterface(coreStepsRecipes, this.player);
                 }
                 break;
 
