@@ -23,6 +23,7 @@ import { CopperMaterial } from "./world/items/tools/copperMaterial";
 import { IronMaterial } from "./world/items/tools/ironMaterial";
 import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
+import { InteractionResult } from "./types/interaction_result";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -131,7 +132,7 @@ export class GameEngine {
     }
 
     addCodebot(x: number, y: number) {
-        const codebot = new Codebot(this.world, x, y);
+        const codebot = new Codebot(this.world, x, y, this.handleCodebotInteraction.bind(this));
         this.codebots.push(codebot);
         const sprite = this.renderer.renderEntity(codebot);
         const handleRemoveItemInHand = () => {
@@ -183,6 +184,22 @@ export class GameEngine {
         this.camera.follow(this.player, this.app.screen.width, this.app.screen.height);
         this.renderer.gameContainer.x = this.camera.x;
         this.renderer.gameContainer.y = this.camera.y;
+    }
+
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult) {
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+            case "OPENED_UI":
+                break;
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
     }
 
     private handleInteractWithTile(tile: Tile) {

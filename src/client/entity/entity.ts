@@ -56,7 +56,7 @@ export abstract class Entity extends Observable<EntityState> {
                 this.inventory.addItem(item);
                 return {type: "MINED", tile};
             }
-            return {type: "NONE", tile};
+            return {type: "MINING", tile};
         }
 
         if (content instanceof Interactable) {

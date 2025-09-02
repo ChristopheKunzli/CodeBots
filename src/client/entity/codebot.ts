@@ -6,6 +6,8 @@ import {EntityType} from "../types/entity_type";
 import { CODEBOT_SPEED, CODEBOT_INVENTORY_SIZE } from "../constants";
 import { Position } from "../types/position";
 import { World } from "../world/world";
+import { InteractionResult } from "../types/interaction_result";
+import Tile from "../world/tile";
 
 export class Codebot extends Entity {
     private customBuiltins: CustomBuiltins;
@@ -16,8 +18,9 @@ export class Codebot extends Entity {
     private onTargetReached: (() => void)|null;
     private static interpreter = new Interpreter();
     private message: string|null;
+    private onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void;
 
-    constructor(world: World, x: number, y: number){
+    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void){
         super(world, x, y);
         this.program = "";
         this.isRunning = false;
@@ -26,6 +29,7 @@ export class Codebot extends Entity {
         this.target = null;
         this.onTargetReached = null;
         this.message = null;
+        this.onInteraction = onInteraction;
     }
 
     getType(): EntityType {
@@ -108,5 +112,12 @@ export class Codebot extends Entity {
             this.posX += (deltaX / distance) * moveDist;
             this.posY += (deltaY / distance) * moveDist;
         }
+    }
+
+    interactWithTile(tile: Tile): InteractionResult {
+        const result = super.interactWithTile(tile);
+        this.onInteraction(this, tile, result);
+
+        return result;
     }
 }

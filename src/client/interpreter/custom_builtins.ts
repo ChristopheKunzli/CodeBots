@@ -12,7 +12,7 @@ import {Position} from "../types/position";
 import { RESOURCE_TYPES, ResourceType } from "../types/resource_type";
 import { HashPair } from "codebotsinterpreter/lib/object/hash_key";
 import { World } from "../world/world";
-import { Item } from "../world/items/item";
+import { INVENTORY_STACK_SIZE } from "../constants";
 
 type Resource = (typeof RESOURCE_TYPES)[number];
 
@@ -55,18 +55,30 @@ export default class CustomBuiltins {
         return {x: x.value, y: y.value};
     }
 
-    parseItem(object: Object): Item|ErrorObject {
+    parseItemType(object: Object): ItemType|ErrorObject {
+        if (!(object instanceof StringObject)) {
+            return new ErrorObject(`unsupported argument type: ${object?.type()}`);
+        }
+        if (!this.isValidItemType(object.value)) {
+            return new ErrorObject(`invalid item type: ${object.value}`);
+        }
+
+        return object.value;
+    }
+
+    parseItem(object: Object): {type: ItemType; amount: number}|ErrorObject {
         if (!(object instanceof HashObject)) {
             return new ErrorObject(`unsupported argument type: ${object.type()}`);
         }
 
         const type = object.pairs.get(new StringObject("type").hashKey().toString())?.value;
-
-        if (!(type instanceof StringObject)) {
-            return new ErrorObject(`unsupported argument type: ${type?.type()}`);
+        if (!type) {
+            return new ErrorObject("type key not found");
         }
-        if (!this.isValidItemType(type.value)) {
-            return new ErrorObject(`invalid item type: ${type.value}`);
+
+        const itemType = this.parseItemType(type);
+        if (itemType instanceof ErrorObject) {
+            return itemType;
         }
 
         const amount = object.pairs.get(new StringObject("amount").hashKey().toString())?.value;
@@ -75,12 +87,10 @@ export default class CustomBuiltins {
             return new ErrorObject(`unsupported argument type: ${amount?.type()}`);
         }
 
-        // TODO
-        throw new Error("not implemented");
-        // return {
-        //     type: type.value,
-        //     amount: amount?.value ?? 1,
-        // };
+        return {
+            type: itemType,
+            amount: amount?.value ?? 1,
+        };
     }
 
     parseResource(object: Object): ResourceType|ErrorObject {
@@ -130,17 +140,17 @@ export default class CustomBuiltins {
 
                 return NULL;
             }),
-            "canTake": new BuiltinObject(async (...args) => {
+            "canCarry": new BuiltinObject(async (...args) => {
                 if (args.length !== 1) {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
 
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
+                const itemType = this.parseItemType(args[0]);
+                if (itemType instanceof ErrorObject) {
+                    return itemType;
                 }
 
-                return new BooleanObject(this.codebot.inventory.canAddItem(item));
+                return new BooleanObject(this.codebot.inventory.items.some((i) => i === null || (i.isStackable && i.spriteName === itemType && i.quantity < INVENTORY_STACK_SIZE)));
             }),
             "isEmpty": new BuiltinObject(async (...args) => {
                 if (args.length !== 0) {
@@ -175,64 +185,30 @@ export default class CustomBuiltins {
                     return item;
                 }
 
-                return new BooleanObject(this.codebot.inventory.canRemoveItem(item));
-            }),
-            "deposit": new BuiltinObject(async (...args) => {
-                // (item) => void
-                if (args.length !== 1) {
-                    return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
-                }
-
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
-                }
-
-                if (!this.codebot.inventory.canRemoveItem(item)) {
-                    return new ErrorObject("unable to deposit such amount");
-                }
-
-                this.codebot.inventory.removeItem(item);
-
-                // TODO
-                throw new Error("not implemented");
-            }),
-            "take": new BuiltinObject(async (...args) => {
-                // (item) => void : dans un coffre
-                if (args.length !== 1) {
-                    return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
-                }
-
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
-                }
-
-                if (!this.codebot.inventory.canAddItem(item)) {
-                    return new ErrorObject("unable to take such amount");
-                }
-
-                this.codebot.inventory.addItem(item);
-
-                // TODO
-                throw new Error("not implemented");
+                return new BooleanObject(this.codebot.inventory.items.some((i) => i?.spriteName === item.type && i.quantity >= item.amount));
             }),
             "hold": new BuiltinObject(async (...args) => {
-                // (item) => void
                 if (args.length !== 1) {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
 
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
+                const itemType = this.parseItemType(args[0]);
+                if (itemType instanceof ErrorObject) {
+                    return itemType;
                 }
 
-                // TODO
-                throw new Error("not implemented");
+                const itemIndex = this.codebot.inventory.items.findIndex((i) => i?.spriteName === itemType);
+                if (itemIndex === -1) {
+                    return new ErrorObject(`item not in inventory: ${itemType}`);
+                }
+
+                const itemInHand = this.codebot.inventory.itemInHand;
+                this.codebot.inventory[this.codebot.inventory.getItemInHandIndex()] = this.codebot.inventory[itemIndex];
+                this.codebot.inventory[itemIndex] = itemInHand;
+
+                return NULL;
             }),
             "find": new BuiltinObject(async (...args) => {
-                // (ressource) => coordinate
                 if (args.length !== 1) {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
@@ -251,26 +227,23 @@ export default class CustomBuiltins {
                 return this.getPositionObject(position);
             }),
             "gather": new BuiltinObject(async (...args) => {
-                // () => void
-                // TODO: get item type
+                const posX = Math.round(this.codebot.posX);
+                const posY = Math.round(this.codebot.posY);
+                const tile = this.world.getTileAt(posX, posY);
+                if (!tile) {
+                    return new ErrorObject("tile not loaded");
+                }
 
-                throw new Error("not implemented");
-            }),
-            "place": new BuiltinObject(async (...args) => {
-                // (item) => void
+                let result = this.codebot.interactWithTile(tile);
+                await new Promise<void>(async (resolve) => {
+                    while (result.type === "MINING") {
+                        await new Promise((resolve) => setTimeout(resolve, 1000));
+                        result = this.codebot.interactWithTile(tile);
+                    }
+                    resolve();
+                });
 
-                // TODO
-                throw new Error("not implemented");
-            }),
-            "craft": new BuiltinObject(async (...args) => {
-                // (item) => void : parametrer la workbench
-
-                throw new Error("not implemented");
-            }),
-            "smelt": new BuiltinObject(async (...args) => {
-                // (item) => void : parametrer la workbench
-
-                throw new Error("not implemented");
+                return NULL;
             }),
             "print": new BuiltinObject(async (...args) => {
                 const message = args.map((arg) => arg.inspect()).join("\n");
@@ -283,7 +256,45 @@ export default class CustomBuiltins {
                 printTimeout = setTimeout(() => this.codebot.setMessage(null), 2000);
 
                 return NULL;
-            })
+            }),
+            "craft": new BuiltinObject(async (...args) => {
+                // (item) => void : parametrer la workbench
+
+                throw new Error("not implemented");
+            }),
+            "deposit": new BuiltinObject(async (...args) => {
+                // (item) => void
+                if (args.length !== 1) {
+                    return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
+                }
+
+                const item = this.parseItem(args[0]);
+                if (item instanceof ErrorObject) {
+                    return item;
+                }
+
+                // TODO
+                throw new Error("not implemented");
+            }),
+            "take": new BuiltinObject(async (...args) => {
+                // (item) => void : dans un coffre
+                if (args.length !== 1) {
+                    return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
+                }
+
+                const item = this.parseItem(args[0]);
+                if (item instanceof ErrorObject) {
+                    return item;
+                }
+
+                // TODO
+                throw new Error("not implemented");
+            }),
+            "smelt": new BuiltinObject(async (...args) => {
+                // (item) => void : parametrer la workbench
+
+                throw new Error("not implemented");
+            }),
         };
     }
 }

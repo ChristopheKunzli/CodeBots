@@ -96,8 +96,6 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
         this.notify();
 
-        console.log(this.state, this.itemInHand, item);
-
         return item.quantity - remaining;
     }
 
