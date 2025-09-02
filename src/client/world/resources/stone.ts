@@ -6,7 +6,7 @@ import {StoneItem} from "../items/stone_item";
 import { Resource } from "./resource";
 export class Stone extends Resource{
     constructor(tile:Tile){
-        super(false, ResourceType.STONE, 100, tile);
+        super(false, ResourceType.STONE, 200, tile);
     }
 
     getItem(): Item {

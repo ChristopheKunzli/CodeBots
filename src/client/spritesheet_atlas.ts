@@ -1,13 +1,14 @@
-import { Assets, Sprite, Spritesheet, Texture } from "pixi.js";
+import { Assets, Spritesheet } from "pixi.js";
+
 export type AnimationName =
-    "codebot"|
-    "player_idle"|
-    "player_idle_right"|
-    "player_idle_left"|
-    "player_idle_back"|
-    "player_walk_down"|
-    "player_walk_right"|
-    "player_walk_left"|
+    "codebot" |
+    "player_idle" |
+    "player_idle_right" |
+    "player_idle_left" |
+    "player_idle_back" |
+    "player_walk_down" |
+    "player_walk_right" |
+    "player_walk_left" |
     "player_walk_up" |
     "codebot_error";
 
@@ -65,9 +66,18 @@ export type TextureName =
     "wood_log" |
     "wood_plank" |
     "seed" |
-    "pickaxe" |
-    "shovel" |
-    "axe" |
+    "wood_pickaxe" |
+    "stone_pickaxe" |
+    "copper_pickaxe" |
+    "iron_pickaxe" |
+    "wood_shovel" |
+    "stone_shovel" |
+    "copper_shovel" |
+    "iron_shovel" |
+    "wood_axe" |
+    "stone_axe" |
+    "copper_axe" |
+    "iron_axe" |
     "iron_rod" |
     "nail" |
     "iron_frame" |
@@ -96,40 +106,40 @@ export type TextureName =
     "light_frame" |
     "dark_frame" |
     "scroll" |
-    "bar"|
-    "selected_slot"|
+    "bar" |
+    "selected_slot" |
     "dialog_box"|
-    "idle1"|
-    "idle2"|
-    "idle_right_1"|
-    "idle_right_2"|
-    "idle_left_1"|
-    "idle_left_2"|
-    "idle_back_1"|
-    "idle_back_2"|
-    "walk_down_1"|
-    "walk_down_2"|
-    "walk_down_3"|
-    "walk_down_4"|
-    "walk_right_1"|
-    "walk_right_2"|
-    "walk_right_3"|
-    "walk_right_4"|
-    "walk_left_1"|
-    "walk_left_2"|
-    "walk_left_3"|
-    "walk_left_4"|
-    "walk_up_1"|
-    "walk_up_2"|
-    "walk_up_3"|
+    "idle1" |
+    "idle2" |
+    "idle_right_1" |
+    "idle_right_2" |
+    "idle_left_1" |
+    "idle_left_2" |
+    "idle_back_1" |
+    "idle_back_2" |
+    "walk_down_1" |
+    "walk_down_2" |
+    "walk_down_3" |
+    "walk_down_4" |
+    "walk_right_1" |
+    "walk_right_2" |
+    "walk_right_3" |
+    "walk_right_4" |
+    "walk_left_1" |
+    "walk_left_2" |
+    "walk_left_3" |
+    "walk_left_4" |
+    "walk_up_1" |
+    "walk_up_2" |
+    "walk_up_3" |
     "walk_up_4";
-    ;
+;
 
 export const findTexture = (spriteSheets: Spritesheet[], texture: TextureName) => {
     return spriteSheets.find((spritesheet) => spritesheet.textures[texture])?.textures[texture];
 };
 
-const generateAtlas = (file: string, spriteAmount: Dimensions, assetDimensions: Dimensions, names: TextureName[], animations?:Partial<Record<AnimationName,TextureName[]>>) => {
+const generateAtlas = (file: string, spriteAmount: Dimensions, assetDimensions: Dimensions, names: TextureName[], animations?: Partial<Record<AnimationName, TextureName[]>>) => {
     return {
         meta: {
             image: file,
@@ -162,7 +172,7 @@ const generateAtlas = (file: string, spriteAmount: Dimensions, assetDimensions: 
 };
 
 const atlas = [
-    generateAtlas("/assets/spritesheet.png", { w: 8, h: 9 }, { w: 16, h: 16 }, [
+    generateAtlas("/assets/spritesheet.png", {w: 8, h: 9}, {w: 16, h: 16}, [
         "grass_1",
         "grass_2",
         "grass_3",
@@ -208,9 +218,18 @@ const atlas = [
         "wood_log",
         "wood_plank",
         "seed",
-        "pickaxe",
-        "shovel",
-        "axe",
+        "wood_pickaxe",
+        "stone_pickaxe",
+        "copper_pickaxe",
+        "iron_pickaxe",
+        "wood_shovel",
+        "stone_shovel",
+        "copper_shovel",
+        "iron_shovel",
+        "wood_axe",
+        "stone_axe",
+        "copper_axe",
+        "iron_axe",
         "iron_rod",
         "nail",
         "iron_frame",
@@ -234,7 +253,7 @@ const atlas = [
         codebot: ["codebot_1", "codebot_2", "codebot_3", "codebot_4"],
         codebot_error: ["codebot_error_1", "codebot_error_2", "codebot_error_3", "codebot_error_4"],
     }),
-    generateAtlas("/assets/trees.png", { w: 2, h: 2 }, { w: 16, h: 32 }, [
+    generateAtlas("/assets/trees.png", {w: 2, h: 2}, {w: 16, h: 32}, [
         "tree_1",
         "tree_2",
         "tree_3",
@@ -250,7 +269,7 @@ const atlas = [
         "selected_slot",
         "dialog_box",
     ]),
-    generateAtlas("/assets/character.png", { w: 5, h: 5 }, { w: 16, h: 16 }, [
+    generateAtlas("/assets/character.png", {w: 5, h: 5}, {w: 16, h: 16}, [
         "idle1",
         "idle2",
         "idle_right_1",
@@ -276,21 +295,21 @@ const atlas = [
         "walk_up_3",
         "walk_up_4",
     ], {
-        player_idle: ["idle1","idle2"],
-        player_idle_right: ["idle_right_1","idle_right_2"],
-        player_idle_left: ["idle_left_1","idle_left_2"],
-        player_idle_back: ["idle_back_1","idle_back_2"],
-        player_walk_down: ["walk_down_1","walk_down_2","walk_down_3","walk_down_4"],
-        player_walk_right: ["walk_right_1","walk_right_2","walk_right_3","walk_right_4"],
-        player_walk_left: ["walk_left_1","walk_left_2","walk_left_3","walk_left_4"],
-        player_walk_up: ["walk_up_1","walk_up_2","walk_up_3","walk_up_4"]
+        player_idle: ["idle1", "idle2"],
+        player_idle_right: ["idle_right_1", "idle_right_2"],
+        player_idle_left: ["idle_left_1", "idle_left_2"],
+        player_idle_back: ["idle_back_1", "idle_back_2"],
+        player_walk_down: ["walk_down_1", "walk_down_2", "walk_down_3", "walk_down_4"],
+        player_walk_right: ["walk_right_1", "walk_right_2", "walk_right_3", "walk_right_4"],
+        player_walk_left: ["walk_left_1", "walk_left_2", "walk_left_3", "walk_left_4"],
+        player_walk_up: ["walk_up_1", "walk_up_2", "walk_up_3", "walk_up_4"]
     }),
 ];
 
 export const getSpritesheets = async () => {
     const spritesheetAssets = await Promise.all(atlas.map((atlas) => Assets.load({
         src: atlas.meta.image,
-        data: { scaleMode: "nearest" },
+        data: {scaleMode: "nearest"},
     })));
 
     const spritesheets = spritesheetAssets.map((spritesheetAsset, i) => new Spritesheet(spritesheetAsset, atlas[i]));

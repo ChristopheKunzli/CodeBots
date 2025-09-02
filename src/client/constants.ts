@@ -9,6 +9,7 @@ export const CAMERA_ZOOM = 2;
 export const INVENTORY_STACK_SIZE = 99;
 export const PLAYER_INVENTORY_SIZE = 7;
 export const YIELDED_RESOURCE_MULTIPLICATOR = 10;
+export const BASE_DAMAGE = 10;
 export const ANIMATION_SPEED = 0.1;
 export const PLAYER_SPEED = 10;
 export const CODEBOT_SPEED = 5;

@@ -491,7 +491,7 @@ export class WorldRenderer {
                 return;
             };
             default: {
-                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron_axe"));
                 this.middleLayer.addChild(sprite);
                 break;
             }

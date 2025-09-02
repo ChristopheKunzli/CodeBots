@@ -12,9 +12,17 @@ import { Recipe } from "./types/recipe";
 import { WoodLogItem } from "./world/items/wood_log_item";
 import { StoneItem } from "./world/items/stone_item";
 import { FurnaceItem } from "./world/items/furnace_item";
+import { CopperItem } from "./world/items/copper_item";
+import { IronItem } from "./world/items/iron_item";
+import { AxeItem } from "./world/items/tools/axeItem";
+import { PickaxeItem } from "./world/items/tools/pickaxeItem";
+import { ShovelItem } from "./world/items/tools/shovelItem";
+import { WoodMaterial } from "./world/items/tools/woodMaterial";
+import { StoneMaterial } from "./world/items/tools/stoneMaterial";
+import { CopperMaterial } from "./world/items/tools/copperMaterial";
+import { IronMaterial } from "./world/items/tools/ironMaterial";
 import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
-import { IronItem } from "./world/items/iron_item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -73,8 +81,24 @@ export class GameEngine {
         this.renderer.renderEntity(this.player);
 
         const recipes: Recipe[] = [
-            {inputs:  [new WoodLogItem(4)], output: new CraftingTableItem(1)},
-            {inputs:  [new StoneItem(4)], output: new FurnaceItem(1)},
+            {inputs: [new WoodLogItem(4)], output: new CraftingTableItem(1)},
+            {inputs: [new StoneItem(4)], output: new FurnaceItem(1)},
+
+            {inputs: [new WoodLogItem(16), new StoneItem(4)], output: new PickaxeItem(new WoodMaterial())},
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new PickaxeItem(new StoneMaterial())},
+            {inputs: [new WoodLogItem(16), new CopperItem(4)], output: new PickaxeItem(new CopperMaterial())},
+            {inputs: [new WoodLogItem(16), new IronItem(4)], output: new PickaxeItem(new IronMaterial())},
+
+            {inputs: [new WoodLogItem(16), new StoneItem(4)], output: new AxeItem(new WoodMaterial())},
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new AxeItem(new StoneMaterial())},
+            {inputs: [new WoodLogItem(16), new CopperItem(4)], output: new AxeItem(new CopperMaterial())},
+            {inputs: [new WoodLogItem(16), new IronItem(4)], output: new AxeItem(new IronMaterial())},
+
+            {inputs: [new WoodLogItem(16), new StoneItem(4)], output: new ShovelItem(new WoodMaterial())},
+            {inputs: [new WoodLogItem(8), new StoneItem(4)], output: new ShovelItem(new StoneMaterial())},
+            {inputs: [new WoodLogItem(16), new CopperItem(4)], output: new ShovelItem(new CopperMaterial())},
+            {inputs: [new WoodLogItem(16), new IronItem(4)], output: new ShovelItem(new IronMaterial())},
+
             {inputs:  [new IronItem(25)], output: new CodebotItem(1)},
             // {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
             // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
@@ -84,7 +108,7 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
-        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this), this.handleItemBarClick.bind(this));
+        this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this), this.handleItemBarClick.bind(this));
 
 
         this.renderer.renderPlayerCoordinate(this.player);
@@ -122,17 +146,17 @@ export class GameEngine {
         this.renderer.initializeCodebot(sprite, codebot, handleRemoveItemInHand)
     }
 
-    craftEvent(recipe:Recipe){
+    craftEvent(recipe: Recipe) {
         if (!this.player.inventory.canAddItem(recipe.output)) {
             return;
         }
-        for(const itemNeeded of recipe.inputs){
+        for (const itemNeeded of recipe.inputs) {
             let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
-            if(!canCraft)
+            if (!canCraft)
                 return;
         }
 
-        for(const itemNeeded of recipe.inputs){
+        for (const itemNeeded of recipe.inputs) {
             this.player.inventory.removeItem(itemNeeded);
         }
 
@@ -182,8 +206,7 @@ export class GameEngine {
             case "OPENED_UI":
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
-                }
-                else if (result.interactableType === InteractableType.FURNACE) {
+                } else if (result.interactableType === InteractableType.FURNACE) {
 
                 }
                 break;
