@@ -7,21 +7,28 @@ import { BaseInterface } from './base_interface';
 
 export class CoreInterface extends BaseInterface {
     private steps: CoreStep[];
-    private currentStepIndex: number;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], hudLayer: Container, currentStepIndex: number = 0) {
-        super(app, spritesheets, scale, hudLayer);
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], hudLayer: Container, onClose?: () => void) {
+        super(app, spritesheets, scale, hudLayer, onClose);
         this.steps = steps;
-        this.currentStepIndex = currentStepIndex;
         this.draw();
     }
 
-    protected draw(): void {
-        const step = this.steps[this.currentStepIndex];
+    get currentStep(): CoreStep {
+        let currentStepIndex = this.steps.findIndex((step) => step.items.some((item) => item.currentGathered < item.item.quantity));
+        if (currentStepIndex === -1) {
+            currentStepIndex = this.steps.length - 1;
+        }
+
+        const step = this.steps[currentStepIndex];
         if (!step) {
             throw new Error("Invalid step index");
         }
 
+        return step;
+    }
+
+    protected draw(): void {
         const width = this.app.screen.width * 0.5;
         const height = this.app.screen.height * 0.5;
         const padding = 18;
@@ -53,7 +60,7 @@ export class CoreInterface extends BaseInterface {
         viewport.addChild(content);
 
         const titleText = new Text({
-            text: `Etape ${step.name}`,
+            text: `Etape ${this.currentStep.name}`,
             style: {
                 fill: '#ffffff',
                 fontSize: 32,
@@ -64,10 +71,10 @@ export class CoreInterface extends BaseInterface {
         titleText.x = (viewportW - titleText.width) / 2;
         content.addChild(titleText);
 
-        for (let i = 0; i < step.items.length; ++i) {
+        for (let i = 0; i < this.currentStep.items.length; ++i) {
             const row = new Container();
 
-            const item = step.items[i];
+            const item = this.currentStep.items[i];
             const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
             itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);

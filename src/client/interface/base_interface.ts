@@ -7,14 +7,16 @@ export abstract class BaseInterface extends Container {
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
     protected hudLayer:Container;
+    protected onClose?: () => void;
 
-    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container) {
+    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container, onClose?: () => void) {
         super();
         this.app = app;
         this.spritesheets = spritesheets;
         this.guiScale = scale;
         this.hudLayer = hudLayer;
         this.hide();
+        this.onClose = onClose;
     }
 
     protected abstract draw(): void;
@@ -40,6 +42,7 @@ export abstract class BaseInterface extends Container {
         closeButton.y = 5;
         closeButton.interactive = true;
         closeButton.on('pointerdown', () => {
+            this.onClose?.();
             this.hide();
         });
         closeButton.on('mouseover', () => {
