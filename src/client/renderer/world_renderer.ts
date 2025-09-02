@@ -3,7 +3,7 @@ import Tile from "../world/tile";
 import { World } from "../world/world";
 import { TileType } from "../types/tile_type";
 import { ResourceType } from "../types/resource_type";
-import { TextureName, findAnimation, findTexture, getSpritesheets } from "../spritesheet_atlas";
+import { findAnimation, findTexture, getSpritesheets, TextureName } from "../spritesheet_atlas";
 import { DecorationType } from "../types/decoration_type";
 import { TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
@@ -32,6 +32,7 @@ export class WorldRenderer {
         frames: {};
     }>[];
     private craftingInterface: CraftingInterface;
+    private furnaceInterface: CraftingInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -78,8 +79,9 @@ export class WorldRenderer {
         this.setCursor();
     }
 
-    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
-        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
+    initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[],player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
+        this.craftingInterface = new CraftingInterface(this.app, this.spriteSheet, 64, craftingRecipes, this.hudLayer, onClickOnCraftLine);
+        this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
         const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         itemBar.show();
     }
@@ -103,8 +105,12 @@ export class WorldRenderer {
         }
     }
 
-    public renderCraftingInterface(){
+    public renderCraftingInterface() {
         this.craftingInterface.show();
+    }
+
+    public renderFurnaceInterface() {
+        this.furnaceInterface.show();
     }
 
     public renderEntity(entity: Entity) {
@@ -236,55 +242,49 @@ export class WorldRenderer {
                 let textureName: TextureName;
                 let rotation = 0;
                 if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_0_edge"; rotation = 0;
+                    textureName = "forest_0_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 90;
+                } else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 180;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 270;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST) {
+                    textureName = "forest_right_edge";
+                    rotation = 0;
+                } else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_right_edge";
+                    rotation = 90;
+                } else if (neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_left_edge";
+                    rotation = 270;
+                } else if (neighbors.bottom?.type !== TileType.FOREST && neighbors.left?.type !== TileType.FOREST) {
+                    textureName = "forest_left_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 0;
+                } else if (neighbors.top?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 90;
+                } else if (neighbors.right?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 180;
+                } else if (neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 270;
+                } else {
+                    const forestTypes: TextureName[] = ["forest_center_1", "forest_center_2"];
+                    textureName = forestTypes[Math.floor(tile.variation * forestTypes.length)];
+                    rotation = 0;
                 }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 0;
-                }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 90;
-                }
-                else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 180;
-                }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 270;
-                } else
-                    if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST) {
-                        textureName = "forest_right_edge"; rotation = 0;
-                    }
-                    else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                        textureName = "forest_right_edge"; rotation = 90;
-                    }
-                    else if (neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                        textureName = "forest_left_edge"; rotation = 270;
-                    }
-                    else if (neighbors.bottom?.type !== TileType.FOREST && neighbors.left?.type !== TileType.FOREST) {
-                        textureName = "forest_left_edge"; rotation = 0;
-                    }
-
-                    else if (neighbors.left?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 0;
-                    }
-                    else if (neighbors.top?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 90;
-                    }
-                    else if (neighbors.right?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 180;
-                    }
-                    else if (neighbors.bottom?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 270;
-                    }
-
-                    else {
-                        const forestTypes: TextureName[] = ["forest_center_1", "forest_center_2"];
-                        textureName = forestTypes[Math.floor(tile.variation * forestTypes.length)];
-                        rotation = 0;
-                    }
 
                 const texture = findTexture(this.spriteSheet, textureName);
                 sprite = new PIXI.Sprite(texture);
@@ -323,7 +323,8 @@ export class WorldRenderer {
                 offsetY = -2;
                 break;
 
-            };
+            }
+                ;
             case InteractableType.CRAFTING_TABLE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
                 this.middleLayer.addChild(sprite);
@@ -348,22 +349,26 @@ export class WorldRenderer {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
+                ;
             case ResourceType.COPPER: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "copper"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
+                ;
             case ResourceType.IRON: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
+                ;
             case ResourceType.COAL: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
+                ;
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
                 this.middleLayer.addChild(sprite);
@@ -393,7 +398,6 @@ export class WorldRenderer {
 
         sprite.zIndex = sprite.y;
     }
-
 
 
     private getTextureForDecoration(tile: Tile, chunk: Chunk, x: number, y: number) {
