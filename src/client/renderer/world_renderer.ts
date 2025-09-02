@@ -157,7 +157,11 @@ export class WorldRenderer {
         const sprite = new PIXI.AnimatedSprite(animation);
         sprite.animationSpeed = ANIMATION_SPEED;
         sprite.anchor.set(0, 1);
-        sprite.play();
+        if (entity.isAnimated()) {
+            sprite.play();
+        } else {
+            sprite.stop();
+        }
         sprite.x = entity.posX * TILE_SIZE;
         sprite.y = entity.posY * TILE_SIZE + TILE_SIZE;
         sprite.zIndex = sprite.y;

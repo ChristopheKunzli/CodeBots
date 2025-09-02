@@ -112,7 +112,7 @@ export class RobotInterface extends BaseInterface {
         helpButton.width = helpButtonSize;
         helpButton.height = helpButtonSize;
         helpButton.x = itemSlot.x + (itemSlot.width - helpButtonSize) / 2;
-        helpButton.y = itemSlot.y - (bounds.height - (itemSlot.y + itemSlot.height) - helpButtonSize) / 2;
+        helpButton.y = itemSlot.y - (helpButtonSize + padding);
         helpButton.interactive = true;
         helpButton
             .on('mouseover', () => helpButton.tint = 0xff0000)
