@@ -1,6 +1,6 @@
-import { Furnace } from "../interactables/furnace";
-import Tile from "../tile";
-import { Item } from "./item";
+import { Furnace } from "../../interactables/furnace";
+import Tile from "../../tile";
+import { Item } from "../item";
 
 export class FurnaceItem extends Item {
     constructor(quantity: number) {

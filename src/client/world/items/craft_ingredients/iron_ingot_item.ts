@@ -1,5 +1,5 @@
-import { Item } from "./item";
-import Tile from "../tile";
+import { Item } from "../item";
+import Tile from "../../tile";
 
 export class IronIngotItem extends Item {
     constructor(quantity: number) {
