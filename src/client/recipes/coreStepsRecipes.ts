@@ -15,7 +15,7 @@ export const coreStepsRecipes: CoreStep[] = [
     },
 
     {
-        name: "Âge de Bronze",
+        name: "Âge de Cuivre",
         items: [
             {item: new WoodLogItem(3000), currentGathered: 0},
             {item: new CopperIngotItem(3000), currentGathered: 0},

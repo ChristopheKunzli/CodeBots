@@ -18,6 +18,8 @@ import { ReinforcedIronPlateItem } from "../world/items/craft_ingredients/reinfo
 import { CopperIngotItem } from "../world/items/craft_ingredients/copper_ingot_item";
 import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item";
 import { CodeBotItem } from "../world/items/CodeBotItem";
+import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
+import { CementItem } from "../world/items/craft_ingredients/cement_item";
 
 export const craftingRecipes: Recipe[] = [
     // Crafting Stations
@@ -31,6 +33,7 @@ export const craftingRecipes: Recipe[] = [
     {inputs: [new IronIngotItem(4), new NailItem(8)], output: new IronPlateItem(1)},
     {inputs: [new IronRodItem(4), new NailItem(16)], output: new IronFrameItem(1)},
     {inputs: [new IronPlateItem(2), new IronFrameItem(4), new NailItem(32)], output: new ReinforcedIronPlateItem(1)},
+    {inputs: [new CementItem(8)], output: new ConcreteItem(4)},
 
     // Tools
     {inputs: [new WoodPlankItem(16)], output: new PickaxeItem(new WoodMaterial())},
