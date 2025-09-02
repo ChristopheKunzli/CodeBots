@@ -27,8 +27,6 @@ export class GameEngine {
     private player: Player;
     private keys: Set<string>;
     private codebots: Codebot[];
-    private recipes: Recipe[]
-    private furnaceRecipes: Recipe[]
 
     constructor(app: PIXI.Application) {
         this.app = app;
@@ -155,14 +153,14 @@ export class GameEngine {
                 break;
             case "OPENED_UI":
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
-                    const recipe = this.recipes.find((recipe) => recipe.output.spriteName === data);
+                    const recipe = craftingRecipes.find((recipe) => recipe.output.spriteName === data);
                     if (!recipe) {
                         break;
                     }
 
                     this.craftEvent(recipe, codebot);
                 } else if (result.interactableType === InteractableType.FURNACE) {
-                    const recipe = this.furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
+                    const recipe = furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
                     if (!recipe) {
                         break;
                     }
