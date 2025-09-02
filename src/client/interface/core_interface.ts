@@ -7,41 +7,53 @@ import { BaseInterface } from './base_interface';
 
 export class CoreInterface extends BaseInterface {
     private steps: CoreStep[];
-    private currentStepIndex: number;
+    private titleText: Text;
+    private contentContainer: Container;
+    private viewportW: number;
+    private padding: number;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], currentStepIndex: number = 0) {
-        super(app, spritesheets, scale);
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], hudLayer: Container, onClose?: () => void) {
+        super(app, spritesheets, scale, hudLayer, onClose);
         this.steps = steps;
-        this.currentStepIndex = currentStepIndex;
+        this.padding = 18;
         this.draw();
     }
 
-    protected draw(): void {
-        const step = this.steps[this.currentStepIndex];
+    get currentStep(): CoreStep {
+        let currentStepIndex = this.steps.findIndex((step) => step.items.some((item) => item.currentGathered < item.item.quantity));
+        if (currentStepIndex === -1) {
+            currentStepIndex = this.steps.length - 1;
+        }
+
+        const step = this.steps[currentStepIndex];
         if (!step) {
             throw new Error("Invalid step index");
         }
 
+        return step;
+    }
+
+    protected draw(): void {
         const width = this.app.screen.width * 0.5;
         const height = this.app.screen.height * 0.5;
-        const padding = 18;
+        const padding = this.padding;
         const coreInterface = this.createCenteredContainer(width, height, "dark_frame", 4);
 
         const viewport = new Container();
         const viewportX = padding;
         const viewportY = padding;
-        const viewportW = width - padding * 2 - 40;
+        this.viewportW = width - padding * 2 - 40;
         const viewportH = height - padding * 2;
 
         viewport.x = viewportX;
         viewport.y = viewportY;
-        viewport.width = viewportW;
+        viewport.width = this.viewportW;
         viewport.height = viewportH;
         coreInterface.addChild(viewport);
 
         const maskG = new Graphics();
         maskG.beginFill(0xff0000);
-        maskG.drawRect(0, 0, viewportW, viewportH);
+        maskG.drawRect(0, 0, this.viewportW, viewportH);
         maskG.endFill();
         maskG.x = viewport.x;
         maskG.y = viewport.y;
@@ -52,8 +64,8 @@ export class CoreInterface extends BaseInterface {
         const content = new Container();
         viewport.addChild(content);
 
-        const titleText = new Text({
-            text: `Etape ${step.stepNumber}`,
+        this.titleText = new Text({
+            text: `Etape ${this.currentStep.name}`,
             style: {
                 fill: '#ffffff',
                 fontSize: 32,
@@ -61,20 +73,35 @@ export class CoreInterface extends BaseInterface {
                 stroke: '#000000',
             },
         });
-        titleText.x = (viewportW - titleText.width) / 2;
-        content.addChild(titleText);
+        this.titleText.x = (this.viewportW - this.titleText.width) / 2;
+        content.addChild(this.titleText);
 
-        for (let i = 0; i < step.items.length; ++i) {
+        this.contentContainer = new Container();
+        content.addChild(this.contentContainer);
+        this.drawContent();
+
+        const contentHeight = content.getLocalBounds().height + padding;
+        const scrollbarX = coreInterface.width * 0.9;
+        const scrollbarY = padding;
+        const scrollbarW = 18;
+        const scrollbarH = height - padding * 2;
+
+        new ScrollBar(content, contentHeight, viewportH, coreInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
+    }
+
+    drawContent() {
+        this.titleText.text = `Etape ${this.currentStep.name}`;
+        this.contentContainer.children = [];
+        for (let i = 0; i < this.currentStep.items.length; ++i) {
             const row = new Container();
 
-            const item = step.items[i];
+            const item = this.currentStep.items[i];
             const itemSprite = new Sprite(findTexture(this.spritesheets, "light_square"));
             itemSprite.width = itemSprite.height = Math.round(this.guiScale * 1.05);
             row.addChild(itemSprite);
-            // TODO ??
-            this.drawItem(new CoreItem(item.spriteName, item.goal), itemSprite, false, false);
+            this.drawItem(new CoreItem(item.item.spriteName, item.item.quantity), itemSprite, false, false);
             const progressText = new Text({
-                text: `${item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.goal}`,
+                text: `${item.item.spriteName.replace(/_/g, ' ').toUpperCase()}\n${item.currentGathered} / ${item.item.quantity}`,
                 style: {
                     fill: '#ffffff',
                     fontSize: 12,
@@ -96,25 +123,17 @@ export class CoreInterface extends BaseInterface {
             progressBarBg.endFill();
             row.addChild(progressBarBg);
 
-            const progress = Math.min(1, item.currentGathered / item.goal);
+            const progress = Math.min(1, item.currentGathered / item.item.quantity);
             const progressBar = new Graphics();
             progressBar.beginFill(0xe42d38);
             progressBar.drawRect(barX, barY, barWidth * progress, barHeight);
             progressBar.endFill();
             row.addChild(progressBar);
 
-            row.y = i * (itemSprite.height + 12) + titleText.height + padding;
-            row.x = (viewportW - row.width) / 2;
+            row.y = i * (itemSprite.height + 12) + this.titleText.height + this.padding;
+            row.x = (this.viewportW - row.width) / 2;
 
-            content.addChild(row);
+            this.contentContainer.addChild(row);
         }
-
-        const contentHeight = content.getLocalBounds().height + padding;
-        const scrollbarX = coreInterface.width * 0.9;
-        const scrollbarY = padding;
-        const scrollbarW = 18;
-        const scrollbarH = height - padding * 2;
-
-        new ScrollBar(content, contentHeight, viewportH, coreInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
     }
 }

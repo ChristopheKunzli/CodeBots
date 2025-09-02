@@ -8,10 +8,9 @@ export class CraftingInterface extends BaseInterface {
     private readonly recipes: Recipe[];
     private onClickOnCraftLine: (recipe:Recipe)=>void;
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[], hudLayer:Container, onClickOnCraftLine: (recipe:Recipe)=>void) {
-        super(app, spritesheets, scale);
+        super(app, spritesheets, scale, hudLayer);
         this.onClickOnCraftLine = onClickOnCraftLine;
         this.recipes = recipes;
-        this.hudLayer = hudLayer;
         this.draw();
     }
 

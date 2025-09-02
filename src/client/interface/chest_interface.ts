@@ -7,8 +7,7 @@ export class ChestInterface extends BaseInterface {
     private items: Item[];
 
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[], hudLayer:Container) {
-        super(app, spritesheets, scale);
-        this.hudLayer = hudLayer;
+        super(app, spritesheets, scale, hudLayer);
         this.items = items;
         this.draw();
     }

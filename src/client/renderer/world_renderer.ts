@@ -11,10 +11,12 @@ import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
 import { CraftingInterface } from "../interface/crafting_interface";
+import { CoreInterface } from "../interface/core_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
+import { CoreStep } from "../types/item";
 
 
 export class WorldRenderer {
@@ -33,6 +35,8 @@ export class WorldRenderer {
     }>[];
     private craftingInterface: CraftingInterface;
     private furnaceInterface: CraftingInterface;
+    private coreInterface: CoreInterface;
+    private itemBar: ItemBar;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -79,11 +83,11 @@ export class WorldRenderer {
         this.setCursor();
     }
 
-    initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[],player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
+    initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[], player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
         this.craftingInterface = new CraftingInterface(this.app, this.spriteSheet, 64, craftingRecipes, this.hudLayer, onClickOnCraftLine);
         this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
-        const itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
-        itemBar.show();
+        this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
+        this.itemBar.show();
     }
 
     public render(chunks: Chunk[]) {
@@ -111,6 +115,32 @@ export class WorldRenderer {
 
     public renderFurnaceInterface() {
         this.furnaceInterface.show();
+    }
+
+    public renderCoreInterface(coreSteps: CoreStep[], entity: Entity) {
+        const oldOnClickEvent = this.itemBar.onClickEvent;
+        this.itemBar.onClickEvent = (item) => {
+            if (!item) return;
+
+            const coreItemIndex = this.coreInterface.currentStep.items.findIndex((i) => {
+                return i.item.spriteName === item.spriteName;
+            });
+
+            if (coreItemIndex !== -1) {
+                const coreItem = this.coreInterface.currentStep.items[coreItemIndex];
+                const stepAmount = coreItem.item.quantity - coreItem.currentGathered;
+                const amount = Math.min(item.quantity, stepAmount);
+
+                entity.inventory.removeItem(item, amount);
+                coreItem.currentGathered += amount;
+                this.coreInterface.drawContent();
+            }
+        };
+        const handleClose = () => {
+            this.itemBar.onClickEvent = oldOnClickEvent;
+        };
+        this.coreInterface = new CoreInterface(this.app, this.spriteSheet, 64, coreSteps, this.hudLayer, handleClose);
+        this.coreInterface.show();
     }
 
     public renderEntity(entity: Entity) {
@@ -322,23 +352,19 @@ export class WorldRenderer {
                 this.middleLayer.addChild(sprite);
                 offsetY = -2;
                 break;
-
             }
-                ;
             case InteractableType.CRAFTING_TABLE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
                 this.middleLayer.addChild(sprite);
                 sprite.anchor.set(0.5, 0.5);
                 break;
             }
-
             case InteractableType.FURNACE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace"));
                 this.middleLayer.addChild(sprite);
                 sprite.anchor.set(0.5, 0.5);
                 break;
             }
-
             case InteractableType.CHEST: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
                 this.middleLayer.addChild(sprite);
@@ -350,25 +376,26 @@ export class WorldRenderer {
                 this.overTileLayer.addChild(sprite);
                 break;
             }
-                ;
             case ResourceType.COPPER: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "copper"))
                 this.overTileLayer.addChild(sprite);
                 break;
             }
-                ;
             case ResourceType.IRON: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron"))
                 this.overTileLayer.addChild(sprite);
                 break;
             }
-                ;
             case ResourceType.COAL: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            }
-                ;
+            };
+            case InteractableType.CORE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "core"))
+                this.overTileLayer.addChild(sprite);
+                break;
+            };
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
                 this.middleLayer.addChild(sprite);
