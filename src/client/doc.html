@@ -263,19 +263,76 @@
                         <ul class="mb-0">
                             <li>
                                 <code>goto(&lt;position&gt;)</code>
-                                 → Déplace le robot jusqu'à la position indiquée.
+                                → Déplace le robot jusqu'à la position indiquée.
                             </li>
                             <li>
-                                <code>find(&lt;resource&gt;)</code>
-                                 → Retourne la position de la resource demandée la plus proche.
+                                <code>canCarry(&lt;itemType&gt;)</code>
+                                → Vérifie si le robot peut encore transporter un objet du type indiqué.
+                            </li>
+                            <li>
+                                <code>isEmpty()</code>
+                                → Retourne vrai si l'inventaire du robot est vide.
                             </li>
                             <li>
                                 <code>wait(&lt;time&gt;)</code>
-                                 → Attend &lt;time&gt; ms.
+                                → Attend <code>&lt;time&gt;</code> ms.
+                            </li>
+                            <li>
+                                <code>has(&lt;item&gt;)</code>
+                                → Retourne vrai si le robot possède l'objet (type et quantité).
+                            </li>
+                            <li>
+                                <code>hold(&lt;itemType&gt;)</code>
+                                → Met l'objet du type indiqué dans la main du robot.
+                            </li>
+                            <li>
+                                <code>find(&lt;resource&gt;)</code>
+                                → Retourne la position de la ressource la plus proche.
+                            </li>
+                            <li>
+                                <code>gather()</code>
+                                → Récolte/miner la ressource présente sous le robot jusqu’à ce qu’elle disparaisse.
                             </li>
                             <li>
                                 <code>print(...&lt;args&gt;)</code>
-                                 → Affiche les arguments.
+                                → Affiche les arguments pendant un court instant.
+                            </li>
+                            <li>
+                                <code>craft(&lt;item&gt;)</code>
+                                → Fabrique l'objet indiqué.
+                            </li>
+                            <li>
+                                <code>deposit(&lt;item&gt;)</code>
+                                → Dépose l'objet indiqué dans un coffre.
+                            </li>
+                            <li>
+                                <code>take(&lt;itemType&gt;)</code>
+                                → Prend l'objet indiqué depuis un coffre.
+                            </li>
+                            <li>
+                                <code>smelt(&lt;item&gt;)</code>
+                                → Utilise le four pour faire fondre l'objet.
+                            </li>
+                        </ul>
+                    </p>
+                    <p>
+                        Types du Codebot.
+                        <ul class="mb-0">
+                            <li>
+                                <code>&lt;position&gt;</code>
+                                → <code>{"x": &lt;integer&gt;, "y": &lt;integer&gt;}</code>
+                            </li>
+                            <li id="resource-type">
+                                <code>&lt;resource&gt;</code>
+                                →
+                            </li>
+                            <li id="itemType-type">
+                                <code>&lt;itemType&gt;</code>
+                                →
+                            </li>
+                            <li>
+                                <code>&lt;item&gt;</code>
+                                → <code>{"type": &lt;itemType&gt;, "amount": &lt;integer&gt;}</code>
                             </li>
                         </ul>
                     </p>
@@ -292,11 +349,7 @@
 while (i &lt; 3) {
     var pos = find("wood");
     goto(pos);
-    pick("wood");
-
-    goto("chest");
-    drop("wood");
-
+    gather();
     var i = i + 1;
 }</pre>
                     </p>
@@ -310,5 +363,31 @@ while (i &lt; 3) {
         integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
         crossorigin="anonymous"
     ></script>
+    <script type="module">
+        import {RESOURCE_TYPES} from "./types/resource_type";
+        import {ITEM_TYPES} from "./types/item";
+
+        const resourceElement = document.getElementById("resource-type");
+        RESOURCE_TYPES.forEach((r, idx) => {
+            const codeEl = document.createElement("code");
+            codeEl.textContent = `"${r}"`;
+            resourceElement.appendChild(codeEl);
+
+            if (idx < RESOURCE_TYPES.length - 1) {
+                resourceElement.appendChild(document.createTextNode(", "));
+            }
+        });
+
+    const itemTypeElement = document.getElementById("itemType-type");
+    ITEM_TYPES.forEach((i, idx) => {
+        const codeEl = document.createElement("code");
+        codeEl.textContent = `"${i}"`;
+        itemTypeElement.appendChild(codeEl);
+
+        if (idx < ITEM_TYPES.length - 1) {
+            itemTypeElement.appendChild(document.createTextNode(", "));
+        }
+    });
+    </script>
 </body>
 </html>
