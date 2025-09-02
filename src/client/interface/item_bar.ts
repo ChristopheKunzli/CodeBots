@@ -2,17 +2,22 @@ import {Application, Container, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
+import { InventorySlot } from '../types/inventory';
 
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
+    public onClickEvent: (item:InventorySlot, index: number) => void;
     private slots: Sprite[];
     private container: Container;
 
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
-        super(app, spritesheets, scale);
+        super(app, spritesheets, scale, container);
         this.inventory = inventory;
         this.slots = [];
         this.container = container;
+        this.onClickEvent = (item: InventorySlot, index: number) => {
+            this.inventory.setItemInHandIndex(index);
+        }
         this.draw();
     }
 
@@ -45,7 +50,7 @@ export class ItemBar extends BaseInterface {
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                this.inventory.setItemInHandIndex(i);
+                this.onClickEvent(items[i], i);
             });
 
             itemBar.addChild(lightSquare);

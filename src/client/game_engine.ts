@@ -21,6 +21,20 @@ import { WoodMaterial } from "./world/items/tools/woodMaterial";
 import { StoneMaterial } from "./world/items/tools/stoneMaterial";
 import { CopperMaterial } from "./world/items/tools/copperMaterial";
 import { IronMaterial } from "./world/items/tools/ironMaterial";
+import { Core } from "./world/interactables/core";
+import { CoalItem } from "./world/items/coal_item";
+import { CoreStep } from "./types/item";
+
+const coreSteps: CoreStep[] = [
+    {
+        name: "Âge de Pierre",
+        items: [
+            {item: new WoodLogItem(2500), currentGathered: 0},
+            {item: new StoneItem(800), currentGathered: 0},
+            {item: new CoalItem(3000), currentGathered: 0},
+        ],
+    },
+];
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -102,6 +116,11 @@ export class GameEngine {
             this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
         }
 
+        const tile  = this.world.getTileAt(1, 0);
+        if (tile) {
+            tile.setContent = new Core(tile);
+        }
+
         // TODO remove
         this.player.inventory.addItem(new CraftingTableItem(1));
     }
@@ -168,6 +187,8 @@ export class GameEngine {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
 
+                } else if (result.interactableType === InteractableType.CORE) {
+                    this.renderer.renderCoreInterface(coreSteps, this.player);
                 }
                 break;
 
