@@ -1,4 +1,4 @@
-import {Application, Container, DestroyOptions, Graphics, Sprite, Spritesheet} from 'pixi.js';
+import {Application, Container, Graphics, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import {ScrollBar} from "./scroll_bar";
 import {MultilineInput} from "./multiline_input";
