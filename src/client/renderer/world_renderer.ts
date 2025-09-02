@@ -34,7 +34,7 @@ export class WorldRenderer {
         frames: {};
     }>[];
     private craftingInterface: CraftingInterface;
-    private robotInterface: RobotInterface;
+    public robotInterface: RobotInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -89,9 +89,9 @@ export class WorldRenderer {
         this.setCursor();
     }
 
-    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
+    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void, onItemBarClick: (i: number) => void){
         this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet, GUI_SCALE, recipes, this.hudLayer, onClickOnCraftLine);
-        const itemBar = new ItemBar(this.app, this.spriteSheet, GUI_SCALE, player.inventory, this.hudLayer);
+        const itemBar = new ItemBar(this.app, this.spriteSheet, GUI_SCALE, player.inventory, onItemBarClick, this.hudLayer);
         itemBar.show()
     }
 
@@ -148,7 +148,7 @@ export class WorldRenderer {
         });
     }
 
-    public renderEntity(entity: Entity) {
+    public renderEntity(entity: Entity): PIXI.AnimatedSprite {
         const animation = findAnimation(this.spriteSheet, entity.getAnimationName());
         if (!animation) {
             throw new Error("animation not found");
@@ -185,19 +185,21 @@ export class WorldRenderer {
             }
         });
 
-        if (entity instanceof Codebot) {
-            sprite.interactive = true;
+        return sprite;
+    }
+
+    public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, onRemoveItemInHand: () => void) {
+        sprite.interactive = true;
             sprite.cursor = "hover";
             sprite
                 .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
                 .on("pointerout", () => sprite.filters = null)
-                .on("click", () => this.renderCodebotInterface(entity));
-            this.renderCodebotMessage(sprite, entity);
-        }
+                .on("click", () => this.renderCodebotInterface(codebot, onRemoveItemInHand));
+            this.renderCodebotMessage(sprite, codebot);
     }
 
-    private renderCodebotInterface(codebot: Codebot) {
-        this.robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, this.hudLayer);
+    private renderCodebotInterface(codebot: Codebot, onRemoveItemInHand: () => void) {
+        this.robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, onRemoveItemInHand, this.hudLayer);
         this.robotInterface.show();
     }
 

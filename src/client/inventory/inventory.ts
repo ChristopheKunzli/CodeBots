@@ -57,8 +57,8 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return Math.min(item.quantity, available) === item.quantity;
     }
 
-    addItem(item: Item): number {
-        let remaining = item.quantity;
+    addItem(item: Item, quantity = item.quantity): number {
+        let remaining = quantity;
 
         // fill existing stacks
         for (const slot of this.items) {
@@ -84,6 +84,8 @@ export default class Inventory extends Observable<InventorySlot[]> {
         }
 
         this.notify();
+
+        console.log(this.state, this.itemInHand, item);
 
         return item.quantity - remaining;
     }

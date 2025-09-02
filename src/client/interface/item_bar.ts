@@ -6,11 +6,13 @@ import Inventory from '../inventory/inventory';
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
     private slots: Sprite[];
+    private onItemBarClick: (i: number) => void;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer: Container) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, onItemBarClick: (i: number) => void, hudLayer: Container) {
         super(app, spritesheets, scale, hudLayer);
         this.inventory = inventory;
         this.slots = [];
+        this.onItemBarClick = onItemBarClick;
         this.draw();
     }
 
@@ -43,7 +45,7 @@ export class ItemBar extends BaseInterface {
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                this.inventory.setItemInHandIndex(i);
+                this.onItemBarClick(i);
             });
 
             itemBar.addChild(lightSquare);

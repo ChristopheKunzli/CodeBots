@@ -6,12 +6,14 @@ import { BaseInterface } from './base_interface';
 import { Codebot } from '../entity/codebot';
 
 export class RobotInterface extends BaseInterface {
-    private codebot: Codebot;
+    public codebot: Codebot;
     private codeArea: MultilineInput;
+    private onRemoveItemInHand: () => void;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, hudLayer: Container) {
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, onRemoveItemInHand: () => void, hudLayer: Container) {
         super(app, spritesheets, scale, hudLayer, () => this.handleClose());
         this.codebot = codebot;
+        this.onRemoveItemInHand = onRemoveItemInHand;
         this.draw();
     }
 
@@ -87,6 +89,17 @@ export class RobotInterface extends BaseInterface {
         itemSlot.y = (bounds.height - size) / 2;
         robotInterface.addChild(itemSlot);
         this.drawItem(this.codebot.inventory.itemInHand, itemSlot, true, true);
+        this.codebot.inventory.observe(() => {
+            const {itemInHand} = this.codebot.inventory;
+            if (!itemInHand) {
+                itemSlot.children = [];
+
+                return;
+            }
+            this.drawItem(itemInHand, itemSlot, true, true);
+        });
+        itemSlot.interactive = true;
+        itemSlot.on("click", this.onRemoveItemInHand);
 
         //power button
         const powerButton = new Sprite(findTexture(this.spritesheets, "power"));

@@ -84,7 +84,7 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
-        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this));
+        this.renderer.initializeUI(recipes,this.player, this.craftEvent.bind(this), this.handleItemBarClick.bind(this));
 
 
         this.renderer.renderPlayerCoordinate(this.player);
@@ -94,10 +94,32 @@ export class GameEngine {
         this.player.inventory.addItem(new CodebotItem(1));
     }
 
+    handleItemBarClick(i: number) {
+        this.player.inventory.setItemInHandIndex(i);
+        if (this.renderer.robotInterface?.visible) {
+            const {codebot} = this.renderer.robotInterface;
+            const {itemInHand} = this.player.inventory;
+            if (codebot.inventory.itemInHand === null && itemInHand) {
+                codebot.inventory.addItem(itemInHand);
+                this.player.inventory.removeItem(itemInHand);
+            }
+        }
+    }
+
     addCodebot(x: number, y: number) {
         const codebot = new Codebot(this.world, x, y);
         this.codebots.push(codebot);
-        this.renderer.renderEntity(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        const handleRemoveItemInHand = () => {
+            const {itemInHand} = codebot.inventory;
+            if (!itemInHand || !this.player.inventory.canAddItem(itemInHand)) {
+                return;
+            }
+
+            this.player.inventory.addItem(itemInHand);
+            codebot.inventory.removeItem(itemInHand);
+        };
+        this.renderer.initializeCodebot(sprite, codebot, handleRemoveItemInHand)
     }
 
     craftEvent(recipe:Recipe){
