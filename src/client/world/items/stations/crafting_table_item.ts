@@ -1,6 +1,6 @@
-import { CraftingTable } from "../interactables/crafting_table";
-import Tile from "../tile";
-import { Item } from "./item";
+import { CraftingTable } from "../../interactables/crafting_table";
+import Tile from "../../tile";
+import { Item } from "../item";
 
 export class CraftingTableItem extends Item {
     constructor(quantity: number) {

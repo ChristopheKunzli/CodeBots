@@ -1,7 +1,7 @@
-import Tile from "../tile";
-import { Item } from "./item";
+import Tile from "../../tile";
+import { Item } from "../item";
 
-export class WoodLogItem extends Item{
+export class WoodLogItem extends Item {
     constructor(quantity: number) {
         super("wood_log", quantity);
     }
