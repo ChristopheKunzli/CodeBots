@@ -127,6 +127,7 @@ export class WorldRenderer {
 
                 entity.inventory.removeItem(item, amount);
                 coreItem.currentGathered += amount;
+                this.coreInterface.drawContent();
             }
         };
         const handleClose = () => {

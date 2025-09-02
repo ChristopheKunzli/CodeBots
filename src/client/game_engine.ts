@@ -27,11 +27,11 @@ import { CoreStep } from "./types/item";
 
 const coreSteps: CoreStep[] = [
     {
-        name: "1",
+        name: "Âge de Pierre",
         items: [
-            {item: new WoodLogItem(2500), currentGathered: 2500},
+            {item: new WoodLogItem(2500), currentGathered: 0},
             {item: new StoneItem(800), currentGathered: 0},
-            {item: new CoalItem(3000), currentGathered: 1843},
+            {item: new CoalItem(3000), currentGathered: 0},
         ],
     },
 ];
