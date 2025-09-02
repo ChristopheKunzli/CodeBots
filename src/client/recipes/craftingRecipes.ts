@@ -17,7 +17,7 @@ import { IronRodItem } from "../world/items/craft_ingredients/iron_rod_item";
 import { ReinforcedIronPlateItem } from "../world/items/craft_ingredients/reinforced_iron_plate_item";
 import { CopperIngotItem } from "../world/items/craft_ingredients/copper_ingot_item";
 import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item";
-import { CodeBotItem } from "../world/items/CodeBotItem";
+import { CodebotItem } from "../world/items/codebot_item";
 import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
 import { CementItem } from "../world/items/craft_ingredients/cement_item";
 
@@ -61,7 +61,7 @@ export const craftingRecipes: Recipe[] = [
             new IronRodItem(16),
             new NailItem(64)
         ],
-        output: new CodeBotItem(1)
+        output: new CodebotItem(1)
     }
 ];
 

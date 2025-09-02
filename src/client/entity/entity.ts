@@ -1,6 +1,6 @@
 import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
-import { AnimationName, TextureName } from "../spritesheet_atlas";
+import { AnimationName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { InteractableType } from "../types/interactable_type";
 import { InteractionResult } from "../types/interaction_result";
@@ -24,10 +24,10 @@ export abstract class Entity extends Observable<EntityState> {
     public inventory: Inventory;
     protected world: World;
 
-    constructor(world: World) {
+    constructor(world: World, x: number, y: number) {
         super({
-            posX: 0,
-            posY: 0,
+            posX: x,
+            posY: y,
             cX: -1,
             cY: -1,
         });
@@ -35,6 +35,14 @@ export abstract class Entity extends Observable<EntityState> {
         this.inventory = new Inventory(this.getInventorySize());
         this.world = world;
         this.id = `entity_${Entity.idCounter++}`;
+    }
+
+    set cX(newCX: number) {
+        this.state.cX = newCX;
+    }
+
+    set cY(newCY: number) {
+        this.state.cY = newCY;
     }
 
     interactWithTile(tile: Tile): InteractionResult {
@@ -48,7 +56,7 @@ export abstract class Entity extends Observable<EntityState> {
                 this.inventory.addItem(item);
                 return {type: "MINED", tile};
             }
-            return {type: "NONE", tile};
+            return {type: "MINING", tile};
         }
 
         if (content instanceof Interactable) {
@@ -79,10 +87,6 @@ export abstract class Entity extends Observable<EntityState> {
 
     abstract getInventorySize(): number;
 
-    interact(i: Interactable) {
-
-    }
-
     get posX(): number {
         return this.state.posX;
     }
@@ -107,11 +111,7 @@ export abstract class Entity extends Observable<EntityState> {
         this.state.posY = newPosY;
     }
 
-    set cX(newCX: number) {
-        this.state.cX = newCX;
-    }
+    interact(i: Interactable) {
 
-    set cY(newCY: number) {
-        this.state.cY = newCY;
     }
 }

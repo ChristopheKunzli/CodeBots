@@ -2,7 +2,7 @@ import Tile from "../world/tile";
 import { InteractableType } from "./interactable_type";
 
 export interface InteractionResult {
-    type: "MINED" | "OPENED_UI" | "NONE";
+    type: "MINED" | "MINING" | "OPENED_UI" | "NONE";
     tile?: Tile;
     interactableType?: InteractableType;
 }
