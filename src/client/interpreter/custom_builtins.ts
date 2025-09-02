@@ -258,9 +258,27 @@ export default class CustomBuiltins {
                 return NULL;
             }),
             "craft": new BuiltinObject(async (...args) => {
-                // (item) => void : parametrer la workbench
+                if (args.length !== 1) {
+                    return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
+                }
 
-                throw new Error("not implemented");
+                const item = this.parseItem(args[0]);
+                if (item instanceof ErrorObject) {
+                    return item;
+                }
+
+                const posX = Math.round(this.codebot.posX);
+                const posY = Math.round(this.codebot.posY);
+                const tile = this.world.getTileAt(posX, posY);
+                if (!tile) {
+                    return new ErrorObject("tile not loaded");
+                }
+
+                for (let i = 0; i < item.amount; ++i) {
+                    this.codebot.interactWithTile(tile, item.type);
+                }
+
+                return NULL;
             }),
             "deposit": new BuiltinObject(async (...args) => {
                 // (item) => void

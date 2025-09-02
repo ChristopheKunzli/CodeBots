@@ -24,6 +24,7 @@ import { IronMaterial } from "./world/items/tools/ironMaterial";
 import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
 import { InteractionResult } from "./types/interaction_result";
+import { Entity } from "./entity/entity";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -33,6 +34,7 @@ export class GameEngine {
     private player: Player;
     private keys: Set<string>;
     private codebots: Codebot[];
+    private recipes: Recipe[]
 
     constructor(app: PIXI.Application) {
         this.app = app;
@@ -81,7 +83,7 @@ export class GameEngine {
         this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
-        const recipes: Recipe[] = [
+        this.recipes = [
             {inputs: [new WoodLogItem(4)], output: new CraftingTableItem(1)},
             {inputs: [new StoneItem(4)], output: new FurnaceItem(1)},
 
@@ -109,7 +111,7 @@ export class GameEngine {
             // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
         ];
 
-        this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this), this.handleItemBarClick.bind(this));
+        this.renderer.initializeUI(this.recipes, this.player, (recipe) => this.craftEvent(recipe, this.player), this.handleItemBarClick.bind(this));
 
 
         this.renderer.renderPlayerCoordinate(this.player);
@@ -132,7 +134,12 @@ export class GameEngine {
     }
 
     addCodebot(x: number, y: number) {
-        const codebot = new Codebot(this.world, x, y, this.handleCodebotInteraction.bind(this));
+        const codebot = new Codebot(
+            this.world,
+            x,
+            y,
+            this.handleCodebotInteraction.bind(this),
+        );
         this.codebots.push(codebot);
         const sprite = this.renderer.renderEntity(codebot);
         const handleRemoveItemInHand = () => {
@@ -144,24 +151,24 @@ export class GameEngine {
             this.player.inventory.addItem(itemInHand);
             codebot.inventory.removeItem(itemInHand);
         };
-        this.renderer.initializeCodebot(sprite, codebot, handleRemoveItemInHand)
+        this.renderer.initializeCodebot(sprite, codebot, handleRemoveItemInHand);
     }
 
-    craftEvent(recipe: Recipe) {
-        if (!this.player.inventory.canAddItem(recipe.output)) {
+    craftEvent(recipe: Recipe, entity: Entity) {
+        if (!entity.inventory.canAddItem(recipe.output)) {
             return;
         }
         for (const itemNeeded of recipe.inputs) {
-            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            let canCraft = entity.inventory.canRemoveItem(itemNeeded);
             if (!canCraft)
                 return;
         }
 
         for (const itemNeeded of recipe.inputs) {
-            this.player.inventory.removeItem(itemNeeded);
+            entity.inventory.removeItem(itemNeeded);
         }
 
-        this.player.inventory.addItem(recipe.output);
+        entity.inventory.addItem(recipe.output);
     }
 
     update(delta: number) {
@@ -186,7 +193,7 @@ export class GameEngine {
         this.renderer.gameContainer.y = this.camera.y;
     }
 
-    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult) {
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) {
         switch (result.type) {
             case "MINED":
                 if (result.tile) {
@@ -194,6 +201,14 @@ export class GameEngine {
                 }
                 break;
             case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    const recipe = this.recipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                }
                 break;
             case "NONE":
                 this.renderer.updateTile(result.tile!.chunk, tile);

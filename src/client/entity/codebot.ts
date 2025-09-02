@@ -18,9 +18,9 @@ export class Codebot extends Entity {
     private onTargetReached: (() => void)|null;
     private static interpreter = new Interpreter();
     private message: string|null;
-    private onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void;
+    private onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void;
 
-    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void){
+    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void){
         super(world, x, y);
         this.program = "";
         this.isRunning = false;
@@ -58,6 +58,7 @@ export class Codebot extends Entity {
     }
 
     async setIsRunning(isRunning: boolean) {
+        this.notify();
         this.isRunning = isRunning;
 
         if (this.isRunning) {
@@ -114,9 +115,9 @@ export class Codebot extends Entity {
         }
     }
 
-    interactWithTile(tile: Tile): InteractionResult {
+    interactWithTile(tile: Tile, data?: any): InteractionResult {
         const result = super.interactWithTile(tile);
-        this.onInteraction(this, tile, result);
+        this.onInteraction(this, tile, result, data);
 
         return result;
     }
