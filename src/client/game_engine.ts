@@ -32,7 +32,7 @@ export class GameEngine {
     private codebots: Codebot[];
     private seed: string;
 
-    constructor(app: PIXI.Application, seed: string = "seed") {
+    constructor(app: PIXI.Application, seed: string = this.generateRandomSeed()) {
         this.app = app;
         this.seed = seed;
         const generator = new WorldGenerator(seed);
@@ -83,6 +83,10 @@ export class GameEngine {
 
             window.addEventListener("beforeunload", saveRequest);
         }
+    }
+
+    private generateRandomSeed(length: number = 32): string {
+        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
     }
 
     private save(): any {
