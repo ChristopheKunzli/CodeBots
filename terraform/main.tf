@@ -61,6 +61,8 @@ resource "azurerm_linux_web_app" "linux_web_app" {
 
     app_settings = {
         SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
+        VITE_DISABLE_SAVE = var.disable_save
+        VITE_CLERK_PUBLISHABLE_KEY = var.clerk_publishable_key
         DISABLE_SAVE = var.disable_save
         CLERK_SECRET_KEY = var.clerk_secret_key
         CLERK_PUBLISHABLE_KEY = var.clerk_publishable_key
