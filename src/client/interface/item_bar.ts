@@ -23,7 +23,9 @@ export class ItemBar extends BaseInterface {
     }
 
     public resetOnClickEvent() {
-        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this.inventory);
+        this.onClickEvent = (item: InventorySlot, index: number) => {
+            this.inventory.setItemInHandIndex(index);
+        }
     }
 
     protected draw(): void {

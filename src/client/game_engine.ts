@@ -201,11 +201,21 @@ export class GameEngine {
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.CHEST) {
-                    this.renderer.renderFurnaceInterface();
+                    const chest = result.tile?.getContent as Chest
+                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot:InventorySlot,index:number) => {
+                        let item = this.player.inventory.getItemAtIndex(index);
+                        if(!item) return;
+                        let quantity = item.quantity;
+                        this.player.inventory.removeItem(item);
+                        chest.inventory.addItem(item, quantity);
+                    }, (i: Item) => {
+                        let quantity = i.quantity;
+                        this.player.inventory.addItem(i);
+                        chest.inventory.removeItem(i, quantity);
+                    });
+
                 } else if (result.interactableType === InteractableType.CORE) {
                     this.renderer.renderCoreInterface(coreStepsRecipes, this.player);                    const chest = result.tile?.getContent as Chest
-
-
                     this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (itemSlot:InventorySlot,index:number) => {
                         let item = this.player.inventory.getItemAtIndex(index);
                         if(!item) return;
