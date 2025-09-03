@@ -274,8 +274,6 @@ export class GameEngine {
             return false;
         }
 
-        console.log(this.save());
-
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
     }
 }

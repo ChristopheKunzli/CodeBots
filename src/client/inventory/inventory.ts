@@ -2,10 +2,30 @@ import { INVENTORY_STACK_SIZE } from "../constants";
 import Observable from "../observer/observable";
 import { InventorySlot } from "../types/inventory";
 import { Item } from "../world/items/item";
-import { Tool } from "../world/items/tools/tool";
 import { FurnaceItem } from "../world/items/stations/furnace_item";
 import { CrateItem } from "../world/items/stations/cratet_item";
 import { CraftingTableItem } from "../world/items/stations/crafting_table_item";
+import { AxeItem } from "../world/items/tools/axeItem";
+import { PickaxeItem } from "../world/items/tools/pickaxeItem";
+import { ShovelItem } from "../world/items/tools/shovelItem";
+import { WoodMaterial } from "../world/items/tools/woodMaterial";
+import { StoneMaterial } from "../world/items/tools/stoneMaterial";
+import { CopperMaterial } from "../world/items/tools/copperMaterial";
+import { IronMaterial } from "../world/items/tools/ironMaterial";
+import { CoalItem } from "../world/items/rawRessources/coal_item";
+import { CopperItem } from "../world/items/rawRessources/copper_item";
+import { IronItem } from "../world/items/rawRessources/iron_item";
+import { StoneItem } from "../world/items/rawRessources/stone_item";
+import { WoodPlankItem } from "../world/items/craft_ingredients/wood_plank_item";
+import { CementItem } from "../world/items/craft_ingredients/cement_item";
+import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
+import { CopperIngotItem } from "../world/items/craft_ingredients/copper_ingot_item";
+import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item";
+import { IronIngotItem } from "../world/items/craft_ingredients/iron_ingot_item";
+import { IronPlateItem } from "../world/items/craft_ingredients/iron_plate_item";
+import { IronRodItem } from "../world/items/craft_ingredients/iron_rod_item";
+import { NailItem } from "../world/items/craft_ingredients/nail_item";
+import { CodebotItem } from "../world/items/codebot_item";
 
 export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;
@@ -73,19 +93,19 @@ export default class Inventory extends Observable<InventorySlot[]> {
     }
 
     addItem(item: Item, quantity = item.quantity): number {
-        const isTool = item instanceof Tool;
         let remaining = quantity;
 
         // fill existing stacks
-        for (const slot of this.items) {
-            if (isTool) break;
-            if (remaining <= 0) break;
-            if (!slot) continue;
+        if (item.isStackable) {
+            for (const slot of this.items) {
+                if (remaining <= 0) break;
+                if (!slot) continue;
 
-            if (slot.spriteName === item.spriteName) {
-                const canAdd = Math.min(INVENTORY_STACK_SIZE - slot.quantity, remaining);
-                slot.quantity += canAdd;
-                remaining -= canAdd;
+                if (slot.spriteName === item.spriteName) {
+                    const canAdd = Math.min(INVENTORY_STACK_SIZE - slot.quantity, remaining);
+                    slot.quantity += canAdd;
+                    remaining -= canAdd;
+                }
             }
         }
 
@@ -95,11 +115,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
             if (!this.items[i]) {
                 const toAdd = Math.min(INVENTORY_STACK_SIZE, remaining);
-                if (isTool) {
-                    this.items[i] = item;
-                } else {
-                    this.items[i] = new (Object.getPrototypeOf(item).constructor)(toAdd);
-                }
+                this.items[i] = Inventory.makeItem(item, toAdd);
                 remaining -= toAdd;
             }
         }
@@ -161,98 +177,71 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return inv;
     }
 
-    private static getClassNameFromSpriteName(spriteName: string): string {
-        const parts: string[] = spriteName.split('_');
-        let className: string = "";
-        for (const part of parts) {
-            className += part.charAt(0).toUpperCase() + part.slice(1);
-        }
-        return className + "Item";
-    }
-
-    private static makeTool(item: any): Tool {
-        const nameParts = item.spriteName.split('_');
-        const toolType = nameParts[1];
-        const materialType = nameParts[0];
-
-        const className = toolType.charAt(0).toUpperCase() + toolType.slice(1) + "Item";
-        const materialClassName = materialType.charAt(0).toUpperCase() + materialType.slice(1) + "Material";
-
-        return new (require(`../world/items/tools/${className}`).default)(new (require(`../world/items/tools`).ToolMaterial)[materialClassName]());
-    }
-
-    private static makeStation(item: any) {
+    private static makeItem(item: any, qty?: number): Item {
+        const quantity = qty || item.quantity;
         switch (item.spriteName) {
             case "workbench":
                 return new CraftingTableItem(1);
             case "furnace":
                 return new FurnaceItem(1);
-            case"crate":
-                return new CrateItem(1);
-            default:
-                throw new Error(`Unknown station item: ${item.spriteName}`);
-        }
-    }
-
-    private static makeRawResource(item: any): Item {
-        const filePath = `../world/items/rawResources/${item.spriteName + "_item"}`;
-        const className = this.getClassNameFromSpriteName(item.spriteName);
-        const module = require(filePath);
-        return new module[className](item.quantity);
-    }
-
-    private static makeCraftIngredient(item: any): Item {
-        const filePath = `../world/items/craft_ingredients/${item.spriteName + "_item"}`;
-        const className = this.getClassNameFromSpriteName(item.spriteName);
-        const module = require(filePath);
-        return new module[className](item.quantity);
-    }
-
-    private static makeCodebot(item: any) {
-        const filePath = `../world/items/codebot_item`;
-        const className = "CodebotItem";
-        const module = require(filePath);
-        return new module[className](1);
-    }
-
-    private static makeItem(item: any): Item {
-        switch (item.spriteName) {
-            case "workbench":
-            case "furnace":
             case "crate":
-                return this.makeStation(item);
+                return new CrateItem(1);
             case "coal":
+                return new CoalItem(quantity);
             case "copper_ore":
+                return new CopperItem(quantity);
             case "iron_ore":
+                return new IronItem(quantity);
             case "stone_ore":
+                return new StoneItem(quantity);
             case "wood_log":
-                return this.makeRawResource(item);
+                return new WoodPlankItem(quantity);
             case "wood_pickaxe":
+                return new PickaxeItem(new WoodMaterial());
             case "stone_pickaxe":
+                return new PickaxeItem(new StoneMaterial());
             case "copper_pickaxe":
+                return new PickaxeItem(new CopperMaterial());
             case "iron_pickaxe":
+                return new PickaxeItem(new IronMaterial());
             case "wood_axe":
+                return new AxeItem(new WoodMaterial());
             case "stone_axe":
+                return new AxeItem(new StoneMaterial());
             case "copper_axe":
+                return new AxeItem(new CopperMaterial());
             case "iron_axe":
+                return new AxeItem(new IronMaterial());
             case "wood_shovel":
+                return new ShovelItem(new WoodMaterial());
             case "stone_shovel":
+                return new ShovelItem(new StoneMaterial());
             case "copper_shovel":
+                return new ShovelItem(new CopperMaterial());
             case "iron_shovel":
-                return this.makeTool(item);
+                return new ShovelItem(new IronMaterial());
             case "cement":
+                return new CementItem(quantity);
             case "concrete":
+                return new ConcreteItem(quantity);
             case "copper_ingot":
+                return new CopperIngotItem(quantity);
             case "iron_frame":
+                return new IronFrameItem(quantity);
             case "iron_ingot":
-            case "iron_plate":
+                return new IronIngotItem(quantity);
             case "iron_rod":
+                return new IronRodItem(quantity);
             case "nail":
+                return new NailItem(quantity);
+            case "iron_plate":
+                return new IronPlateItem(quantity);
             case "reinforced_iron_plate":
+                return new IronPlateItem(quantity);
             case "wood_plank":
-                return this.makeCraftIngredient(item);
+                return new WoodPlankItem(quantity);
             case "codebot_item":
-                return this.makeCodebot(item);
+                return new CodebotItem(quantity);
             default:
                 throw new Error(`Unknown item: ${item.spriteName}`);
         }
