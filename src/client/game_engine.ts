@@ -86,7 +86,7 @@ export class GameEngine {
                 })
             }
 
-            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+            setInterval(saveRequest, 1000 * 60/* * 5 TODO */);// every 5 minutes
 
             window.addEventListener("beforeunload", saveRequest);
         }
@@ -104,7 +104,7 @@ export class GameEngine {
             world: this.world.toJSON(),
         };
 
-        return JSON.stringify(gameState);
+        return gameState;
     }
 
     async initialize(withoutHud?: boolean) {
