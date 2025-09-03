@@ -2,6 +2,7 @@ import {Application} from 'pixi.js';
 import {initDevtools} from '@pixi/devtools';
 import {GameEngine} from './game_engine';
 
+
 // const exampleRecipes: Recipe[] = [
 //     {inputs: [{spriteName: "wood_log", quantity: 1}], output: {spriteName: "wood_plank", quantity: 4}},
 //     {inputs: [{spriteName: "iron_ingot", quantity: 1}], output: {spriteName: "nail", quantity: 16}},
