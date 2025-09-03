@@ -76,7 +76,7 @@ export class GameEngine {
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
-            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
+            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
         }
 
         const tile  = this.world.getTileAt(1, 0);
