@@ -72,6 +72,7 @@ export class MultilineInput extends Graphics {
         });
 
         window.addEventListener("keydown", this.onKeyDown);
+        window.addEventListener("paste", () => this.paste());
 
         this.blinkTimer = window.setInterval(() => {
             this._caret.visible = !this._caret.visible;
@@ -141,7 +142,7 @@ export class MultilineInput extends Graphics {
             this.texts.push(txt);
 
             const bounds = txt.getLocalBounds();
-            const realH = (bounds.height && bounds.height > 0) ? bounds.height : this.fallbackLineHeight;
+            const realH = this.fontSize;
             // add 1px slack to avoid fractional clipping
             y += realH + 1;
         }
@@ -389,6 +390,41 @@ export class MultilineInput extends Graphics {
                 break;
         }
     };
+
+    private paste() {
+        navigator.clipboard.readText().then(text => {
+            if (!this.focused) return;
+            if (!text) return;
+
+            const line = this.lines[this.cursorLine] ?? "";
+            // if we are at the very end (last line, at its end) and append happens, mark _justAppended
+            if (this.cursorLine === this.lines.length - 1 && this.cursorChar === line.length) {
+                this._justAppended = true;
+            }
+
+            const before = line.slice(0, this.cursorChar);
+            const after = line.slice(this.cursorChar);
+            const newLines = text.split("\n");
+            if (newLines.length === 1) {
+                // simple paste
+                this.lines[this.cursorLine] = before + text + after;
+                this.cursorChar += text.length;
+            } else {
+                // multi-line paste
+                const middleLines = newLines.slice(1, -1);
+                this.lines[this.cursorLine] = before + newLines[0];
+                this.lines.splice(this.cursorLine + 1, 0, ...middleLines, newLines[newLines.length - 1] + after);
+                this.cursorLine += newLines.length - 1;
+                this.cursorChar = newLines[newLines.length - 1].length;
+            }
+
+            this.renderLines();
+            this.updateCaretGraphics();
+            if (this.autoScrollToCaret) this.ensureCaretVisible();
+        }).catch((err) => {
+            console.error("Failed to read from clipboard:", err);
+        });
+    }
 
     public getText(): string {
         return this.lines.join("\n");

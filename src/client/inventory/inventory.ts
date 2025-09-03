@@ -8,7 +8,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;
 
     constructor(size: number) {
-        super(Array.from({length: size}, () => null));
+        super(Array.from({ length: size }, () => null));
 
         this.itemInHandIndex = 0;
     }
@@ -28,6 +28,13 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
     get items(): InventorySlot[] {
         return this.state;
+    }
+
+    getItemAtIndex(index: number): InventorySlot | null {
+        if (index < 0 || index >= this.items.length) {
+            throw new Error(`Index ${index} is out of bounds`);
+        }
+        return this.items[index];
     }
 
     canAddItem(item: Item): boolean {

@@ -3,6 +3,7 @@ import {findTexture} from "../spritesheet_atlas";
 import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
 import { InventorySlot } from '../types/inventory';
+import { Item } from '../world/items/item';
 
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
@@ -18,6 +19,13 @@ export class ItemBar extends BaseInterface {
             this.inventory.setItemInHandIndex(index);
         }
         this.draw();
+
+    }
+
+    public resetOnClickEvent() {
+        this.onClickEvent = (item: InventorySlot, index: number) => {
+            this.inventory.setItemInHandIndex(index);
+        }
     }
 
     protected draw(): void {
