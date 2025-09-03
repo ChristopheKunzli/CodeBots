@@ -154,7 +154,7 @@ export class World {
 
             const tile = chunk.getTile(x, y);
 
-            if (tile.content?.tileContentType === ressourceType) {
+            if (tile.getContent?.tileContentType === ressourceType) {
                 return current;
             }
 
