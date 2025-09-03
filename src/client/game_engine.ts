@@ -33,11 +33,11 @@ export class GameEngine {
     private codebots: Codebot[];
     private seed: string;
 
-    constructor(app: PIXI.Application, seed: string = this.generateRandomSeed()) {
+    constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
-        this.seed = seed;
-        const generator = new WorldGenerator(seed);
-        this.world = new World(generator);
+        this.seed = save ? save.seed : this.generateRandomSeed();
+        const generator = new WorldGenerator(this.seed);
+        this.world = save ? World.fromJSON(save.world, generator) : new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
             this.world,
@@ -46,7 +46,8 @@ export class GameEngine {
             this.addCodebot.bind(this),
         );
         this.camera = new Camera();
-        this.codebots = [];
+        this.codebots = save ? Codebot.fromJSON(save.codebots) : [];
+        this.player = save ? Player.fromJSON(save.player) : new Player(this.world);
 
         this.keys = new Set<string>();
 
@@ -87,7 +88,7 @@ export class GameEngine {
     }
 
     private generateRandomSeed(length: number = 32): string {
-        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
+        return Array.from({length}, () => Math.random().toString(36)[2]).join('');
     }
 
     private save(): any {
@@ -105,7 +106,6 @@ export class GameEngine {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
-        this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
@@ -273,6 +273,8 @@ export class GameEngine {
         if (distance > PLAYER_RANGE) {
             return false;
         }
+
+        console.log(this.save());
 
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
     }

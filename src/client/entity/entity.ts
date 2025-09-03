@@ -123,4 +123,11 @@ export abstract class Entity extends Observable<EntityState> {
             inventory: this.inventory.toJSON(),
         };
     }
+
+    fromJSON(entity: any) {
+        this.id = entity.id;
+        this.posX = entity.posX;
+        this.posY = entity.posY;
+        this.inventory = Inventory.fromJSON(entity.inventory);
+    }
 }

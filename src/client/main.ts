@@ -1,6 +1,6 @@
-import {Application} from 'pixi.js';
-import {initDevtools} from '@pixi/devtools';
-import {GameEngine} from './game_engine';
+import { Application } from 'pixi.js';
+import { initDevtools } from '@pixi/devtools';
+import { GameEngine } from './game_engine';
 
 (async () => {
     const app = new Application();
@@ -15,9 +15,13 @@ import {GameEngine} from './game_engine';
         initDevtools({app});
     }
 
+    const save = await fetch('/api/save').then(res => {
+        return res.ok ? res.json() : null;
+    }).catch(() => null);
+
     document.body.appendChild(app.canvas);
-    const engine = new GameEngine(app);
-    await engine.initialize();
+    const engine = new GameEngine(app, save ? save.seed : null);
+    await engine.initialize(save);
 
     app.ticker.add((delta) => {
         engine.update(delta.deltaTime);

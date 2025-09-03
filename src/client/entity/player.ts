@@ -80,4 +80,7 @@ export class Player extends Entity {
         return PLAYER_INVENTORY_SIZE;
     }
 
+    static fromJSON(player) {
+        return undefined;
+    }
 }

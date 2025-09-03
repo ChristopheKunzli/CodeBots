@@ -20,13 +20,13 @@ import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item"
 import { CodebotItem } from "../world/items/codebot_item";
 import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
 import { CementItem } from "../world/items/craft_ingredients/cement_item";
-import { ChestItem } from "../world/items/chest_item";
+import { CrateItem } from "../world/items/stations/cratet_item";
 
 export const craftingRecipes: Recipe[] = [
     // Crafting Stations
     {inputs: [new WoodPlankItem(32)], output: new CraftingTableItem(1)},
     {inputs: [new StoneItem(32)], output: new FurnaceItem(1)},
-    {inputs: [new WoodPlankItem(32)], output: new ChestItem(1)},
+    {inputs: [new WoodPlankItem(32)], output: new CrateItem(1)},
 
     // Crafting ingredients
     {inputs: [new WoodLogItem(1)], output: new WoodPlankItem(2)},

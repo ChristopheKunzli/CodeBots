@@ -14,8 +14,14 @@ export class World {
     public generator: IWorldGenerator;
     public entities: Entity[];
 
-    constructor(generator: IWorldGenerator) {
+    constructor(generator: IWorldGenerator, savedData?: any) {
         this.savedChunks = new Map();
+        if (savedData && savedData.savedChunks) {
+            for (const chunkData of savedData.savedChunks) {
+                //const chunk = Chunk.fromJSON(chunkData);
+                //this.savedChunks.set(chunk.key, chunk);
+            }
+        }
         this.activeChunks = new Map();
         this.generator = generator;
     }

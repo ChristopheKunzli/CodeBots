@@ -1,8 +1,8 @@
-import { Chest } from "../interactables/chest";
-import Tile from "../tile";
-import { Item } from "./item";
+import { Chest } from "../../interactables/chest";
+import Tile from "../../tile";
+import { Item } from "../item";
 
-export class ChestItem extends Item {
+export class CrateItem extends Item {
     constructor(quantity: number) {
         super("crate", quantity);
     }
