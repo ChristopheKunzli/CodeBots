@@ -77,7 +77,13 @@ export class GameEngine {
 
         if (viteDisableSave !== "true") {
             const saveRequest = () => {
-                fetch("/api/save", {method: "POST", body: JSON.stringify(this.save())})
+                fetch("/api/save", {
+                    method: "POST",
+                    body: JSON.stringify({data: this.save()}),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
             }
 
             setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes

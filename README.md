@@ -153,7 +153,7 @@ Terraform va alors créer une instance de "linux_web_app" pour chaque environmen
 
 ### Configurer le déploiement automatique sur sa propre instance:
 - Depuis Github dans Settings -> Environments, créer 2 environements: `Production` et `Development`
-- Pour chacun des environements, définir le secret `AZURE_WEBAPP_PUBLISH_PROFILE` avec le contenu du profile Azure de la web app correspondant à l'environement [cf](https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service) et les variables d'environement nécéssaire à l'application client (`VITE_DISABLE_SAVE` et `VITE_CLERK_PUBLISHABLE_KEY`)
+- Pour chacun des environements, définir le secret `AZURE_WEBAPP_PUBLISH_PROFILE` avec le contenu du profile Azure de la web app correspondant à l'environement [cf](https://learn.microsoft.com/en-us/visualstudio/azure/how-to-get-publish-profile-from-azure-app-service)
 
 ## 4. Mockup
 
