@@ -18,7 +18,6 @@ import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
 import { InteractionResult } from "./types/interaction_result";
 import { Entity } from "./entity/entity";
-import { ChestItem } from "./world/items/chest_item";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
@@ -72,6 +71,18 @@ export class GameEngine {
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
+
+        const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+        if (viteDisableSave !== "true") {
+            const saveRequest = () => {
+                fetch("/api/save", {method: "POST", body: JSON.stringify(this.save())})
+            }
+
+            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+
+            window.addEventListener("beforeunload", saveRequest);
+        }
     }
 
     private save(): any {
