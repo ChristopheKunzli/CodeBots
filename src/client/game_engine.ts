@@ -18,6 +18,10 @@ import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
 import { InteractionResult } from "./types/interaction_result";
 import { Entity } from "./entity/entity";
+import { ChestItem } from "./world/items/chest_item";
+import { Chest } from "./world/interactables/chest";
+import { Item } from "./world/items/item";
+import { InventorySlot } from "./types/inventory";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -76,9 +80,9 @@ export class GameEngine {
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
-            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
+            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
 
-            const tile  = this.world.getTileAt(1, 0);
+            const tile = this.world.getTileAt(1, 0);
             if (tile) {
                 tile.setContent = new Core(tile);
             }
@@ -196,6 +200,20 @@ export class GameEngine {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
                     this.renderer.renderFurnaceInterface();
+
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    const chest = result.tile?.getContent as Chest
+                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot: InventorySlot, index: number) => {
+                        let item = this.player.inventory.getItemAtIndex(index);
+                        if (!item) return;
+                        let quantity = item.quantity;
+                        this.player.inventory.removeItem(item);
+                        chest.inventory.addItem(item, quantity);
+                    }, (i: Item) => {
+                        let quantity = i.quantity;
+                        this.player.inventory.addItem(i);
+                        chest.inventory.removeItem(i, quantity);
+                    });
                 } else if (result.interactableType === InteractableType.CORE) {
                     this.renderer.renderCoreInterface(coreStepsRecipes, this.player);
                 }

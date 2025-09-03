@@ -20,6 +20,7 @@ import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item"
 import { CodebotItem } from "../world/items/codebot_item";
 import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
 import { CementItem } from "../world/items/craft_ingredients/cement_item";
+import { ChestItem } from "../world/items/chest_item";
 
 export const craftingRecipes: Recipe[] = [
     // Crafting Stations
@@ -27,6 +28,7 @@ export const craftingRecipes: Recipe[] = [
     {inputs: [new StoneItem(32)], output: new FurnaceItem(1)},
 
     // Crafting ingredients
+    {inputs: [new WoodLogItem(4)], output: new ChestItem(1)},
     {inputs: [new WoodLogItem(1)], output: new WoodPlankItem(2)},
     {inputs: [new IronIngotItem(1)], output: new NailItem(8)},
     {inputs: [new IronIngotItem(2)], output: new IronRodItem(1)},

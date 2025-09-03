@@ -20,6 +20,9 @@ import { OutlineFilter } from "pixi-filters";
 import { CoreStep } from "../types/item";
 import { Codebot } from "../entity/codebot";
 import { InventorySlot } from "../types/inventory";
+import { Item } from "../world/items/item";
+import Inventory from "../inventory/inventory";
+import { ChestInterface } from "../interface/chest_interface";
 
 
 export class WorldRenderer {
@@ -98,6 +101,7 @@ export class WorldRenderer {
     initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[], player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
         this.craftingInterface = new CraftingInterface(this.app, this.spriteSheet, 64, craftingRecipes, this.hudLayer, onClickOnCraftLine);
         this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
+
         this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         this.itemBar.show();
         this.renderPlayerCoordinate(player);
@@ -122,7 +126,14 @@ export class WorldRenderer {
         }
     }
 
-    public renderCraftingInterface() {
+
+    renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index:number)=>void, moveItemFromChest: (item:Item)=>void){
+        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64,chestInventory, this.hudLayer,moveItemFromChest, ()=> this.itemBar.resetOnClickEvent() );
+        chestInterface.show();
+        this.itemBar.onClickEvent = moveItemToChest;
+    }
+
+    public renderCraftingInterface(){
         this.craftingInterface.show();
     }
 
