@@ -104,6 +104,7 @@ export class WorldRenderer {
 
         this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         this.itemBar.show();
+        this.renderPlayerCoordinate(player);
     }
 
     public render(chunks: Chunk[]) {
