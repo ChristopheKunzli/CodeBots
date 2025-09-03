@@ -79,4 +79,5 @@ export class Player extends Entity {
     getInventorySize(): number {
         return PLAYER_INVENTORY_SIZE;
     }
+
 }

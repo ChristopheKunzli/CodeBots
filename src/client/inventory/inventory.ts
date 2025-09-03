@@ -127,4 +127,11 @@ export default class Inventory extends Observable<InventorySlot[]> {
     isEmpty(): boolean {
         return this.items.every((slot) => !slot);
     }
+
+    public toJSON(): any {
+        return {
+            items: this.items,
+            itemInHandIndex: this.itemInHandIndex
+        };
+    }
 }

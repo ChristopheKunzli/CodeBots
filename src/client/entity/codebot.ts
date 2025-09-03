@@ -121,4 +121,12 @@ export class Codebot extends Entity {
 
         return result;
     }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            program: this.program,
+            isRunning: this.isRunning,
+        };
+    }
 }

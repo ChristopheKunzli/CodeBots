@@ -28,4 +28,14 @@ export default class Tile {
         return this.content;
     }
 
+    toJSON(): any {
+        return {
+            type: this.type,
+            content: this.content ? this.content.toJSON() : null,
+            decoration: this.decoration,
+            variation: this.variation,
+            absX: this.absX,
+            absY: this.absY,
+        };
+    }
 }

@@ -27,10 +27,12 @@ export class GameEngine {
     private player: Player;
     private keys: Set<string>;
     private codebots: Codebot[];
+    private seed: string;
 
-    constructor(app: PIXI.Application) {
+    constructor(app: PIXI.Application, seed: string = "seed") {
         this.app = app;
-        const generator = new WorldGenerator("seed");
+        this.seed = seed;
+        const generator = new WorldGenerator(seed);
         this.world = new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
@@ -68,6 +70,19 @@ export class GameEngine {
         });
     }
 
+    private save(): any {
+        const gameState = {
+            seed: this.seed,
+            player: this.player.toJSON(),
+            codebots: [],
+            world: this.world.toJSON(),
+        };
+        for (const codebot of this.codebots) {
+            gameState.codebots.push(codebot.toJSON());
+        }
+        return JSON.stringify(gameState);
+    }
+
     async initialize(withoutHud?: boolean) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
@@ -79,7 +94,7 @@ export class GameEngine {
             this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
         }
 
-        const tile  = this.world.getTileAt(1, 0);
+        const tile = this.world.getTileAt(1, 0);
         if (tile) {
             tile.setContent = new Core(tile);
         }
