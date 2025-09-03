@@ -91,9 +91,12 @@ export class GameEngine {
                 })
             }
 
-            setInterval(saveRequest, 1000 * 60/* * 5 TODO */);// every 5 minutes
+            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
-            window.addEventListener("beforeunload", async () => await saveRequest());
+            window.addEventListener("beforeunload", () => {
+                const data = new Blob([JSON.stringify({data: this.save()})], { type: "application/json" });
+                navigator.sendBeacon("/api/save", data);
+            }, false);
         }
     }
 
