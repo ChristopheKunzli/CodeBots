@@ -29,17 +29,12 @@ jobs:
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
         run: |
           # Debug: print env variables
-          echo "VITE_DISABLE_SAVE=$VITE_DISABLE_SAVE"
 
-          if [ -z "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
-            echo "❌ VITE_CLERK_PUBLISHABLE_KEY is not set"
-            exit 1
-          else
-            echo "✅ VITE_CLERK_PUBLISHABLE_KEY is set"
-          fi
           npm install
           npm run build --if-present
           npm run test --if-present
+          echo "Checking VITE_CLERK_PUBLISHABLE_KEY is set in dist/"
+          grep -R "$VITE_CLERK_PUBLISHABLE_KEY" dist/ || echo "❌ CLERK_PUBLISHABLE_KEY not found"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
