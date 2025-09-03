@@ -26,9 +26,9 @@ export const craftingRecipes: Recipe[] = [
     // Crafting Stations
     {inputs: [new WoodPlankItem(32)], output: new CraftingTableItem(1)},
     {inputs: [new StoneItem(32)], output: new FurnaceItem(1)},
+    {inputs: [new WoodPlankItem(32)], output: new ChestItem(1)},
 
     // Crafting ingredients
-    {inputs: [new WoodLogItem(4)], output: new ChestItem(1)},
     {inputs: [new WoodLogItem(1)], output: new WoodPlankItem(2)},
     {inputs: [new IronIngotItem(1)], output: new NailItem(8)},
     {inputs: [new IronIngotItem(2)], output: new IronRodItem(1)},
