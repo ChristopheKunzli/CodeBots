@@ -8,9 +8,11 @@ dotenv.config({path: "src/server/.env"});
 
 const app = new Hono();
 
-app.use('*', clerkMiddleware());
-
 export const requireAuth = async (c: Context, next: Next) => {
+    if (process.env.DISABLE_SAVE === "true") {
+        return next();
+    }
+
     const auth = getAuth(c);
 
     if (!auth?.userId) {
@@ -19,6 +21,16 @@ export const requireAuth = async (c: Context, next: Next) => {
 
     return next();
 };
+
+if (process.env.DISABLE_SAVE !== "true") {
+    app.use('*', clerkMiddleware());
+
+    app.get("/api/save", requireAuth, (c) => {
+        const {userId} = getAuth(c);
+
+        return c.json({userId});
+    });
+}
 
 app.get("/game*", requireAuth, serveStatic({ path: "./dist/client/game.html"}));
 

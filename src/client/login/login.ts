@@ -2,6 +2,7 @@
 import {Clerk} from "@clerk/clerk-js";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const disableSave = import.meta.env.VITE_DISABLE_SAVE;
 
 export const initializeAuthentication = async () => {
     const clerk = new Clerk(clerkPubKey);
@@ -12,7 +13,7 @@ export const initializeAuthentication = async () => {
         throw new Error("invalid html element");
     }
 
-    if (clerk.isSignedIn) {
+    if (clerk.isSignedIn || disableSave === "true") {
         window.location.href = "/";
         return;
     }

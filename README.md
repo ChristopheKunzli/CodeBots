@@ -100,10 +100,30 @@ Prérequis :
 
 ### Lancer le projet en mode développement:
 
+- copier `/src/client/.env.example` et le renommer en `/src/client/.env`
+
+- remplire le fichier `/src/client/.env` avec les identifiants de votre application clerk [cf](https://clerk.com/docs) ou bien désactiver la fonctionnalité de sauvegarde
+
+```bash
+VITE_DISABLE_SAVE=true # or false and give the publishable clerk key
+VITE_CLERK_PUBLISHABLE_KEY=
+```
+
+- Lancer le projet
 ```bash
 npm install
 npm run dev:client
 ```
+
+### Comment build le projet
+- copier `/src/server/.env.example` et le renommer en `/src/server/.env`
+
+- remplire le fichier `/src/server/.env` avec les identifiants clerk [cf](https://clerk.com/docs) ou bien désactiver la fonctionnalité de sauvegarde
+`DISABLE_SAVE=true`
+
+`npm run build`
+
+Le résultat du build se trouve alors dans le dossier `dist`
 
 ### Comment contribuer:
 
