@@ -12,6 +12,7 @@ export class ChestInterface extends BaseInterface {
         this.hudLayer = hudLayer;
         this.inventory = inventory;
         this.moveItemFromChest = moveItemFromChest;
+        this.inventory.observe(this.draw.bind(this));
         this.draw();
     }
 
