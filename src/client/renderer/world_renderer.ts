@@ -5,18 +5,21 @@ import { TileType } from "../types/tile_type";
 import { ResourceType } from "../types/resource_type";
 import { findAnimation, findTexture, getSpritesheets, TextureName } from "../spritesheet_atlas";
 import { DecorationType } from "../types/decoration_type";
-import { TILE_SIZE } from "../constants";
+import { ANIMATION_SPEED, CAMERA_ZOOM, GUI_SCALE, TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
 import { CraftingInterface } from "../interface/crafting_interface";
 import { CoreInterface } from "../interface/core_interface";
+import { RobotInterface } from "../interface/robot_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
 import { CoreStep } from "../types/item";
+import { Codebot } from "../entity/codebot";
+import { InventorySlot } from "../types/inventory";
 
 
 export class WorldRenderer {
@@ -37,6 +40,7 @@ export class WorldRenderer {
     private furnaceInterface: CraftingInterface;
     private coreInterface: CoreInterface;
     private itemBar: ItemBar;
+    public robotInterface?: RobotInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -48,11 +52,18 @@ export class WorldRenderer {
     private world: World;
     private app: PIXI.Application;
     private onInteractionWithTile: (tile: Tile) => void;
+    private onAddCodebot: (x: number, y: number) => void;
 
-    constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
+    constructor(
+        world: World,
+        app: PIXI.Application,
+        onInteractionWithTile: (tile: Tile) => void,
+        onAddCodebot: (x: number, y: number) => void,
+    ) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
+        this.gameContainer = new PIXI.Container();
         this.tileLayer = new PIXI.Container();
         this.overTileLayer = new PIXI.Container();
         this.middleLayer = new PIXI.Container();
@@ -70,6 +81,7 @@ export class WorldRenderer {
         this.container.addChild(this.hudLayer);
 
         this.onInteractionWithTile = onInteractionWithTile;
+        this.onAddCodebot = onAddCodebot;
     }
 
     private setCursor() {
@@ -143,6 +155,36 @@ export class WorldRenderer {
         this.coreInterface.show();
     }
 
+    public renderPlayerCoordinate(player: Player) {
+        const getTextFromCoordinate = (player: Player) => `x: ${Math.round(player.posX)}, y: ${Math.round(player.posY)}`
+
+        document.fonts.ready.then(() => {
+            const coordinateText = new PIXI.Text({
+                text: getTextFromCoordinate(player),
+                style: {
+                    fontFamily: `"Jersey 10", sans-serif`,
+                    fontWeight: "400",
+                    fontStyle: "normal",
+                    fontSize: 40,
+                    fill: "#73946b",
+                    stroke: {
+                        color: "white",
+                        width: 2,
+                    },
+                },
+            });
+
+            coordinateText.x = 10;
+            coordinateText.y = 10;
+
+            player.observe(() => {
+                coordinateText.text = getTextFromCoordinate(player);
+            });
+
+            this.hudLayer.addChild(coordinateText);
+        });
+    }
+
     public renderEntity(entity: Entity) {
         const animation = findAnimation(this.spriteSheet, entity.getAnimationName());
         if (!animation) {
@@ -150,20 +192,20 @@ export class WorldRenderer {
         }
 
         const sprite = new PIXI.AnimatedSprite(animation);
-        sprite.animationSpeed = 0.1;
+        sprite.animationSpeed = ANIMATION_SPEED;
         sprite.anchor.set(0, 1);
-        sprite.play();
+        if (entity.isAnimated()) {
+            sprite.play();
+        } else {
+            sprite.stop();
+        }
         sprite.x = entity.posX * TILE_SIZE;
         sprite.y = entity.posY * TILE_SIZE + TILE_SIZE;
-
-        // sprite.anchor.set(0.5, 1); // les pieds posés sur le sol
-        // bas du sprite = bas du tile
-        sprite.zIndex = sprite.y; // pour le tri avec les autres objets
+        sprite.zIndex = sprite.y;
 
         this.middleLayer.addChild(sprite);
         let animationName = entity.getAnimationName();
         entity.observe((state) => {
-            sprite.zIndex = sprite.y;
             if (animationName !== entity.getAnimationName()) {
                 sprite.textures = findAnimation(this.spriteSheet, entity.getAnimationName())!;
                 animationName = entity.getAnimationName();
@@ -171,11 +213,111 @@ export class WorldRenderer {
 
             sprite.x = state.posX * TILE_SIZE;
             sprite.y = state.posY * TILE_SIZE + TILE_SIZE;
+            sprite.zIndex = sprite.y;
 
             if (entity.isAnimated()) {
                 sprite.play();
             } else {
                 sprite.stop();
+            }
+        });
+
+        return sprite;
+    }
+
+    public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, player: Player) {
+        sprite.interactive = true;
+            sprite.cursor = "hover";
+            sprite
+                .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+                .on("pointerout", () => sprite.filters = null)
+                .on("click", () => this.renderCodebotInterface(codebot, player));
+            this.renderCodebotMessage(sprite, codebot);
+    }
+
+    private renderCodebotInterface(codebot: Codebot, player: Player) {
+        const oldOnClickEvent = this.itemBar.onClickEvent;
+        this.itemBar.onClickEvent = (item: InventorySlot) => {
+            if (codebot.inventory.itemInHand !== null || item === null) {
+                return;
+            }
+            codebot.inventory.addItem(item);
+            player.inventory.removeItem(item);
+        };
+        const handleClose = () => {
+            this.itemBar.onClickEvent = oldOnClickEvent;
+            this.robotInterface?.destroy();
+            this.robotInterface = undefined;
+        };
+
+        const handleRemoveItemInHand = () => {
+            const {itemInHand} = codebot.inventory;
+            if (!itemInHand || !player.inventory.canAddItem(itemInHand)) {
+                return;
+            }
+
+            player.inventory.addItem(itemInHand);
+            codebot.inventory.removeItem(itemInHand);
+        };
+
+        this.robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, handleRemoveItemInHand, this.hudLayer, handleClose);
+        this.robotInterface.show();
+    }
+
+    private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
+        let text = codebot.getMessage();
+
+        const dialogBoxTexture = findTexture(this.spriteSheet, "dialog_box");
+        if (!dialogBoxTexture) {
+            throw new Error("could not find texture");
+        }
+
+        const padding = 5;
+
+        const message = new PIXI.Text({
+            text: text ?? "",
+            style: {
+                fontFamily: `"Jersey 10", sans-serif`,
+                fontStyle: "normal",
+                fontSize: 16,
+                fill: "black",
+            },
+            x: padding,
+            resolution: CAMERA_ZOOM,
+        });
+
+        const panel = new PIXI.NineSliceSprite({
+            texture: dialogBoxTexture,
+            leftWidth: 3,
+            rightWidth: 9,
+            topHeight: 3,
+            bottomHeight: 10,
+            width: message.width + 2 * padding,
+            height: message.height + 2 * padding,
+            x: -message.width,
+            y: -(message.height + 2 * padding + TILE_SIZE),
+            zIndex: 10000,
+        });
+
+        panel.addChild(message);
+        sprite.addChild(panel);
+
+        panel.visible = text !== null;
+
+        codebot.observe(() => {
+            if (text !== codebot.getMessage()) {
+                text = codebot.getMessage();
+
+                if (text) {
+                    panel.visible = true;
+                    message.text = text;
+                    panel.width = message.width + 2 * padding;
+                    panel.height = message.height + 2 * padding;
+                    panel.x = -message.width;
+                    panel.y = -(message.height + 2 * padding + TILE_SIZE);
+                } else {
+                    panel.visible = false;
+                }
             }
         });
     }
@@ -250,7 +392,7 @@ export class WorldRenderer {
                     this.getTextureForMiddleLayer(tile, chunk, x, y);
 
                 } else if (tile.decoration != null) {
-                    const occSprite = this.getTextureForDecoration(tile, chunk, x, y);
+                    this.getTextureForDecoration(tile, chunk, x, y);
                 }
             }
         }
@@ -396,8 +538,13 @@ export class WorldRenderer {
                 this.overTileLayer.addChild(sprite);
                 break;
             };
+            case InteractableType.CODEBOT: {
+                this.onAddCodebot(tile.absX, tile.absY);
+                tile.setContent = null;
+                return;
+            };
             default: {
-                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron_axe"));
                 this.middleLayer.addChild(sprite);
                 break;
             }

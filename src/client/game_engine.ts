@@ -14,6 +14,10 @@ import { Core } from "./world/interactables/core";
 import { craftingRecipes } from "./recipes/craftingRecipes";
 import { furnaceRecipes } from "./recipes/smeltingRecipes";
 import { coreStepsRecipes } from "./recipes/coreStepsRecipes";
+import { Codebot } from "./entity/codebot";
+import { CodebotItem } from "./world/items/codebot_item";
+import { InteractionResult } from "./types/interaction_result";
+import { Entity } from "./entity/entity";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -22,14 +26,21 @@ export class GameEngine {
     public camera: Camera;
     private player: Player;
     private keys: Set<string>;
+    private codebots: Codebot[];
 
     constructor(app: PIXI.Application) {
         this.app = app;
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
+        this.renderer = new WorldRenderer(
+            this.world,
+            app,
+            this.handleInteractWithTile.bind(this),
+            this.addCodebot.bind(this),
+        );
         this.camera = new Camera();
+        this.codebots = [];
 
         this.keys = new Set<string>();
 
@@ -73,30 +84,47 @@ export class GameEngine {
             tile.setContent = new Core(tile);
         }
 
-        // TODO remove
+
+        this.renderer.renderPlayerCoordinate(this.player);
+
+        // TODO test only
         this.player.inventory.addItem(new CraftingTableItem(1));
         this.player.inventory.addItem(new FurnaceItem(1));
+        this.player.inventory.addItem(new CodebotItem(1));
     }
 
-    craftEvent(recipe: Recipe) {
-        if (!this.player.inventory.canAddItem(recipe.output)) {
+    addCodebot(x: number, y: number) {
+        const codebot = new Codebot(
+            this.world,
+            x,
+            y,
+            this.handleCodebotInteraction.bind(this),
+        );
+        this.codebots.push(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
+    }
+
+    craftEvent(recipe: Recipe, entity: Entity) {
+        if (!entity.inventory.canAddItem(recipe.output)) {
             return;
         }
         for (const itemNeeded of recipe.inputs) {
-            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            let canCraft = entity.inventory.canRemoveItem(itemNeeded);
             if (!canCraft)
                 return;
         }
 
         for (const itemNeeded of recipe.inputs) {
-            this.player.inventory.removeItem(itemNeeded);
+            entity.inventory.removeItem(itemNeeded);
         }
 
-        this.player.inventory.addItem(recipe.output);
+        entity.inventory.addItem(recipe.output);
     }
 
     update(delta: number) {
-        this.player.update(this.keys, delta);
+        const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
+        entities.forEach((entity) => entity.update(this.renderer.robotInterface?.visible ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);
@@ -104,7 +132,6 @@ export class GameEngine {
             this.player.cX = newCX;
             this.player.cY = newCY;
 
-            const entities = [this.player /* , ...robots plus tard */];
             this.world.updateLoadedChunks(entities);
 
             // 2. recalcul rendu
@@ -115,6 +142,37 @@ export class GameEngine {
         this.camera.follow(this.player, this.app.screen.width, this.app.screen.height);
         this.renderer.gameContainer.x = this.camera.x;
         this.renderer.gameContainer.y = this.camera.y;
+    }
+
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) {
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    const recipe = craftingRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.FURNACE) {
+                    const recipe = furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                }
+                break;
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
     }
 
     private handleInteractWithTile(tile: Tile) {

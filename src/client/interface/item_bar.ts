@@ -8,13 +8,12 @@ export class ItemBar extends BaseInterface {
     private inventory: Inventory;
     public onClickEvent: (item:InventorySlot, index: number) => void;
     private slots: Sprite[];
-    private container: Container;
+    private onItemBarClick: (i: number) => void;
 
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
         super(app, spritesheets, scale, container);
         this.inventory = inventory;
         this.slots = [];
-        this.container = container;
         this.onClickEvent = (item: InventorySlot, index: number) => {
             this.inventory.setItemInHandIndex(index);
         }
@@ -23,7 +22,7 @@ export class ItemBar extends BaseInterface {
 
     protected draw(): void {
         const itemBar = new Container();
-        this.container.addChild(itemBar);
+        this.hudLayer.addChild(itemBar);
 
         const {items} = this.inventory;
 
