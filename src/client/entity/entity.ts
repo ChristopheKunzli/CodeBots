@@ -24,7 +24,7 @@ export abstract class Entity extends Observable<EntityState> {
     public inventory: Inventory;
     protected world: World;
 
-    constructor(world: World, x: number, y: number) {
+    constructor(world: World, x: number, y: number, inventory?: Inventory, id?: string) {
         super({
             posX: x,
             posY: y,
@@ -32,9 +32,9 @@ export abstract class Entity extends Observable<EntityState> {
             cY: -1,
         });
 
-        this.inventory = new Inventory(this.getInventorySize());
+        this.inventory = inventory ? inventory : new Inventory(this.getInventorySize());
         this.world = world;
-        this.id = `entity_${Entity.idCounter++}`;
+        this.id = id ? id : `entity_${Entity.idCounter++}`;
     }
 
     set cX(newCX: number) {

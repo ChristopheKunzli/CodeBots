@@ -1,26 +1,27 @@
 import Interpreter from "codebotsinterpreter";
 import CustomBuiltins from "../interpreter/custom_builtins";
-import {Entity} from "./entity";
-import type {AnimationName, TextureName} from "../spritesheet_atlas";
-import {EntityType} from "../types/entity_type";
-import { CODEBOT_SPEED, CODEBOT_INVENTORY_SIZE } from "../constants";
+import { Entity } from "./entity";
+import type { AnimationName } from "../spritesheet_atlas";
+import { EntityType } from "../types/entity_type";
+import { CODEBOT_INVENTORY_SIZE, CODEBOT_SPEED } from "../constants";
 import { Position } from "../types/position";
 import { World } from "../world/world";
 import { InteractionResult } from "../types/interaction_result";
 import Tile from "../world/tile";
+import Inventory from "../inventory/inventory";
 
 export class Codebot extends Entity {
     private customBuiltins: CustomBuiltins;
     public program: string;
     private isRunning: boolean;
-    private error: string|null;
-    private target: Position|null;
-    private onTargetReached: (() => void)|null;
+    private error: string | null;
+    private target: Position | null;
+    private onTargetReached: (() => void) | null;
     private static interpreter = new Interpreter();
-    private message: string|null;
+    private message: string | null;
     private onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void;
 
-    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void){
+    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void) {
         super(world, x, y);
         this.program = "";
         this.isRunning = false;
@@ -48,12 +49,12 @@ export class Codebot extends Entity {
         return this.error !== null;
     }
 
-    setMessage(message: string|null) {
+    setMessage(message: string | null) {
         this.message = message;
         this.notify();
     }
 
-    getMessage(): string|null {
+    getMessage(): string | null {
         return this.error ?? this.message;
     }
 
@@ -128,5 +129,13 @@ export class Codebot extends Entity {
             program: this.program,
             isRunning: this.isRunning,
         };
+    }
+
+    static fromJSON(codebotData) {
+        const codebot = new Codebot(codebotData.world, codebotData.state.posX, codebotData.state.posY, () => {});
+        codebot.program = codebotData.program;
+        codebot.isRunning = codebotData.isRunning;
+        codebot.inventory = codebotData.inventory ? Inventory.fromJSON(codebotData.inventory) : new Inventory(codebot.getInventorySize());
+        return codebotData;
     }
 }
