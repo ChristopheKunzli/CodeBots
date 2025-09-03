@@ -81,20 +81,18 @@ export class GameEngine {
 
         if (!withoutHud) {
             this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
+
+            const tile = this.world.getTileAt(1, 0);
+            if (tile) {
+                tile.setContent = new Core(tile);
+            }
+
+            // TODO test only
+            this.player.inventory.addItem(new CraftingTableItem(1));
+            this.player.inventory.addItem(new FurnaceItem(1));
+            this.player.inventory.addItem(new CodebotItem(1));
         }
 
-        const tile = this.world.getTileAt(1, 0);
-        if (tile) {
-            tile.setContent = new Core(tile);
-        }
-
-
-        this.renderer.renderPlayerCoordinate(this.player);
-
-        // TODO test only
-        this.player.inventory.addItem(new CraftingTableItem(1));
-        this.player.inventory.addItem(new FurnaceItem(1));
-        this.player.inventory.addItem(new CodebotItem(1));
     }
 
     addCodebot(x: number, y: number) {
