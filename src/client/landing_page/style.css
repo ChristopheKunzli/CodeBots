@@ -103,3 +103,9 @@ code {
     -webkit-text-stroke: 1px #dddad0;
     color: hsl(140, 20%, 30%);
 }
+
+#auth #user-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}

@@ -1,18 +1,32 @@
-import {Hono} from "hono";
+import dotenv from "dotenv";
+import {Context, Hono, Next} from "hono";
 import {serve} from "@hono/node-server";
 import {serveStatic} from "@hono/node-server/serve-static";
+import {clerkMiddleware, getAuth} from '@hono/clerk-auth';
+
+dotenv.config({path: "src/server/.env"});
 
 const app = new Hono();
 
-// Exemple API
-app.get("/api/hello", (c) => c.json({message: "Hello from Hono 🚀"}));
+app.use('*', clerkMiddleware());
 
-// En production : servir le build de Vite
+export const requireAuth = async (c: Context, next: Next) => {
+    const auth = getAuth(c);
+
+    if (!auth?.userId) {
+        return c.redirect('/login');
+    }
+
+    return next();
+};
+
+app.get("/game*", requireAuth, serveStatic({ path: "./dist/client/game.html"}));
+
 app.use("/*", serveStatic({root: "./dist/client"}));
 
-app.get("/game", serveStatic({ path: "./dist/client/game.html"}));
-
 app.get("/doc", serveStatic({ path: "./dist/client/doc.html"}));
+
+app.get("/login", serveStatic({ path: "./dist/client/login.html"}));
 
 serve({
     fetch: app.fetch,
