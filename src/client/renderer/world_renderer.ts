@@ -100,6 +100,7 @@ export class WorldRenderer {
         this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
         this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         this.itemBar.show();
+        this.renderPlayerCoordinate(player);
     }
 
     public render(chunks: Chunk[]) {
