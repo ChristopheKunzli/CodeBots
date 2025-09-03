@@ -1,5 +1,5 @@
 import {Application} from 'pixi.js';
-
+import {initDevtools} from '@pixi/devtools';
 import {GameEngine} from './game_engine';
 
 
@@ -84,18 +84,22 @@ import {GameEngine} from './game_engine';
 //     "\n17Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood" +
 //     "\n18Repeat:\n    go to zone 1\n    cut wood\n    go to chest 1\n    drop wood"
 // ;
-import { initDevtools } from '@pixi/devtools';
 
 
 (async () => {
     // Create a new application
     const app = new Application();
-    initDevtools({ app });
+
     // Initialize the application
     await app.init({
         background: '#1099bb',
         resizeTo: window,
     });
+
+    if (process.env.NODE_ENV === "development") {
+        console.log("init pixijs dev tools");
+        initDevtools({app});
+    }
 
     // Append the application canvas to the document body
     document.body.appendChild(app.canvas);

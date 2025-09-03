@@ -16,9 +16,18 @@ export const ITEM_TYPES: TextureName[] = [
     "wood_log",
     "wood_plank",
     "seed",
-    "pickaxe",
-    "shovel",
-    "axe",
+    "wood_pickaxe",
+    "stone_pickaxe",
+    "copper_pickaxe",
+    "iron_pickaxe",
+    "wood_axe",
+    "stone_axe",
+    "copper_axe",
+    "iron_axe",
+    "wood_shovel",
+    "stone_shovel",
+    "copper_shovel",
+    "iron_shovel",
     "iron_rod",
     "nail",
     "iron_frame",
@@ -32,13 +41,12 @@ export const ITEM_TYPES: TextureName[] = [
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type CoreItem = {
-    spriteName: TextureName
+    item: Item;
     currentGathered: number
-    goal: number
 }
 
 export type CoreStep = {
-    stepNumber: number,
-    items: CoreItem[]
+    name: string;
+    items: CoreItem[];
 }
 

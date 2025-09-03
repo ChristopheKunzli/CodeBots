@@ -2,20 +2,22 @@ import {Application, Container, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
+import { InventorySlot } from '../types/inventory';
 import { Item } from '../world/items/item';
 
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
-    public onClickEvent: (index:number)=>void;
+    public onClickEvent: (item:InventorySlot, index: number) => void;
     private slots: Sprite[];
-    private container: Container;
+    private onItemBarClick: (i: number) => void;
 
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
-        super(app, spritesheets, scale);
+        super(app, spritesheets, scale, container);
         this.inventory = inventory;
         this.slots = [];
-        this.container = container;
-        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this.inventory);
+        this.onClickEvent = (item: InventorySlot, index: number) => {
+            this.inventory.setItemInHandIndex(index);
+        }
         this.draw();
 
     }
@@ -26,7 +28,7 @@ export class ItemBar extends BaseInterface {
 
     protected draw(): void {
         const itemBar = new Container();
-        this.container.addChild(itemBar);
+        this.hudLayer.addChild(itemBar);
 
         const {items} = this.inventory;
 
@@ -53,7 +55,7 @@ export class ItemBar extends BaseInterface {
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                items[i] && this.onClickEvent(i);
+                this.onClickEvent(items[i], i);
             });
 
             itemBar.addChild(lightSquare);

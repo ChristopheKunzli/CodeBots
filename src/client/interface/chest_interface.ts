@@ -8,7 +8,7 @@ export class ChestInterface extends BaseInterface {
     private inventory: Inventory;
     private moveItemFromChest: (item:Item)=>void;
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer:Container, moveItemFromChest:(item:Item)=>void, onCloseCallBack:()=>void) {
-        super(app, spritesheets, scale, onCloseCallBack);
+        super(app, spritesheets, scale,hudLayer, onCloseCallBack);
         this.hudLayer = hudLayer;
         this.inventory = inventory;
         this.moveItemFromChest = moveItemFromChest;

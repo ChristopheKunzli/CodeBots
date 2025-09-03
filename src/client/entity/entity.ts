@@ -1,6 +1,6 @@
 import Inventory from "../inventory/inventory";
 import Observable from "../observer/observable";
-import { AnimationName, TextureName } from "../spritesheet_atlas";
+import { AnimationName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { InteractableType } from "../types/interactable_type";
 import { InteractionResult } from "../types/interaction_result";
@@ -8,6 +8,8 @@ import { Interactable } from "../world/interactables/interactable";
 import { Resource } from "../world/resources/resource";
 import Tile from "../world/tile";
 import { World } from "../world/world";
+import { Tool } from "../world/items/tools/tool";
+import { Item } from "../world/items/item";
 
 type EntityState = {
     posX: number;
@@ -21,10 +23,11 @@ export abstract class Entity extends Observable<EntityState> {
     public id: string;
     public inventory: Inventory;
     protected world: World;
-    constructor(world: World) {
+
+    constructor(world: World, x: number, y: number) {
         super({
-            posX: 0,
-            posY: 0,
+            posX: x,
+            posY: y,
             cX: -1,
             cY: -1,
         });
@@ -34,16 +37,26 @@ export abstract class Entity extends Observable<EntityState> {
         this.id = `entity_${Entity.idCounter++}`;
     }
 
+    set cX(newCX: number) {
+        this.state.cX = newCX;
+    }
+
+    set cY(newCY: number) {
+        this.state.cY = newCY;
+    }
+
     interactWithTile(tile: Tile): InteractionResult {
         const content = tile?.getContent;
 
+        const itemInHand : Item | null = this.inventory.itemInHand;
+
         if (content instanceof Resource) {
-            const item = content.mine();
+            const item = content.mine(itemInHand instanceof Tool ? itemInHand : null);
             if (item) {
                 this.inventory.addItem(item);
-                return { type: "MINED", tile };
+                return {type: "MINED", tile};
             }
-            return { type: "NONE", tile };
+            return {type: "MINING", tile};
         }
 
         if (content instanceof Interactable) {
@@ -54,7 +67,6 @@ export abstract class Entity extends Observable<EntityState> {
             };
         }
 
-        const itemInHand = this.inventory.itemInHand;
         if (itemInHand) {
             const used = itemInHand.use(tile);
             if (used) {
@@ -62,7 +74,7 @@ export abstract class Entity extends Observable<EntityState> {
             }
         }
 
-        return { type: "NONE", tile };
+        return {type: "NONE", tile};
     }
 
     abstract getSpeed(): number;
@@ -74,10 +86,6 @@ export abstract class Entity extends Observable<EntityState> {
     abstract getType(): EntityType;
 
     abstract getInventorySize(): number;
-
-    interact(i: Interactable) {
-
-    }
 
     get posX(): number {
         return this.state.posX;
@@ -103,11 +111,7 @@ export abstract class Entity extends Observable<EntityState> {
         this.state.posY = newPosY;
     }
 
-    set cX(newCX: number) {
-        this.state.cX = newCX;
-    }
+    interact(i: Interactable) {
 
-    set cY(newCY: number) {
-        this.state.cY = newCY;
     }
 }

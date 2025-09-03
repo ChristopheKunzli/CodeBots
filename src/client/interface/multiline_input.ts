@@ -410,5 +410,6 @@ export class MultilineInput extends Graphics {
         for (const t of this.texts) t.destroy();
         this._bg.destroy();
         super.destroy(options);
+        this._scrollbar.destroy();
     }
 }

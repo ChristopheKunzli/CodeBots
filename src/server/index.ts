@@ -12,6 +12,8 @@ app.use("/*", serveStatic({root: "./dist/client"}));
 
 app.get("/game", serveStatic({ path: "./dist/client/game.html"}));
 
+app.get("/doc", serveStatic({ path: "./dist/client/doc.html"}));
+
 serve({
     fetch: app.fetch,
     port: Number(process.env.PORT) || 8080,

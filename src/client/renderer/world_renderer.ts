@@ -3,21 +3,27 @@ import Tile from "../world/tile";
 import { World } from "../world/world";
 import { TileType } from "../types/tile_type";
 import { ResourceType } from "../types/resource_type";
-import { TextureName, findAnimation, findTexture, getSpritesheets } from "../spritesheet_atlas";
+import { findAnimation, findTexture, getSpritesheets, TextureName } from "../spritesheet_atlas";
 import { DecorationType } from "../types/decoration_type";
-import { TILE_SIZE } from "../constants";
+import { ANIMATION_SPEED, CAMERA_ZOOM, GUI_SCALE, TILE_SIZE } from "../constants";
 import { Chunk } from "../world/chunk";
 import { Entity } from "../entity/entity";
 import { TileRenderer } from "./tile_renderer";
 import { InteractableType } from "../types/interactable_type";
 import { CraftingInterface } from "../interface/crafting_interface";
+import { CoreInterface } from "../interface/core_interface";
+import { RobotInterface } from "../interface/robot_interface";
 import { Recipe } from "../types/recipe";
 import { Player } from "../entity/player";
 import { ItemBar } from "../interface/item_bar";
 import { OutlineFilter } from "pixi-filters";
-import { ChestInterface } from "../interface/chest_interface";
-import Inventory from "../inventory/inventory";
+import { CoreStep } from "../types/item";
+import { Codebot } from "../entity/codebot";
+import { InventorySlot } from "../types/inventory";
 import { Item } from "../world/items/item";
+import Inventory from "../inventory/inventory";
+import { ChestInterface } from "../interface/chest_interface";
+
 
 export class WorldRenderer {
     public container: PIXI.Container;
@@ -34,6 +40,10 @@ export class WorldRenderer {
         frames: {};
     }>[];
     private craftingInterface: CraftingInterface;
+    private furnaceInterface: CraftingInterface;
+    private coreInterface: CoreInterface;
+    private itemBar: ItemBar;
+    public robotInterface?: RobotInterface;
     private tileLayer: PIXI.Container;
     private overTileLayer: PIXI.Container;
     private middleLayer: PIXI.Container;
@@ -45,12 +55,18 @@ export class WorldRenderer {
     private world: World;
     private app: PIXI.Application;
     private onInteractionWithTile: (tile: Tile) => void;
-    private itemBar: ItemBar;
+    private onAddCodebot: (x: number, y: number) => void;
 
-    constructor(world: World, app: PIXI.Application, onInteractionWithTile: (tile: Tile) => void) {
+    constructor(
+        world: World,
+        app: PIXI.Application,
+        onInteractionWithTile: (tile: Tile) => void,
+        onAddCodebot: (x: number, y: number) => void,
+    ) {
         this.app = app;
         this.world = world;
         this.container = new PIXI.Container();
+        this.gameContainer = new PIXI.Container();
         this.tileLayer = new PIXI.Container();
         this.overTileLayer = new PIXI.Container();
         this.middleLayer = new PIXI.Container();
@@ -68,6 +84,7 @@ export class WorldRenderer {
         this.container.addChild(this.hudLayer);
 
         this.onInteractionWithTile = onInteractionWithTile;
+        this.onAddCodebot = onAddCodebot;
     }
 
     private setCursor() {
@@ -81,8 +98,10 @@ export class WorldRenderer {
         this.setCursor();
     }
 
-    initializeUI(recipes:Recipe[],player:Player, onClickOnCraftLine: (recipe:Recipe)=>void){
-        this.craftingInterface = new CraftingInterface(this.app,this.spriteSheet,64,recipes, this.hudLayer, onClickOnCraftLine);
+    initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[], player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
+        this.craftingInterface = new CraftingInterface(this.app, this.spriteSheet, 64, craftingRecipes, this.hudLayer, onClickOnCraftLine);
+        this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
+
         this.itemBar = new ItemBar(this.app, this.spriteSheet, 64 /* TODO */, player.inventory, this.hudLayer);
         this.itemBar.show();
     }
@@ -107,7 +126,7 @@ export class WorldRenderer {
     }
 
 
-    renderChestInterface(chestInventory: Inventory, moveItemToChest: (index:number)=>void, moveItemFromChest: (item:Item)=>void){
+    renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index:number)=>void, moveItemFromChest: (item:Item)=>void){
         const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64,chestInventory, this.hudLayer,moveItemFromChest, ()=> this.itemBar.resetOnClickEvent() );
         chestInterface.show();
         this.itemBar.onClickEvent = moveItemToChest;
@@ -117,6 +136,66 @@ export class WorldRenderer {
         this.craftingInterface.show();
     }
 
+    public renderFurnaceInterface() {
+        this.furnaceInterface.show();
+    }
+
+    public renderCoreInterface(coreSteps: CoreStep[], entity: Entity) {
+        const oldOnClickEvent = this.itemBar.onClickEvent;
+        this.itemBar.onClickEvent = (item) => {
+            if (!item) return;
+
+            const coreItemIndex = this.coreInterface.currentStep.items.findIndex((i) => {
+                return i.item.spriteName === item.spriteName;
+            });
+
+            if (coreItemIndex !== -1) {
+                const coreItem = this.coreInterface.currentStep.items[coreItemIndex];
+                const stepAmount = coreItem.item.quantity - coreItem.currentGathered;
+                const amount = Math.min(item.quantity, stepAmount);
+
+                entity.inventory.removeItem(item, amount);
+                coreItem.currentGathered += amount;
+                this.coreInterface.drawContent();
+            }
+        };
+        const handleClose = () => {
+            this.itemBar.onClickEvent = oldOnClickEvent;
+        };
+        this.coreInterface = new CoreInterface(this.app, this.spriteSheet, 64, coreSteps, this.hudLayer, handleClose);
+        this.coreInterface.show();
+    }
+
+    public renderPlayerCoordinate(player: Player) {
+        const getTextFromCoordinate = (player: Player) => `x: ${Math.round(player.posX)}, y: ${Math.round(player.posY)}`
+
+        document.fonts.ready.then(() => {
+            const coordinateText = new PIXI.Text({
+                text: getTextFromCoordinate(player),
+                style: {
+                    fontFamily: `"Jersey 10", sans-serif`,
+                    fontWeight: "400",
+                    fontStyle: "normal",
+                    fontSize: 40,
+                    fill: "#73946b",
+                    stroke: {
+                        color: "white",
+                        width: 2,
+                    },
+                },
+            });
+
+            coordinateText.x = 10;
+            coordinateText.y = 10;
+
+            player.observe(() => {
+                coordinateText.text = getTextFromCoordinate(player);
+            });
+
+            this.hudLayer.addChild(coordinateText);
+        });
+    }
+
     public renderEntity(entity: Entity) {
         const animation = findAnimation(this.spriteSheet, entity.getAnimationName());
         if (!animation) {
@@ -124,20 +203,20 @@ export class WorldRenderer {
         }
 
         const sprite = new PIXI.AnimatedSprite(animation);
-        sprite.animationSpeed = 0.1;
+        sprite.animationSpeed = ANIMATION_SPEED;
         sprite.anchor.set(0, 1);
-        sprite.play();
+        if (entity.isAnimated()) {
+            sprite.play();
+        } else {
+            sprite.stop();
+        }
         sprite.x = entity.posX * TILE_SIZE;
         sprite.y = entity.posY * TILE_SIZE + TILE_SIZE;
-
-        // sprite.anchor.set(0.5, 1); // les pieds posés sur le sol
-        // bas du sprite = bas du tile
-        sprite.zIndex = sprite.y; // pour le tri avec les autres objets
+        sprite.zIndex = sprite.y;
 
         this.middleLayer.addChild(sprite);
         let animationName = entity.getAnimationName();
         entity.observe((state) => {
-            sprite.zIndex = sprite.y;
             if (animationName !== entity.getAnimationName()) {
                 sprite.textures = findAnimation(this.spriteSheet, entity.getAnimationName())!;
                 animationName = entity.getAnimationName();
@@ -145,11 +224,111 @@ export class WorldRenderer {
 
             sprite.x = state.posX * TILE_SIZE;
             sprite.y = state.posY * TILE_SIZE + TILE_SIZE;
+            sprite.zIndex = sprite.y;
 
             if (entity.isAnimated()) {
                 sprite.play();
             } else {
                 sprite.stop();
+            }
+        });
+
+        return sprite;
+    }
+
+    public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, player: Player) {
+        sprite.interactive = true;
+            sprite.cursor = "hover";
+            sprite
+                .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+                .on("pointerout", () => sprite.filters = null)
+                .on("click", () => this.renderCodebotInterface(codebot, player));
+            this.renderCodebotMessage(sprite, codebot);
+    }
+
+    private renderCodebotInterface(codebot: Codebot, player: Player) {
+        const oldOnClickEvent = this.itemBar.onClickEvent;
+        this.itemBar.onClickEvent = (item: InventorySlot) => {
+            if (codebot.inventory.itemInHand !== null || item === null) {
+                return;
+            }
+            codebot.inventory.addItem(item);
+            player.inventory.removeItem(item);
+        };
+        const handleClose = () => {
+            this.itemBar.onClickEvent = oldOnClickEvent;
+            this.robotInterface?.destroy();
+            this.robotInterface = undefined;
+        };
+
+        const handleRemoveItemInHand = () => {
+            const {itemInHand} = codebot.inventory;
+            if (!itemInHand || !player.inventory.canAddItem(itemInHand)) {
+                return;
+            }
+
+            player.inventory.addItem(itemInHand);
+            codebot.inventory.removeItem(itemInHand);
+        };
+
+        this.robotInterface = new RobotInterface(this.app, this.spriteSheet, GUI_SCALE, codebot, handleRemoveItemInHand, this.hudLayer, handleClose);
+        this.robotInterface.show();
+    }
+
+    private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
+        let text = codebot.getMessage();
+
+        const dialogBoxTexture = findTexture(this.spriteSheet, "dialog_box");
+        if (!dialogBoxTexture) {
+            throw new Error("could not find texture");
+        }
+
+        const padding = 5;
+
+        const message = new PIXI.Text({
+            text: text ?? "",
+            style: {
+                fontFamily: `"Jersey 10", sans-serif`,
+                fontStyle: "normal",
+                fontSize: 16,
+                fill: "black",
+            },
+            x: padding,
+            resolution: CAMERA_ZOOM,
+        });
+
+        const panel = new PIXI.NineSliceSprite({
+            texture: dialogBoxTexture,
+            leftWidth: 3,
+            rightWidth: 9,
+            topHeight: 3,
+            bottomHeight: 10,
+            width: message.width + 2 * padding,
+            height: message.height + 2 * padding,
+            x: -message.width,
+            y: -(message.height + 2 * padding + TILE_SIZE),
+            zIndex: 10000,
+        });
+
+        panel.addChild(message);
+        sprite.addChild(panel);
+
+        panel.visible = text !== null;
+
+        codebot.observe(() => {
+            if (text !== codebot.getMessage()) {
+                text = codebot.getMessage();
+
+                if (text) {
+                    panel.visible = true;
+                    message.text = text;
+                    panel.width = message.width + 2 * padding;
+                    panel.height = message.height + 2 * padding;
+                    panel.x = -message.width;
+                    panel.y = -(message.height + 2 * padding + TILE_SIZE);
+                } else {
+                    panel.visible = false;
+                }
             }
         });
     }
@@ -224,7 +403,7 @@ export class WorldRenderer {
                     this.getTextureForMiddleLayer(tile, chunk, x, y);
 
                 } else if (tile.decoration != null) {
-                    const occSprite = this.getTextureForDecoration(tile, chunk, x, y);
+                    this.getTextureForDecoration(tile, chunk, x, y);
                 }
             }
         }
@@ -246,55 +425,49 @@ export class WorldRenderer {
                 let textureName: TextureName;
                 let rotation = 0;
                 if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_0_edge"; rotation = 0;
+                    textureName = "forest_0_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 90;
+                } else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 180;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_one_edge";
+                    rotation = 270;
+                } else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST) {
+                    textureName = "forest_right_edge";
+                    rotation = 0;
+                } else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
+                    textureName = "forest_right_edge";
+                    rotation = 90;
+                } else if (neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = "forest_left_edge";
+                    rotation = 270;
+                } else if (neighbors.bottom?.type !== TileType.FOREST && neighbors.left?.type !== TileType.FOREST) {
+                    textureName = "forest_left_edge";
+                    rotation = 0;
+                } else if (neighbors.left?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 0;
+                } else if (neighbors.top?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 90;
+                } else if (neighbors.right?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 180;
+                } else if (neighbors.bottom?.type !== TileType.FOREST) {
+                    textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
+                    rotation = 270;
+                } else {
+                    const forestTypes: TextureName[] = ["forest_center_1", "forest_center_2"];
+                    textureName = forestTypes[Math.floor(tile.variation * forestTypes.length)];
+                    rotation = 0;
                 }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 0;
-                }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 90;
-                }
-                else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 180;
-                }
-                else if (neighbors.left?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                    textureName = "forest_one_edge"; rotation = 270;
-                } else
-                    if (neighbors.left?.type !== TileType.FOREST && neighbors.top?.type !== TileType.FOREST) {
-                        textureName = "forest_right_edge"; rotation = 0;
-                    }
-                    else if (neighbors.top?.type !== TileType.FOREST && neighbors.right?.type !== TileType.FOREST) {
-                        textureName = "forest_right_edge"; rotation = 90;
-                    }
-                    else if (neighbors.right?.type !== TileType.FOREST && neighbors.bottom?.type !== TileType.FOREST) {
-                        textureName = "forest_left_edge"; rotation = 270;
-                    }
-                    else if (neighbors.bottom?.type !== TileType.FOREST && neighbors.left?.type !== TileType.FOREST) {
-                        textureName = "forest_left_edge"; rotation = 0;
-                    }
-
-                    else if (neighbors.left?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 0;
-                    }
-                    else if (neighbors.top?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 90;
-                    }
-                    else if (neighbors.right?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 180;
-                    }
-                    else if (neighbors.bottom?.type !== TileType.FOREST) {
-                        textureName = forestEdgeTypes[Math.floor(tile.variation * forestEdgeTypes.length)];
-                        rotation = 270;
-                    }
-
-                    else {
-                        const forestTypes: TextureName[] = ["forest_center_1", "forest_center_2"];
-                        textureName = forestTypes[Math.floor(tile.variation * forestTypes.length)];
-                        rotation = 0;
-                    }
 
                 const texture = findTexture(this.spriteSheet, textureName);
                 sprite = new PIXI.Sprite(texture);
@@ -332,22 +505,19 @@ export class WorldRenderer {
                 this.middleLayer.addChild(sprite);
                 offsetY = -2;
                 break;
-
-            };
+            }
             case InteractableType.CRAFTING_TABLE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "workbench"));
                 this.middleLayer.addChild(sprite);
                 sprite.anchor.set(0.5, 0.5);
                 break;
             }
-
             case InteractableType.FURNACE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "furnace"));
                 this.middleLayer.addChild(sprite);
                 sprite.anchor.set(0.5, 0.5);
                 break;
             }
-
             case InteractableType.CHEST: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "crate"));
                 this.middleLayer.addChild(sprite);
@@ -358,24 +528,34 @@ export class WorldRenderer {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "stone"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
             case ResourceType.COPPER: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "copper"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
             case ResourceType.IRON: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
             case ResourceType.COAL: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
                 this.overTileLayer.addChild(sprite);
                 break;
             };
+            case InteractableType.CORE: {
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "core"))
+                this.overTileLayer.addChild(sprite);
+                break;
+            };
+            case InteractableType.CODEBOT: {
+                this.onAddCodebot(tile.absX, tile.absY);
+                tile.setContent = null;
+                return;
+            };
             default: {
-                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "axe"));
+                sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron_axe"));
                 this.middleLayer.addChild(sprite);
                 break;
             }
@@ -403,7 +583,6 @@ export class WorldRenderer {
 
         sprite.zIndex = sprite.y;
     }
-
 
 
     private getTextureForDecoration(tile: Tile, chunk: Chunk, x: number, y: number) {

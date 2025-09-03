@@ -6,15 +6,22 @@ import * as PIXI from "pixi.js";
 import { WorldGenerator } from "./world/world_generator";
 import { CHUNK_SIZE, PLAYER_RANGE, TILE_SIZE } from "./constants";
 import Tile from "./world/tile";
-import { CraftingTableItem } from "./world/items/crafting_table_item";
+import { CraftingTableItem } from "./world/items/stations/crafting_table_item";
 import { InteractableType } from "./types/interactable_type";
 import { Recipe } from "./types/recipe";
-import { WoodLogItem } from "./world/items/wood_log_item";
-import { StoneItem } from "./world/items/stone_item";
-import { FurnaceItem } from "./world/items/furnace_item";
+import { FurnaceItem } from "./world/items/stations/furnace_item";
+import { Core } from "./world/interactables/core";
+import { craftingRecipes } from "./recipes/craftingRecipes";
+import { furnaceRecipes } from "./recipes/smeltingRecipes";
+import { coreStepsRecipes } from "./recipes/coreStepsRecipes";
+import { Codebot } from "./entity/codebot";
+import { CodebotItem } from "./world/items/codebot_item";
+import { InteractionResult } from "./types/interaction_result";
+import { Entity } from "./entity/entity";
 import { ChestItem } from "./world/items/chest_item";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
+import { InventorySlot } from "./types/inventory";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -23,14 +30,21 @@ export class GameEngine {
     public camera: Camera;
     private player: Player;
     private keys: Set<string>;
+    private codebots: Codebot[];
 
     constructor(app: PIXI.Application) {
         this.app = app;
         const generator = new WorldGenerator("seed");
         this.world = new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
+        this.renderer = new WorldRenderer(
+            this.world,
+            app,
+            this.handleInteractWithTile.bind(this),
+            this.addCodebot.bind(this),
+        );
         this.camera = new Camera();
+        this.codebots = [];
 
         this.keys = new Set<string>();
 
@@ -58,48 +72,63 @@ export class GameEngine {
         });
     }
 
-    async initialize() {
+    async initialize(withoutHud?: boolean) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
         this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
-        const recipes: Recipe[] = [
-            { inputs: [new WoodLogItem(4)], output: new CraftingTableItem(1) },
-            { inputs: [new StoneItem(4)], output: new FurnaceItem(1) },
-            { inputs: [new WoodLogItem(4)], output: new ChestItem(1) },
-            // {inputs: [{spriteName: "wood_plank", quantity: 12}, {spriteName: "nail", quantity: 64}], output: {spriteName: "crate", quantity: 1}},
-            // {inputs: [{spriteName: "stone", quantity: 8}, {spriteName: "coal", quantity: 2}, {spriteName: "iron_ore", quantity: 1}], output: {spriteName: "furnace_off", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "pickaxe", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 8}], output: {spriteName: "shovel", quantity: 1}},
-            // {inputs: [{spriteName: "wood_plank", quantity: 3}, {spriteName: "iron_rod", quantity: 2}, {spriteName: "nail", quantity: 16}], output: {spriteName: "axe", quantity: 1}},
-        ];
-        this.renderer.initializeUI(recipes, this.player, this.craftEvent.bind(this));
+        if (!withoutHud) {
+            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
+        }
 
-        // TODO remove
+        const tile  = this.world.getTileAt(1, 0);
+        if (tile) {
+            tile.setContent = new Core(tile);
+        }
+
+
+        this.renderer.renderPlayerCoordinate(this.player);
+
+        // TODO test only
         this.player.inventory.addItem(new CraftingTableItem(1));
+        this.player.inventory.addItem(new FurnaceItem(1));
+        this.player.inventory.addItem(new CodebotItem(1));
     }
 
-    craftEvent(recipe: Recipe) {
-        if (!this.player.inventory.canAddItem(recipe.output)) {
+    addCodebot(x: number, y: number) {
+        const codebot = new Codebot(
+            this.world,
+            x,
+            y,
+            this.handleCodebotInteraction.bind(this),
+        );
+        this.codebots.push(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
+    }
+
+    craftEvent(recipe: Recipe, entity: Entity) {
+        if (!entity.inventory.canAddItem(recipe.output)) {
             return;
         }
         for (const itemNeeded of recipe.inputs) {
-            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            let canCraft = entity.inventory.canRemoveItem(itemNeeded);
             if (!canCraft)
                 return;
         }
 
         for (const itemNeeded of recipe.inputs) {
-            this.player.inventory.removeItem(itemNeeded);
+            entity.inventory.removeItem(itemNeeded);
         }
 
-        this.player.inventory.addItem(recipe.output);
+        entity.inventory.addItem(recipe.output);
     }
 
     update(delta: number) {
-        this.player.update(this.keys, delta);
+        const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
+        entities.forEach((entity) => entity.update(this.renderer.robotInterface?.visible ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);
@@ -107,7 +136,6 @@ export class GameEngine {
             this.player.cX = newCX;
             this.player.cY = newCY;
 
-            const entities = [this.player /* , ...robots plus tard */];
             this.world.updateLoadedChunks(entities);
 
             // 2. recalcul rendu
@@ -118,6 +146,37 @@ export class GameEngine {
         this.camera.follow(this.player, this.app.screen.width, this.app.screen.height);
         this.renderer.gameContainer.x = this.camera.x;
         this.renderer.gameContainer.y = this.camera.y;
+    }
+
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) {
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    const recipe = craftingRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.FURNACE) {
+                    const recipe = furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                }
+                break;
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
     }
 
     private handleInteractWithTile(tile: Tile) {
@@ -141,12 +200,13 @@ export class GameEngine {
             case "OPENED_UI":
                 if (result.interactableType === InteractableType.CRAFTING_TABLE) {
                     this.renderer.renderCraftingInterface();
-                }
-                else if (result.interactableType === InteractableType.CHEST) {
-                    const chest = result.tile?.getContent as Chest
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    this.renderer.renderFurnaceInterface();
+                } else if (result.interactableType === InteractableType.CORE) {
+                    this.renderer.renderCoreInterface(coreStepsRecipes, this.player);                    const chest = result.tile?.getContent as Chest
 
 
-                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (index:number) => {
+                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (itemSlot:InventorySlot,index:number) => {
                         let item = this.player.inventory.getItemAtIndex(index);
                         if(!item) return;
                         let quantity = item.quantity;
