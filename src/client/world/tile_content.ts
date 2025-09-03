@@ -8,4 +8,11 @@ export abstract class TileContent{
         public tile:Tile
         ){
     }
+
+    toJSON(): any {
+        return {
+            tileContentType: this.tileContentType,
+            walkable: this.walkable,
+        };
+    }
 }

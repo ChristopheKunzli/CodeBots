@@ -114,4 +114,13 @@ export abstract class Entity extends Observable<EntityState> {
     interact(i: Interactable) {
 
     }
+
+    toJSON(): any {
+        return {
+            id: this.id,
+            posX: this.posX,
+            posY: this.posY,
+            inventory: this.inventory.toJSON(),
+        };
+    }
 }

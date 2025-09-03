@@ -18,7 +18,6 @@ import { Codebot } from "./entity/codebot";
 import { CodebotItem } from "./world/items/codebot_item";
 import { InteractionResult } from "./types/interaction_result";
 import { Entity } from "./entity/entity";
-import { ChestItem } from "./world/items/chest_item";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
@@ -31,10 +30,12 @@ export class GameEngine {
     private player: Player;
     private keys: Set<string>;
     private codebots: Codebot[];
+    private seed: string;
 
-    constructor(app: PIXI.Application) {
+    constructor(app: PIXI.Application, seed: string = this.generateRandomSeed()) {
         this.app = app;
-        const generator = new WorldGenerator("seed");
+        this.seed = seed;
+        const generator = new WorldGenerator(seed);
         this.world = new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
@@ -70,6 +71,35 @@ export class GameEngine {
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
+
+        const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+        if (viteDisableSave !== "true") {
+            const saveRequest = () => {
+                fetch("/api/save", {method: "POST", body: JSON.stringify(this.save())})
+            }
+
+            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+
+            window.addEventListener("beforeunload", saveRequest);
+        }
+    }
+
+    private generateRandomSeed(length: number = 32): string {
+        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
+    }
+
+    private save(): any {
+        const gameState = {
+            seed: this.seed,
+            player: this.player.toJSON(),
+            codebots: [],
+            world: this.world.toJSON(),
+        };
+        for (const codebot of this.codebots) {
+            gameState.codebots.push(codebot.toJSON());
+        }
+        return JSON.stringify(gameState);
     }
 
     async initialize(withoutHud?: boolean) {

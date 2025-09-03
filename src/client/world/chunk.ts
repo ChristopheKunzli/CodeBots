@@ -37,4 +37,13 @@ export class Chunk {
     isWalkable(x: number, y: number): boolean | undefined {
         return this.tiles[y][x].getContent?.walkable;
     }
+
+    toJSON(): any {
+        return {
+            cx: this.cx,
+            cy: this.cy,
+            size: this.size,
+            tiles: this.tiles.map(row => row.map(tile => tile.toJSON())),
+        };
+    }
 }

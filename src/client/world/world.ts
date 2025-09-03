@@ -20,6 +20,12 @@ export class World {
         this.generator = generator;
     }
 
+    public toJSON() : any {
+        return {
+            savedChunks: Array.from(this.savedChunks.values()).map(chunk => chunk.toJSON()),
+        }
+    }
+
     updateLoadedChunks(entities: Entity[]) {
         const newLoaded = new Map<string, Chunk>();
         for (const entity of entities) {
