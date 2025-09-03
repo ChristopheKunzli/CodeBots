@@ -120,7 +120,7 @@ npm run dev:client
 ### Comment build le projet
 - copier `/src/server/.env.example` et le renommer en `/src/server/.env`
 
-- remplire le fichier `/src/server/.env` avec les identifiants clerk [cf](https://clerk.com/docs) ou bien désactiver la fonctionnalité de sauvegarde
+- remplire le fichier `/src/server/.env` avec les identifiants clerk [cf](https://clerk.com/docs) et les identifiants de connection à la base de donnée MongoDB ou bien désactiver la fonctionnalité de sauvegarde
 `DISABLE_SAVE=true`
 
 `npm run build`
