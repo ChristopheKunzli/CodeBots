@@ -22,6 +22,7 @@ import { Entity } from "./entity/entity";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
+import {Clerk} from "@clerk/clerk-js";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -77,13 +78,26 @@ export class GameEngine {
         const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
 
         if (viteDisableSave !== "true") {
+            const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+            const clerk = new Clerk(clerkPubKey);
+            clerk.load();
+
             const saveRequest = () => {
-                fetch("/api/save", {method: "POST", body: JSON.stringify(this.save())})
+                return fetch("/api/save", {
+                    method: "POST",
+                    body: JSON.stringify({data: this.save()}),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
             }
 
             setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
-            window.addEventListener("beforeunload", saveRequest);
+            window.addEventListener("beforeunload", () => {
+                const data = new Blob([JSON.stringify({data: this.save()})], { type: "application/json" });
+                navigator.sendBeacon("/api/save", data);
+            }, false);
         }
     }
 
@@ -99,7 +113,7 @@ export class GameEngine {
             world: this.world.toJSON(),
         };
 
-        return JSON.stringify(gameState);
+        return gameState;
     }
 
     async initialize(withoutHud?: boolean) {
