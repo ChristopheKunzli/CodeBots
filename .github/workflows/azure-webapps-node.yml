@@ -23,6 +23,9 @@ jobs:
           cache: 'npm'
 
       - name: npm install, build, and test
+        env:
+          VITE_DISABLE_SAVE: ${{ vars.VITE_DISABLE_SAVE }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
         run: |
           npm install
           npm run build --if-present
