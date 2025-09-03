@@ -30,12 +30,16 @@ jobs:
           npm run test --if-present
 
       - name: Print environment variables
+        env:
+          VITE_DISABLE_SAVE: ${{ vars.VITE_DISABLE_SAVE }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
         run: |
           echo "VITE_DISABLE_SAVE=$VITE_DISABLE_SAVE"
           echo "VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY"
-          echo "NODE_ENV=$NODE_ENV"
-          # Debug: print all vars that start with VITE_
-          env | grep ^VITE_
+          if [ "$VITE_CLERK_PUBLISHABLE_KEY" != "false" ]; then
+            echo "Failed"
+            exit 1
+          fi
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
