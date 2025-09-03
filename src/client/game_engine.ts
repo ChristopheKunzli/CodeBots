@@ -1,3 +1,4 @@
+/// <reference path="./env.d.ts" />
 import { Camera } from "./world/camera";
 import { Player } from "./entity/player";
 import { WorldRenderer } from "./renderer/world_renderer";
@@ -93,12 +94,10 @@ export class GameEngine {
         const gameState = {
             seed: this.seed,
             player: this.player.toJSON(),
-            codebots: [],
+            codebots: this.codebots.map((codebot) => codebot.toJSON()),
             world: this.world.toJSON(),
         };
-        for (const codebot of this.codebots) {
-            gameState.codebots.push(codebot.toJSON());
-        }
+
         return JSON.stringify(gameState);
     }
 
