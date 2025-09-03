@@ -107,10 +107,10 @@ export class WorldRenderer {
     }
 
 
-    renderChestInterface(chestInventory: Inventory, onClickEvent: (item:Item)=>void){
-        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64, chestInventory.items.filter(item => item != null), this.hudLayer);
+    renderChestInterface(chestInventory: Inventory, moveItemToChest: (index:number)=>void, moveItemFromChest: (item:Item)=>void){
+        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64,chestInventory, this.hudLayer,moveItemFromChest, ()=> this.itemBar.resetOnClickEvent() );
         chestInterface.show();
-        this.itemBar.onClickEvent = onClickEvent;
+        this.itemBar.onClickEvent = moveItemToChest;
     }
 
     public renderCraftingInterface(){

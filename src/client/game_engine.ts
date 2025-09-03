@@ -144,11 +144,18 @@ export class GameEngine {
                 }
                 else if (result.interactableType === InteractableType.CHEST) {
                     const chest = result.tile?.getContent as Chest
-                    chest.inventory.addItem(new StoneItem(2));
-                    this.renderer.renderChestInterface(this.player.inventory, (result.tile?.getContent as Chest).inventory, (i: Item) => {
+
+
+                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (index:number) => {
+                        let item = this.player.inventory.getItemAtIndex(index);
+                        if(!item) return;
+                        let quantity = item.quantity;
+                        this.player.inventory.removeItem(item);
+                        chest.inventory.addItem(item, quantity);
+                    }, (i: Item) => {
                         let quantity = i.quantity;
-                        this.player.inventory.removeItem(i);
-                        chest.inventory.addItem(i, quantity);
+                        this.player.inventory.addItem(i);
+                        chest.inventory.removeItem(i, quantity);
                     });
                 }
                 break;

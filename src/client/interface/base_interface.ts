@@ -7,18 +7,20 @@ export abstract class BaseInterface extends Container {
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
     protected hudLayer:Container;
-
-    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number) {
+    private onCloseCallBack: ()=>void = () =>{};
+    protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, onCloseCallBack:()=>void = ()=>{}) {
         super();
         this.app = app;
         this.spritesheets = spritesheets;
         this.guiScale = scale;
         this.hide();
+        this.onCloseCallBack = onCloseCallBack;
     }
 
     protected abstract draw(): void;
 
     public hide(): void {
+        this.onCloseCallBack();
         this.visible = false;
     }
 

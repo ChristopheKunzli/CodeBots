@@ -2,14 +2,16 @@ import {Application, Container, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import { Item } from '../world/items/item';
 import { BaseInterface } from './base_interface';
+import Inventory from '../inventory/inventory';
 
 export class ChestInterface extends BaseInterface {
-    private items: Item[];
-
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[], hudLayer:Container) {
-        super(app, spritesheets, scale);
+    private inventory: Inventory;
+    private moveItemFromChest: (item:Item)=>void;
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer:Container, moveItemFromChest:(item:Item)=>void, onCloseCallBack:()=>void) {
+        super(app, spritesheets, scale, onCloseCallBack);
         this.hudLayer = hudLayer;
-        this.items = items;
+        this.inventory = inventory;
+        this.moveItemFromChest = moveItemFromChest;
         this.draw();
     }
 
@@ -42,11 +44,13 @@ export class ChestInterface extends BaseInterface {
 
             darkSquare.interactive = true;
             darkSquare.on('pointerdown', () => {
-                //TODO manage chest item click
-                console.log(`Clicked on chest item slot ${i + 1}`);
+                if(!this.inventory.items[i])
+                    return;
+                this.moveItemFromChest(this.inventory.items[i]!);
+                this.draw();
             });
 
-            this.drawItem(this.items[i], darkSquare);
+            this.drawItem(this.inventory.items[i], darkSquare);
             chestInventory.addChild(darkSquare);
         }
     }

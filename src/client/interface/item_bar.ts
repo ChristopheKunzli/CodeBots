@@ -6,7 +6,7 @@ import { Item } from '../world/items/item';
 
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
-    public onClickEvent: (item:Item)=>void;
+    public onClickEvent: (index:number)=>void;
     private slots: Sprite[];
     private container: Container;
 
@@ -15,8 +15,13 @@ export class ItemBar extends BaseInterface {
         this.inventory = inventory;
         this.slots = [];
         this.container = container;
+        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this.inventory);
         this.draw();
-        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this);
+
+    }
+
+    public resetOnClickEvent() {
+        this.onClickEvent = this.inventory.setItemInHandIndex.bind(this.inventory);
     }
 
     protected draw(): void {
@@ -48,7 +53,7 @@ export class ItemBar extends BaseInterface {
 
             lightSquare.interactive = true;
             lightSquare.on('pointerdown', () => {
-                items[i] && this.onClickEvent(items[i]!);
+                items[i] && this.onClickEvent(i);
             });
 
             itemBar.addChild(lightSquare);

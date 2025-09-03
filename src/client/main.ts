@@ -1,9 +1,7 @@
 import {Application} from 'pixi.js';
 
 import {GameEngine} from './game_engine';
-import {CoreStep} from "./types/item";
-import {getSpritesheets} from "./spritesheet_atlas";
-import {ChestInterface, CoreInterface, CraftingInterface, ItemBar, RobotInterface} from "./interface/interfaces";
+
 
 // const exampleRecipes: Recipe[] = [
 //     {inputs: [{spriteName: "wood_log", quantity: 1}], output: {spriteName: "wood_plank", quantity: 4}},
