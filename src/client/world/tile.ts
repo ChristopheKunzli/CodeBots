@@ -13,6 +13,10 @@ import { IronStone } from "./resources/iron_stone";
 import { Tree } from "./resources/tree";
 import { CodebotInteractable } from "./interactables/codebot_interactable";
 
+/**
+ * Represents a single tile in the game world
+ * A tile can contain terrain type, decoration, and optional content (like a tree or chest)
+ */
 export default class Tile {
     public chunk: Chunk;
     public noiseValue: number;
@@ -23,6 +27,11 @@ export default class Tile {
     public absX: number;
     public absY: number;
 
+    /**
+     * Creates a new Tile.
+     * @param type The type of terrain for this tile.
+     * @param chunk The chunk this tile belongs to.
+     */
     constructor(type: TileType, chunk: Chunk) {
         this.content = null;
         this.decoration = null;
@@ -30,16 +39,28 @@ export default class Tile {
         this.chunk = chunk;
     }
 
+    /**
+     * Sets the content of this tile
+     * @param content The content to place on the tile, or null to remove content
+     */
     set setContent(content: TileContent | null) {
         this.content = content;
         this.chunk.chunkUpdated(this);
     }
 
+    /**
+     * Gets the current content of this tile.
+     * @returns The content of this tile, or null if empty.
+     */
     get getContent(): TileContent | null {
         return this.content;
     }
 
-    toJSON(): any {
+    /**
+     * Converts this tile into a JSON object for saving
+     * @returns An object representing the tile's state
+     */
+    public toJSON(): any {
         return {
             type: this.type,
             content: this.content ? this.content.toJSON() : null,
@@ -50,6 +71,12 @@ export default class Tile {
         };
     }
 
+    /**
+     * Creates a Tile from saved JSON data
+     * @param tileData The saved tile data
+     * @param chunk The chunk this tile belongs to
+     * @returns A new Tile instance
+     */
     static fromJSON(tileData: any, chunk: Chunk) {
         const tile = new Tile(tileData.type, chunk);
         tile.setContent = Tile.makeContent(tileData, tile);
@@ -60,7 +87,14 @@ export default class Tile {
         return tile;
     }
 
-    private static makeContent(tileData: any, tile: Tile): TileContent {
+    /**
+     * Creates tile content from saved JSON data.
+     * @param tileData The saved tile data.
+     * @param tile The tile to assign the content to.
+     * @returns A TileContent object or null if no content.
+     * @throws Error if the content type is unknown.
+     */
+    private static makeContent(tileData: any, tile: Tile): TileContent | null {
         if (!tileData.content) return null;
 
         switch (tileData.content.tileContentType) {
@@ -70,17 +104,17 @@ export default class Tile {
                 return Chest.fromJSON(tileData.content, tile);
             case "Furnace":
                 return new Furnace(tile);
-            case "Crafting_table" :
+            case "Crafting_table":
                 return new CraftingTable(tile);
             case "Stone":
                 return new Stone(tile);
-            case "Coal" :
+            case "Coal":
                 return new CoalStone(tile);
             case "Copper":
                 return new CopperStone(tile);
-            case "Iron" :
+            case "Iron":
                 return new IronStone(tile);
-            case "Wood" :
+            case "Wood":
                 return new Tree(tile);
             case "Codebot":
                 return new CodebotInteractable(tile);

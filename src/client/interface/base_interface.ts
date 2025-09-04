@@ -2,6 +2,10 @@ import { Application, Container, ContainerChild, Graphics, NineSliceSprite, Spri
 import { findTexture, TextureName } from "../spritesheet_atlas";
 import { Item } from '../world/items/item';
 
+/**
+ * Base class for all UI interfaces
+ * Provides helper methods to create panels, frames, and draw items
+ */
 export abstract class BaseInterface extends Container {
     protected app: Application;
     protected spritesheets: Spritesheet[];
@@ -9,6 +13,14 @@ export abstract class BaseInterface extends Container {
     protected hudLayer: Container;
     protected onClose?: () => void;
 
+    /**
+     * Creates a new BaseInterface
+     * @param app The PixiJS application instance
+     * @param spritesheets Loaded spritesheets for textures
+     * @param scale UI scale factor
+     * @param hudLayer The layer to add UI elements to
+     * @param onClose Optional callback for when the interface closes
+     */
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container, onClose?: () => void) {
         super();
         this.app = app;
@@ -19,12 +31,18 @@ export abstract class BaseInterface extends Container {
         this.onClose = onClose;
     }
 
+    /**
+     * Draws the interface contents
+     * Must be implemented by subclasses
+     */
     protected abstract draw(): void;
 
+    /** Hides the interface */
     public hide(): void {
         this.visible = false;
     }
 
+    /** Shows the interface */
     public show(): void {
         this.visible = true;
     }

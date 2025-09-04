@@ -4,9 +4,29 @@ import {ScrollBar} from "./scroll_bar";
 import { Recipe } from '../types/recipe';
 import { BaseInterface } from './base_interface';
 
+/**
+ * CraftingInterface
+ *
+ * Displays a scrollable interface listing all crafting recipes
+ * Each row shows:
+ * - One large output item slot (result of the recipe)
+ * - Several smaller input item slots (ingredients)
+ *
+ * Players can click on a recipe's output slot to craft it
+ */
 export class CraftingInterface extends BaseInterface {
     private readonly recipes: Recipe[];
     private onClickOnCraftLine: (recipe:Recipe)=>void;
+
+    /**
+     * Creates a crafting interface instance
+     * @param app The PixiJS application
+     * @param spritesheets Spritesheets for rendering textures
+     * @param scale UI scaling factor
+     * @param recipes List of crafting recipes to display
+     * @param hudLayer The HUD container where this UI will be added
+     * @param onClickOnCraftLine Function called when clicking on a recipe output
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, recipes: Recipe[], hudLayer:Container, onClickOnCraftLine: (recipe:Recipe)=>void) {
         super(app, spritesheets, scale, hudLayer);
         this.onClickOnCraftLine = onClickOnCraftLine;

@@ -11,13 +11,23 @@ export class Chest extends Interactable {
         this.inventory = inventory || new Inventory(27);
     }
 
-    toJSON(): any {
+    /**
+     * Converts this chest into a JSON object for saving.
+     * @returns An object containing chest data and its inventory.
+     */
+    public toJSON(): any {
         return {
             ...super.toJSON(),
             inventory: this.inventory.toJSON(),
         };
     }
 
+    /**
+     * Creates a Chest from saved JSON data
+     * @param data The saved chest data
+     * @param tile The tile where this chest is placed
+     * @returns A Chest instance restored from data
+     */
     static fromJSON(data: any, tile: Tile): Chest {
         return new Chest(tile, Inventory.fromJSON(data.inventory));
     }

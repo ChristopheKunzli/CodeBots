@@ -5,11 +5,31 @@ import {MultilineInput} from "./multiline_input";
 import { BaseInterface } from './base_interface';
 import { Codebot } from '../entity/codebot';
 
+/**
+ * RobotInterface
+ *
+ * A user interface panel for controlling a Codebot
+ * - Displays a text editor (MultilineInput) for the bot's program
+ * - Shows a slot for an item the bot is holding
+ * - Provides a power button to start/stop the bot
+ * - Includes a help button that opens documentation
+ * - Uses a ScrollBar for scrolling long code
+ */
 export class RobotInterface extends BaseInterface {
     public codebot: Codebot;
     private codeArea: MultilineInput;
     private onRemoveItemInHand: () => void;
 
+    /**
+     * Creates a new RobotInterface
+     * @param app The PixiJS application instance
+     * @param spritesheets Loaded spritesheets for UI textures
+     * @param scale GUI scale factor
+     * @param codebot The Codebot to display and control
+     * @param onRemoveItemInHand Function to call when removing the held item
+     * @param hudLayer Layer to attach this interface to
+     * @param onClose Optional callback called when the interface closes
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, onRemoveItemInHand: () => void, hudLayer: Container, onClose?: () => void) {
         super(app, spritesheets, scale, hudLayer, () => {
             this.handleClose()
@@ -20,6 +40,9 @@ export class RobotInterface extends BaseInterface {
         this.draw();
     }
 
+    /**
+     * Saves the program text when the interface closes
+     */
     private handleClose() {
         this.codebot.program = this.codeArea.getText();
     }
@@ -136,7 +159,10 @@ export class RobotInterface extends BaseInterface {
         robotInterface.addChild(helpButton);
     }
 
-    destroy(): void {
+    /**
+     * Cleans up resources when the interface is destroyed.
+     */
+    public destroy(): void {
         this.codeArea.destroy();
     }
 }

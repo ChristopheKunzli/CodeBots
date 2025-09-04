@@ -13,11 +13,20 @@ import { DecorationType } from "../types/decoration_type";
 import { MAP_FREQUENCY, RESOURCE_FREQUENCY } from "../constants";
 import { World } from "./world";
 
+/**
+ * Generates the game world by creating chunks and tiles based on noise and random values
+ * Uses seeded random number generators to ensure consistent world generation
+ */
 export class WorldGenerator implements IWorldGenerator {
     private noiseFunc: Simplex.NoiseFunction2D;
     private resourceNoiseFunc: Simplex.NoiseFunction2D;
     private rng:seedrandom.PRNG;
     private world: World;
+
+    /**
+     * Creates a new WorldGenerator
+     * @param seed A string used as a seed for random generation
+     */
     constructor(public seed: string) {
         this.rng = seedrandom(this.seed);
         const resourceRng = seedrandom(this.seed + "_resource");
@@ -25,15 +34,30 @@ export class WorldGenerator implements IWorldGenerator {
         this.resourceNoiseFunc = Simplex.createNoise2D(resourceRng);
     }
 
+    /**
+     * Links this generator to a specific world.
+     * @param world The world instance to associate with this generator.
+     */
     public setWorld(world: World){
         this.world = world;
     }
 
-    getPseudoRandomGenerator() :seedrandom.PRNG{
+    /**
+     * Gets the seeded random number generator used for world generation
+     * @returns The seeded random generator
+     */
+    public getPseudoRandomGenerator() :seedrandom.PRNG{
         return this.rng;
     }
 
-    generateChunk(cx: number, cy: number, size: number): Chunk {
+    /**
+     * Generates a new chunk at the specified chunk coordinates
+     * @param cx The X coordinate of the chunk
+     * @param cy The Y coordinate of the chunk
+     * @param size The size of the chunk in tiles
+     * @returns A fully generated chunk with terrain and resources
+     */
+    public generateChunk(cx: number, cy: number, size: number): Chunk {
         const chunk = new Chunk(cx, cy, size, this.world);
         const tileRng = seedrandom(`${this.seed}_${cx}_${cy}`);
         for (let y = 0; y < size; y++) {

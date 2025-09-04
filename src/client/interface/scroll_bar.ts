@@ -1,5 +1,14 @@
 import { Container, Graphics, Application } from "pixi.js";
 
+/**
+ * ScrollBar
+ *
+ * A custom vertical scrollbar for scrolling any content inside a container.
+ * - Displays a track and a draggable thumb.
+ * - Supports clicking on the track to jump the thumb.
+ * - Handles mouse wheel scrolling.
+ * - Notifies when scroll position changes.
+ */
 export class ScrollBar {
     private content: any;
     private parent: Container;
