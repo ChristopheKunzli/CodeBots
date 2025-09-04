@@ -160,9 +160,7 @@ export class GameEngine {
             y,
             this.handleCodebotInteraction.bind(this),
         );
-        this.codebots.push(codebot);
-        const sprite = this.renderer.renderEntity(codebot);
-        this.renderer.initializeCodebot(sprite, codebot, this.player);
+        this.addCodeBot(codebot);
     }
 
     craftEvent(recipe: Recipe, entity: Entity) {
