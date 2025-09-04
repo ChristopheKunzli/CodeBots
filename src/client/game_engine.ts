@@ -118,7 +118,7 @@ export class GameEngine {
         };
     }
 
-    async initialize(withoutHud?: boolean, save?: any) {
+    async initialize(withoutHud?: boolean, save?: any | null) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
