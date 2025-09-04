@@ -87,7 +87,6 @@ export default class Tile {
             default:
                 throw new Error(`Unknown tile content type: ${tileData.content.tileContentType}`);
         }
-
     }
 
 }
