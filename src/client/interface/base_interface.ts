@@ -1,14 +1,26 @@
-import {Application, Container, ContainerChild, NineSliceSprite, Sprite, Spritesheet, Text} from 'pixi.js';
-import {findTexture, TextureName} from "../spritesheet_atlas";
+import { Application, Container, ContainerChild, Graphics, NineSliceSprite, Sprite, Spritesheet, Text } from 'pixi.js';
+import { findTexture, TextureName } from "../spritesheet_atlas";
 import { Item } from '../world/items/item';
 
+/**
+ * Base class for all UI interfaces
+ * Provides helper methods to create panels, frames, and draw items
+ */
 export abstract class BaseInterface extends Container {
     protected app: Application;
     protected spritesheets: Spritesheet[];
     protected guiScale: number;
-    protected hudLayer:Container;
+    protected hudLayer: Container;
     protected onClose?: () => void;
 
+    /**
+     * Creates a new BaseInterface
+     * @param app The PixiJS application instance
+     * @param spritesheets Loaded spritesheets for textures
+     * @param scale UI scale factor
+     * @param hudLayer The layer to add UI elements to
+     * @param onClose Optional callback for when the interface closes
+     */
     protected constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container, onClose?: () => void) {
         super();
         this.app = app;
@@ -19,12 +31,18 @@ export abstract class BaseInterface extends Container {
         this.onClose = onClose;
     }
 
+    /**
+     * Draws the interface contents
+     * Must be implemented by subclasses
+     */
     protected abstract draw(): void;
 
+    /** Hides the interface */
     public hide(): void {
         this.visible = false;
     }
 
+    /** Shows the interface */
     public show(): void {
         this.visible = true;
     }
@@ -106,7 +124,7 @@ export abstract class BaseInterface extends Container {
      * @param drawNameOnHover whether to show the item name below the slot when hovering over the item
      * (note : this requires the container to leave enough space below the slotto show the text)
      */
-    protected drawItem = (item: Item|null, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
+    protected drawItem = (item: Item | null, container: ContainerChild, drawQty: boolean = true, drawNameOnHover: boolean = true) => {
         if (!item) return;
 
         const itemTexture = findTexture(this.spritesheets, item.spriteName);
@@ -123,9 +141,9 @@ export abstract class BaseInterface extends Container {
 
         container.addChild(itemSprite);
 
-        if (drawQty) {
+        if (drawQty && item.quantity > 1) {
             const quantityText = new Text({
-                text: item.quantity > 1 ? item.quantity.toString() : '',
+                text: item.quantity.toString(),
                 style: {
                     fontFamily: `"Jersey 10", sans-serif`,
                     fontWeight: "400",
@@ -136,8 +154,21 @@ export abstract class BaseInterface extends Container {
                 resolution: 4,
             });
 
-            quantityText.x = itemSprite.x + itemSprite.width - (quantityText.width * 1.1);
-            quantityText.y = itemSprite.y + itemSprite.height - (quantityText.height * 1.1);
+            const bg = new Graphics();
+            const padding = 1;
+            const bgHeight = (quantityText.height) * 0.7;
+            const bgWidth = quantityText.width;
+            const bgX = itemSprite.x + itemSprite.width - bgWidth - padding;
+            const bgY = itemSprite.y + itemSprite.height - bgHeight - padding;
+
+            bg.beginFill(0xffffff, 0.5);
+            bg.drawRect(bgX, bgY, bgWidth, bgHeight);
+            bg.endFill();
+
+            container.addChild(bg);
+
+            quantityText.x = bgX + (bgWidth - quantityText.width) / 2;
+            quantityText.y = bgY + (bgHeight - quantityText.height) / 2;
             container.addChild(quantityText);
         }
 

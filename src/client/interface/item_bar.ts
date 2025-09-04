@@ -4,26 +4,49 @@ import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
 import { InventorySlot } from '../types/inventory';
 
+/**
+ * ItemBar
+ *
+ * A horizontal bar displayed at the bottom of the screen
+ * showing the player's inventory items. Players can click
+ * on slots to select or use items
+ */
 export class ItemBar extends BaseInterface {
     private inventory: Inventory;
     public onClickEvent: (item:InventorySlot, index: number) => void;
     private slots: Sprite[];
-    private container: Container;
 
+    /**
+     * Creates an ItemBar instance
+     * @param app The PixiJS application
+     * @param spritesheets Spritesheets containing item textures
+     * @param scale UI scale factor for slot sizes
+     * @param inventory The player's inventory to display
+     * @param container The container (HUD layer) to add the item bar to
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, container: Container) {
         super(app, spritesheets, scale, container);
         this.inventory = inventory;
         this.slots = [];
-        this.container = container;
         this.onClickEvent = (item: InventorySlot, index: number) => {
             this.inventory.setItemInHandIndex(index);
         }
         this.draw();
+
+    }
+
+    /**
+     * Resets the click event behavior to simply select the clicked slot
+     */
+    public resetOnClickEvent() {
+        this.onClickEvent = (item: InventorySlot, index: number) => {
+            this.inventory.setItemInHandIndex(index);
+        }
     }
 
     protected draw(): void {
         const itemBar = new Container();
-        this.container.addChild(itemBar);
+        this.hudLayer.addChild(itemBar);
 
         const {items} = this.inventory;
 
@@ -62,6 +85,9 @@ export class ItemBar extends BaseInterface {
         this.inventory.observe(this.drawSlots.bind(this));
     }
 
+    /**
+     * Updates the slot visuals, including highlighting the selected slot.
+     */
     drawSlots()  {
         for (let i = 0; i < this.inventory.items.length; ++i) {
             const item = this.inventory.items[i];

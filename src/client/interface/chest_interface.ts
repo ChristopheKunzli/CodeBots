@@ -2,13 +2,32 @@ import {Application, Container, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
 import { Item } from '../world/items/item';
 import { BaseInterface } from './base_interface';
+import Inventory from '../inventory/inventory';
 
+/**
+ * Interface for displaying and interacting with a chest's inventory
+ * Allows moving items from the chest to the player's inventory
+ */
 export class ChestInterface extends BaseInterface {
-    private items: Item[];
+    private inventory: Inventory;
+    private moveItemFromChest: (item:Item)=>void;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, items: Item[], hudLayer:Container) {
-        super(app, spritesheets, scale, hudLayer);
-        this.items = items;
+    /**
+     * Creates a ChestInterface instance
+     * @param app The PixiJS application
+     * @param spritesheets Loaded spritesheets for UI textures
+     * @param scale UI scale factor
+     * @param inventory The chest's inventory
+     * @param hudLayer The container where the interface will be displayed
+     * @param moveItemFromChest Callback triggered to move items from chest to player
+     * @param onCloseCallBack Callback triggered when the interface is closed
+     */
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer:Container, moveItemFromChest:(item:Item)=>void, onCloseCallBack:()=>void) {
+        super(app, spritesheets, scale,hudLayer, onCloseCallBack);
+        this.hudLayer = hudLayer;
+        this.inventory = inventory;
+        this.moveItemFromChest = moveItemFromChest;
+        this.inventory.observe(this.draw.bind(this));
         this.draw();
     }
 
@@ -41,11 +60,13 @@ export class ChestInterface extends BaseInterface {
 
             darkSquare.interactive = true;
             darkSquare.on('pointerdown', () => {
-                //TODO manage chest item click
-                console.log(`Clicked on chest item slot ${i + 1}`);
+                if(!this.inventory.items[i])
+                    return;
+                this.moveItemFromChest(this.inventory.items[i]!);
+                this.draw();
             });
 
-            this.drawItem(this.items[i], darkSquare);
+            this.drawItem(this.inventory.items[i], darkSquare);
             chestInventory.addChild(darkSquare);
         }
     }

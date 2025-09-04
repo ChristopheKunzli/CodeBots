@@ -57,6 +57,8 @@ Repeat:
     plant birch seed
 ```
 
+Ce code n'est plus à jour. [cf](https://codebots-dev-web-app.azurewebsites.net/doc).
+
 - Les ressources peuvent être stockées dans des coffres.
 - Les technologies débloquées permettent d’améliorer les robots et outils.
 - Une interface permet de gérer les robots et leurs actions.
@@ -100,10 +102,30 @@ Prérequis :
 
 ### Lancer le projet en mode développement:
 
+- copier `/src/client/.env.example` et le renommer en `/src/client/.env`
+
+- remplire le fichier `/src/client/.env` avec les identifiants de votre application clerk [cf](https://clerk.com/docs) ou bien désactiver la fonctionnalité de sauvegarde
+
+```bash
+VITE_DISABLE_SAVE=true # or false and give the publishable clerk key
+VITE_CLERK_PUBLISHABLE_KEY=
+```
+
+- Lancer le projet
 ```bash
 npm install
 npm run dev:client
 ```
+
+### Comment build le projet
+- copier `/src/server/.env.example` et le renommer en `/src/server/.env`
+
+- remplire le fichier `/src/server/.env` avec les identifiants clerk [cf](https://clerk.com/docs) et les identifiants de connection à la base de donnée MongoDB ou bien désactiver la fonctionnalité de sauvegarde
+`DISABLE_SAVE=true`
+
+`npm run build`
+
+Le résultat du build se trouve alors dans le dossier `dist`
 
 ### Comment contribuer:
 
@@ -122,8 +144,9 @@ npm run dev:client
 Vous pouvez utiliser les fichiers terraform pour déployer votre propre instance de Codebots sur Azure.
 
 - créer un fichier `terraform/terrafrom.tfvars`
-- ajouter votre subscription id: `subscription_id = ` [cf](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
-- `cd terraform`
+- ajouter votre
+    - subscription id: `subscription_id = ` [cf](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
+    - les variables d'environement pour l'application server comme indiqué ci-dessus: `disable_save`, `clerk_secret_key`, `clerk_publishable_key`
 - `terraform apply`
 
 Terraform va alors créer une instance de "linux_web_app" pour chaque environment (dev et main)

@@ -1,3 +1,4 @@
+/// <reference path="./env.d.ts" />
 import { Camera } from "./world/camera";
 import { Player } from "./entity/player";
 import { WorldRenderer } from "./renderer/world_renderer";
@@ -14,7 +15,20 @@ import { Core } from "./world/interactables/core";
 import { craftingRecipes } from "./recipes/craftingRecipes";
 import { furnaceRecipes } from "./recipes/smeltingRecipes";
 import { coreStepsRecipes } from "./recipes/coreStepsRecipes";
+import { Codebot } from "./entity/codebot";
+import { CodebotItem } from "./world/items/codebot_item";
+import { InteractionResult } from "./types/interaction_result";
+import { Entity } from "./entity/entity";
+import { Chest } from "./world/interactables/chest";
+import { Item } from "./world/items/item";
+import { InventorySlot } from "./types/inventory";
+import { Clerk } from "@clerk/clerk-js";
+import { CoreStep } from "./types/item";
 
+/**
+ * Main class that controls the game
+ * Handles the world, player, camera, codebots, and rendering.
+ */
 export class GameEngine {
     public app: PIXI.Application;
     public world: World;
@@ -22,15 +36,49 @@ export class GameEngine {
     public camera: Camera;
     private player: Player;
     private keys: Set<string>;
+    private codebots: Codebot[];
+    private seed: string;
+    private coreStepsRecipes: CoreStep[];
+    private firstLoad: boolean;
 
-    constructor(app: PIXI.Application) {
+    /**
+     * Creates a new game engine
+     * @param app The PixiJS application for rendering
+     * @param save Optional saved game data
+     */
+    constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
-        const generator = new WorldGenerator("seed");
-        this.world = new World(generator);
+        this.seed = save?.seed ? save.seed : this.generateRandomSeed();
+        const generator = new WorldGenerator(this.seed);
+        this.world = save?.world ? new World(generator, save.world) : new World(generator);
         generator.setWorld(this.world);
-        this.renderer = new WorldRenderer(this.world, app, this.handleInteractWithTile.bind(this));
+        this.renderer = new WorldRenderer(
+            this.world,
+            app,
+            this.handleInteractWithTile.bind(this),
+            this.addCodebot.bind(this),
+        );
         this.camera = new Camera();
+        this.codebots = [];
+        this.firstLoad = true;
 
+        this.player = save?.player ? Player.fromJSON(save.player, this.world) : new Player(this.world);
+        this.coreStepsRecipes = save?.coreStepsRecipes ? coreStepsRecipes.map((step) => {
+            const stepSave = save.coreStepsRecipes.find(({ name }) => name === step.name) as CoreStep | undefined;
+            if (!stepSave) {
+                return step;
+            }
+            return {
+                items: step.items.map(({ item, currentGathered }) => {
+                    const itemSave = stepSave.items.find((i) => i.item.spriteName === item.spriteName);
+                    return {
+                        item,
+                        currentGathered: itemSave?.currentGathered ?? currentGathered,
+                    };
+                }),
+                name: step.name,
+            };
+        }) : coreStepsRecipes;
         this.keys = new Set<string>();
 
         window.addEventListener("keydown", (e) =>
@@ -57,54 +105,169 @@ export class GameEngine {
         });
     }
 
-    async initialize(withoutHud?: boolean) {
+    /**
+     * Generates a random seed string for world generation
+     * @param length The length of the seed string. Default is 32
+     * @returns A random seed string
+     */
+    private generateRandomSeed(length: number = 32): string {
+        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
+    }
+
+    /**
+     * Saves the current game state
+     * @returns An object containing all necessary save data
+     */
+    private save(): any {
+        return {
+            seed: this.seed,
+            player: this.player.toJSON(),
+            codebots: this.codebots.map((codebot) => codebot.toJSON()),
+            coreStepsRecipes: this.coreStepsRecipes.map((step) => ({
+                name: step.name,
+                items: step.items.map((item) => ({
+                    item: { ...item.item },
+                    currentGathered: item.currentGathered,
+                }))
+            })),
+            world: this.world.toJSON(),
+        };
+    }
+
+    /**
+     * Sets up the game, renderer, UI, and loads saved data if available.
+     * @param withoutHud skips UI initialization
+     * @param save Optional saved game data
+     */
+    async initialize(withoutHud?: boolean, save?: any | null) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
-        this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
-            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, this.craftEvent.bind(this));
+            const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+            if (viteDisableSave !== "true") {
+                const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+                const clerk = new Clerk(clerkPubKey);
+                clerk.load();
+
+                const saveRequest = () => {
+                    const data = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now(),
+                    });
+
+                    localStorage.setItem('save', data);
+
+                    return fetch("/api/save", {
+                        method: "POST",
+                        body: data,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                }
+
+                setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+
+                window.addEventListener("beforeunload", () => {
+                    const save = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now()
+                    });
+
+                    localStorage.setItem('save', save);
+
+                    const data = new Blob([save], {type: "application/json"});
+                    navigator.sendBeacon("/api/save", data);
+                }, false);
+            }
+
+            this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
+
+            const tile = this.world.getTileAt(1, 0);
+            if (tile) {
+                tile.setContent = new Core(tile);
+            }
+
+            if (!save) {
+                this.player.inventory.addItem(new CraftingTableItem(1));
+                // TODO test only
+                this.player.inventory.addItem(new FurnaceItem(1));
+                this.player.inventory.addItem(new CodebotItem(1));
+            } else {
+                for (const codebotData of save.codebots ?? []) {
+                    this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
+                }
+            }
         }
 
-        const tile  = this.world.getTileAt(1, 0);
-        if (tile) {
-            tile.setContent = new Core(tile);
-        }
-
-        // TODO remove
-        this.player.inventory.addItem(new CraftingTableItem(1));
-        this.player.inventory.addItem(new FurnaceItem(1));
     }
 
-    craftEvent(recipe: Recipe) {
-        if (!this.player.inventory.canAddItem(recipe.output)) {
+    /**
+     * Adds a codebot to the game and sets up its rendering
+     * @param codebot The codebot to add
+     */
+    public addCodeBot(codebot: Codebot): void {
+        this.codebots.push(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
+    }
+
+    /**
+     * Creates a new codebot at a given position
+     * @param x The X position of the codebot
+     * @param y The Y position of the codebot
+     */
+    public addCodebot(x: number, y: number): void {
+        const codebot = new Codebot(
+            this.world,
+            x,
+            y,
+            this.handleCodebotInteraction.bind(this),
+        );
+        this.addCodeBot(codebot);
+    }
+
+    /**
+     * Handles crafting items from a recipe for a specific entity
+     * @param recipe The crafting recipe to use
+     * @param entity The entity that will craft the item
+     */
+    public craftEvent(recipe: Recipe, entity: Entity): void {
+        if (!entity.inventory.canAddItem(recipe.output)) {
             return;
         }
         for (const itemNeeded of recipe.inputs) {
-            let canCraft = this.player.inventory.canRemoveItem(itemNeeded);
+            let canCraft = entity.inventory.canRemoveItem(itemNeeded);
             if (!canCraft)
                 return;
         }
 
         for (const itemNeeded of recipe.inputs) {
-            this.player.inventory.removeItem(itemNeeded);
+            entity.inventory.removeItem(itemNeeded);
         }
 
-        this.player.inventory.addItem(recipe.output);
+        entity.inventory.addItem(recipe.output);
     }
 
-    update(delta: number) {
-        this.player.update(this.keys, delta);
+    /**
+     * Updates the game state: entities, camera, and rendering
+     * @param delta
+     */
+    public update(delta: number): void {
+        const entities = [this.player, ...this.codebots];
+        entities.forEach((entity) => entity.update(this.renderer.robotInterface?.visible ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);
-        if (newCX !== this.player.cX || newCY !== this.player.cY) {
+        if (this.firstLoad || (newCX !== this.player.cX || newCY !== this.player.cY)) {
+            this.firstLoad = false;
             this.player.cX = newCX;
             this.player.cY = newCY;
 
-            const entities = [this.player /* , ...robots plus tard */];
             this.world.updateLoadedChunks(entities);
 
             // 2. recalcul rendu
@@ -117,7 +280,87 @@ export class GameEngine {
         this.renderer.gameContainer.y = this.camera.y;
     }
 
-    private handleInteractWithTile(tile: Tile) {
+    /**
+     * Handles interactions between a codebot and a tile
+     * @param codebot The codebot performing the action
+     * @param tile The tile the codebot interacts with
+     * @param result The result of the interaction
+     * @param data Extra data if needed
+     */
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any): void {
+        switch (result.type) {
+            case "MINED":
+                if (result.tile) {
+                    this.renderer.updateTile(result.tile.chunk, result.tile);
+                }
+                break;
+            case "OPENED_UI":
+                if (result.interactableType === InteractableType.CRAFTING_TABLE) {
+                    const recipe = craftingRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.FURNACE) {
+                    const recipe = furnaceRecipes.find((recipe) => recipe.output.spriteName === data);
+                    if (!recipe) {
+                        break;
+                    }
+
+                    this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    if (!data?.type || !data?.action) {
+                        break;
+                    }
+
+                    const chest = tile.getContent as Chest;
+
+                    if (data.action === "take") {
+                        while (true) {
+                            const item = chest.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canRemoveItem(item) ||
+                                !codebot.inventory.canAddItem(item)) {
+                                break;
+                            }
+
+                            codebot.inventory.addItem(item);
+                            chest.inventory.removeItem(item);
+                        }
+                    } else if (data.action === "deposit") {
+                        while (true) {
+                            const item = codebot.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canAddItem(item) ||
+                                !codebot.inventory.canRemoveItem(item)) {
+                                break;
+                            }
+
+                            chest.inventory.addItem(item);
+                            codebot.inventory.removeItem(item);
+                        }
+                    }
+                }
+                break;
+            case "NONE":
+                this.renderer.updateTile(result.tile!.chunk, tile);
+            default:
+                break;
+        }
+    }
+
+    /**
+    * Handles interactions between the player and a tile
+    * @param tile The tile clicked by the player
+    */
+    private handleInteractWithTile(tile: Tile): void {
         const distance = Math.sqrt(
             Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
         );
@@ -140,8 +383,24 @@ export class GameEngine {
                     this.renderer.renderCraftingInterface();
                 } else if (result.interactableType === InteractableType.FURNACE) {
                     this.renderer.renderFurnaceInterface();
+
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    const chest = result.tile?.getContent as Chest
+                    this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot: InventorySlot, index: number) => {
+                        let item = this.player.inventory.getItemAtIndex(index);
+                        if (!item) return;
+                        if (!chest.inventory.canAddItem(item)) return;
+                        let quantity = item.quantity;
+                        this.player.inventory.removeItem(item);
+                        chest.inventory.addItem(item, quantity);
+                    }, (i: Item) => {
+                        if (!this.player.inventory.canAddItem(i)) return;
+                        let quantity = i.quantity;
+                        this.player.inventory.addItem(i);
+                        chest.inventory.removeItem(i, quantity);
+                    });
                 } else if (result.interactableType === InteractableType.CORE) {
-                    this.renderer.renderCoreInterface(coreStepsRecipes, this.player);
+                    this.renderer.renderCoreInterface(this.coreStepsRecipes, this.player);
                 }
                 break;
 
@@ -152,7 +411,12 @@ export class GameEngine {
         }
     }
 
-    private handleMouseClick(event: MouseEvent) {
+
+    /**
+    * Handles mouse clicks and triggers mining effects.
+    * @param event The mouse click event.
+    */
+    private handleMouseClick(event: MouseEvent): void {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
 
@@ -168,7 +432,7 @@ export class GameEngine {
         );
 
         if (distance > PLAYER_RANGE) {
-            return false;
+            return;
         }
 
         this.renderer.renderMiningEffect(tile.absX, tile.absY);

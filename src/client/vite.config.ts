@@ -12,6 +12,8 @@ export default defineConfig({
             input: {
                 landing: "src/client/index.html",
                 game: "src/client/game.html",
+                doc: "src/client/doc.html",
+                login: "src/client/login.html",
             },
         },
         outDir: "../../dist/client",

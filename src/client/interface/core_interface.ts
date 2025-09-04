@@ -5,6 +5,10 @@ import {ScrollBar} from "./scroll_bar";
 import { CoreItem } from '../world/items/stations/core_item';
 import { BaseInterface } from './base_interface';
 
+/**
+ * Interface that displays the Core progression steps
+ * Shows a scrollable list of items needed to complete each step
+ */
 export class CoreInterface extends BaseInterface {
     private steps: CoreStep[];
     private titleText: Text;
@@ -12,6 +16,15 @@ export class CoreInterface extends BaseInterface {
     private viewportW: number;
     private padding: number;
 
+    /**
+     * Creates a CoreInterface instance
+     * @param app The PixiJS application
+     * @param spritesheets Loaded spritesheets for UI textures
+     * @param scale UI scale factor
+     * @param steps List of Core steps with required items
+     * @param hudLayer The container where the interface will be displayed
+     * @param onClose Optional callback triggered when closing the interface
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, steps: CoreStep[], hudLayer: Container, onClose?: () => void) {
         super(app, spritesheets, scale, hudLayer, onClose);
         this.steps = steps;
@@ -19,6 +32,10 @@ export class CoreInterface extends BaseInterface {
         this.draw();
     }
 
+    /**
+     * Gets the current step based on collected items
+     * Returns the last step if all are complete
+     */
     get currentStep(): CoreStep {
         let currentStepIndex = this.steps.findIndex((step) => step.items.some((item) => item.currentGathered < item.item.quantity));
         if (currentStepIndex === -1) {
@@ -89,7 +106,11 @@ export class CoreInterface extends BaseInterface {
         new ScrollBar(content, contentHeight, viewportH, coreInterface, scrollbarX, scrollbarY, scrollbarW, scrollbarH, this.app);
     }
 
-    drawContent() {
+    /**
+     * Draws the content of the current step.
+     * Displays each item with its quantity, progress, and a progress bar.
+     */
+    public drawContent(): void {
         this.titleText.text = `Etape ${this.currentStep.name}`;
         this.contentContainer.children = [];
         for (let i = 0; i < this.currentStep.items.length; ++i) {

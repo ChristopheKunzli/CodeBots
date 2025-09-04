@@ -1,19 +1,50 @@
 import {Application, Container, Graphics, Sprite, Spritesheet} from 'pixi.js';
 import {findTexture} from "../spritesheet_atlas";
-import { Item } from '../world/items/item';
 import {ScrollBar} from "./scroll_bar";
 import {MultilineInput} from "./multiline_input";
 import { BaseInterface } from './base_interface';
+import { Codebot } from '../entity/codebot';
 
+/**
+ * RobotInterface
+ *
+ * A user interface panel for controlling a Codebot
+ * - Displays a text editor (MultilineInput) for the bot's program
+ * - Shows a slot for an item the bot is holding
+ * - Provides a power button to start/stop the bot
+ * - Includes a help button that opens documentation
+ * - Uses a ScrollBar for scrolling long code
+ */
 export class RobotInterface extends BaseInterface {
-    private code: string;
-    private item: Item | null;
+    public codebot: Codebot;
+    private codeArea: MultilineInput;
+    private onRemoveItemInHand: () => void;
 
-    constructor(app: Application, spritesheets: Spritesheet[], scale: number, code: string, item: Item|null = null) {
-        super(app, spritesheets, scale);
-        this.code = code;
-        this.item = item;
+    /**
+     * Creates a new RobotInterface
+     * @param app The PixiJS application instance
+     * @param spritesheets Loaded spritesheets for UI textures
+     * @param scale GUI scale factor
+     * @param codebot The Codebot to display and control
+     * @param onRemoveItemInHand Function to call when removing the held item
+     * @param hudLayer Layer to attach this interface to
+     * @param onClose Optional callback called when the interface closes
+     */
+    constructor(app: Application, spritesheets: Spritesheet[], scale: number, codebot: Codebot, onRemoveItemInHand: () => void, hudLayer: Container, onClose?: () => void) {
+        super(app, spritesheets, scale, hudLayer, () => {
+            this.handleClose()
+            onClose?.();
+        });
+        this.codebot = codebot;
+        this.onRemoveItemInHand = onRemoveItemInHand;
         this.draw();
+    }
+
+    /**
+     * Saves the program text when the interface closes
+     */
+    private handleClose() {
+        this.codebot.program = this.codeArea.getText();
     }
 
     protected draw(): void {
@@ -48,18 +79,18 @@ export class RobotInterface extends BaseInterface {
 
         const codeAreaW = viewportW * 0.8 - scrollbarW;
         const codeAreaH = viewportH;
-        const codeArea = new MultilineInput(codeAreaW, codeAreaH, this.code);
+        this.codeArea = new MultilineInput(codeAreaW, codeAreaH, this.codebot.program);
 
-        codeArea.x = viewportX;
-        codeArea.y = viewportY;
-        viewport.addChild(codeArea);
+        this.codeArea.x = viewportX;
+        this.codeArea.y = viewportY;
+        viewport.addChild(this.codeArea);
 
-        const scrollbarX = codeArea.x + codeAreaW + scrollbarW + padding / 2;
-        const scrollbarY = codeArea.y;
+        const scrollbarX = this.codeArea.x + codeAreaW + scrollbarW + padding / 2;
+        const scrollbarY = this.codeArea.y;
 
         const scrollbar = new ScrollBar(
-            codeArea,
-            codeArea.contentHeight,
+            this.codeArea,
+            this.codeArea.contentHeight,
             codeAreaH,
             robotInterface,
             scrollbarX,
@@ -69,7 +100,7 @@ export class RobotInterface extends BaseInterface {
             this.app
         );
 
-        codeArea.setScrollBar(scrollbar);
+        this.codeArea.setScrollBar(scrollbar);
 
         //measure available space to add itemSlot and power button
         const bounds = robotInterface.getLocalBounds();
@@ -82,7 +113,18 @@ export class RobotInterface extends BaseInterface {
         itemSlot.x = (scrollbarX + scrollbarW) + (availableWidth - size) / 2;
         itemSlot.y = (bounds.height - size) / 2;
         robotInterface.addChild(itemSlot);
-        this.drawItem(this.item, itemSlot, true, true);
+        this.drawItem(this.codebot.inventory.itemInHand, itemSlot, true, true);
+        this.codebot.inventory.observe(() => {
+            const {itemInHand} = this.codebot.inventory;
+            if (!itemInHand) {
+                itemSlot.children = [];
+
+                return;
+            }
+            this.drawItem(itemInHand, itemSlot, true, true);
+        });
+        itemSlot.interactive = true;
+        itemSlot.on("click", this.onRemoveItemInHand);
 
         //power button
         const powerButton = new Sprite(findTexture(this.spritesheets, "power"));
@@ -90,12 +132,37 @@ export class RobotInterface extends BaseInterface {
         powerButton.width = powerButton.height = powerButtonSize;
         powerButton.x = itemSlot.x + (itemSlot.width - powerButtonSize) / 2;
         powerButton.y = itemSlot.y + itemSlot.height + (bounds.height - (itemSlot.y + itemSlot.height) - powerButtonSize) / 2;
+        powerButton.tint = this.codebot.getIsRunning() ? 0xffffff : 0xff0000;
         powerButton.interactive = true;
         powerButton.on('pointerdown', () => {
-            //TODO manage robot power button click
-            console.log(`Clicked on robot power button`);
-            powerButton.tint = powerButton.tint === 0xff0000 ? 0xffffff : 0xff0000;
+            this.codebot.program = this.codeArea.getText();
+            this.codebot.setIsRunning(!this.codebot.getIsRunning())
         });
+
+        this.codebot.observe(() => {
+            powerButton.tint = this.codebot.getIsRunning() ? 0xffffff : 0xff0000;
+        });
+
         robotInterface.addChild(powerButton);
+
+        const helpButton = new Sprite(findTexture(this.spritesheets, "help"));
+        const helpButtonSize = size * 0.5;
+        helpButton.width = helpButtonSize;
+        helpButton.height = helpButtonSize;
+        helpButton.x = itemSlot.x + (itemSlot.width - helpButtonSize) / 2;
+        helpButton.y = itemSlot.y - (helpButtonSize + padding);
+        helpButton.interactive = true;
+        helpButton
+            .on('mouseover', () => helpButton.tint = 0xff0000)
+            .on('mouseout', () => helpButton.tint = 0xffffff)
+            .on('pointerdown', () => window.open("/doc", "_blank"));
+        robotInterface.addChild(helpButton);
+    }
+
+    /**
+     * Cleans up resources when the interface is destroyed.
+     */
+    public destroy(): void {
+        this.codeArea.destroy();
     }
 }

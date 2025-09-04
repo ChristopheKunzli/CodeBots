@@ -9,7 +9,8 @@ export type AnimationName =
     "player_walk_down" |
     "player_walk_right" |
     "player_walk_left" |
-    "player_walk_up";
+    "player_walk_up" |
+    "codebot_error";
 
 export const findAnimation = (spriteSheets: Spritesheet[], animation: AnimationName) => {
     return spriteSheets.find((spritesheet) => spritesheet.animations[animation])?.animations[animation];
@@ -89,12 +90,17 @@ export type TextureName =
     "codebot_2" |
     "codebot_3" |
     "codebot_4" |
+    "codebot_error_1" |
+    "codebot_error_2" |
+    "codebot_error_3" |
+    "codebot_error_4" |
     "tree_1" |
     "tree_2" |
     "tree_3" |
     "tree_4" |
     "power" |
     "close" |
+    "help" |
     "light_square" |
     "dark_square" |
     "light_frame" |
@@ -102,6 +108,7 @@ export type TextureName =
     "scroll" |
     "bar" |
     "selected_slot" |
+    "dialog_box"|
     "idle1" |
     "idle2" |
     "idle_right_1" |
@@ -165,7 +172,7 @@ const generateAtlas = (file: string, spriteAmount: Dimensions, assetDimensions: 
 };
 
 const atlas = [
-    generateAtlas("/assets/spritesheet.png", {w: 8, h: 9}, {w: 16, h: 16}, [
+    generateAtlas("/assets/spritesheet.png", {w: 9, h: 9}, {w: 16, h: 16}, [
         "grass_1",
         "grass_2",
         "grass_3",
@@ -235,9 +242,17 @@ const atlas = [
         "codebot_2",
         "codebot_3",
         "codebot_4",
+        "codebot_error_1",
+        "codebot_error_2",
+        "codebot_error_3",
+        "codebot_error_4",
         "power",
-        "close"
-    ]),
+        "close",
+        "help",
+    ], {
+        codebot: ["codebot_1", "codebot_2", "codebot_3", "codebot_4"],
+        codebot_error: ["codebot_error_1", "codebot_error_2", "codebot_error_3", "codebot_error_4"],
+    }),
     generateAtlas("/assets/trees.png", {w: 2, h: 2}, {w: 16, h: 32}, [
         "tree_1",
         "tree_2",
@@ -252,6 +267,7 @@ const atlas = [
         "scroll",
         "bar",
         "selected_slot",
+        "dialog_box",
     ]),
     generateAtlas("/assets/character.png", {w: 5, h: 5}, {w: 16, h: 16}, [
         "idle1",

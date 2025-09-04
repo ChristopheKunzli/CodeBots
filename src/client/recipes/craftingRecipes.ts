@@ -17,14 +17,20 @@ import { IronRodItem } from "../world/items/craft_ingredients/iron_rod_item";
 import { ReinforcedIronPlateItem } from "../world/items/craft_ingredients/reinforced_iron_plate_item";
 import { CopperIngotItem } from "../world/items/craft_ingredients/copper_ingot_item";
 import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item";
-import { CodeBotItem } from "../world/items/CodeBotItem";
+import { CodebotItem } from "../world/items/codebot_item";
 import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
 import { CementItem } from "../world/items/craft_ingredients/cement_item";
+import { CrateItem } from "../world/items/stations/crate_item";
 
+/**
+ * List of all crafting recipes available in the game
+ * Each recipe defines the required input items and the resulting output item
+ */
 export const craftingRecipes: Recipe[] = [
     // Crafting Stations
     {inputs: [new WoodPlankItem(32)], output: new CraftingTableItem(1)},
     {inputs: [new StoneItem(32)], output: new FurnaceItem(1)},
+    {inputs: [new WoodPlankItem(32)], output: new CrateItem(1)},
 
     // Crafting ingredients
     {inputs: [new WoodLogItem(1)], output: new WoodPlankItem(2)},
@@ -61,7 +67,7 @@ export const craftingRecipes: Recipe[] = [
             new IronRodItem(16),
             new NailItem(64)
         ],
-        output: new CodeBotItem(1)
+        output: new CodebotItem(1)
     }
 ];
 

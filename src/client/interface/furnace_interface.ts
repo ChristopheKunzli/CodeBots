@@ -2,11 +2,24 @@ import { Application, Container, Sprite, Spritesheet, Text } from 'pixi.js';
 import { findTexture } from "../spritesheet_atlas";
 import { BaseInterface } from './base_interface';
 
-
+/**
+ * FurnaceInterface
+ *
+ * Displays a simple interface for a furnace with:
+ * - An input slot for items to smelt
+ * - A fuel slot
+ * - An output slot for the resulting item
+ */
 export class FurnaceInterface extends BaseInterface {
-
+    /**
+     * Creates a FurnaceInterface instance
+     * @param app The PixiJS application
+     * @param spritesheets Loaded spritesheets for rendering textures
+     * @param scale UI scale factor
+     * @param hudLayer The HUD container where the interface is added
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, hudLayer: Container) {
-        super(app, spritesheets, scale);
+        super(app, spritesheets, scale, hudLayer);
         this.hudLayer = hudLayer;
         this.draw();
     }
