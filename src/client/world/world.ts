@@ -18,8 +18,8 @@ export class World {
         this.savedChunks = new Map();
         if (savedData && savedData.savedChunks) {
             for (const chunkData of savedData.savedChunks) {
-                //const chunk = Chunk.fromJSON(chunkData);
-                //this.savedChunks.set(chunk.key, chunk);
+                const chunk = Chunk.fromJSON(chunkData, this);
+                this.savedChunks.set(chunk.key, chunk);
             }
         }
         this.activeChunks = new Map();

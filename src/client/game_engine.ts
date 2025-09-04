@@ -22,7 +22,7 @@ import { Entity } from "./entity/entity";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
-import {Clerk} from "@clerk/clerk-js";
+import { Clerk } from "@clerk/clerk-js";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -38,7 +38,7 @@ export class GameEngine {
         this.app = app;
         this.seed = save ? save.seed : this.generateRandomSeed();
         const generator = new WorldGenerator(this.seed);
-        this.world = save ? World.fromJSON(save.world, generator) : new World(generator);
+        this.world = save ? new World(generator, save.world) : new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
             this.world,
@@ -48,7 +48,7 @@ export class GameEngine {
         );
         this.camera = new Camera();
         this.codebots = save ? Codebot.fromJSON(save.codebots) : [];
-        this.player = save ? Player.fromJSON(save.player) : new Player(this.world);
+        this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
 
         this.keys = new Set<string>();
 
@@ -95,7 +95,7 @@ export class GameEngine {
             setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
             window.addEventListener("beforeunload", () => {
-                const data = new Blob([JSON.stringify({data: this.save()})], { type: "application/json" });
+                const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
                 navigator.sendBeacon("/api/save", data);
             }, false);
         }
