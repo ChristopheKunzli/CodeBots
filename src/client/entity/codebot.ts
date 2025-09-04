@@ -137,8 +137,8 @@ export class Codebot extends Entity {
         };
     }
 
-    static fromJSON(codebotData, world: World) : Codebot {
-        const codebot = new Codebot(world, codebotData.posX, codebotData.posY, () => {}, Inventory.fromJSON(codebotData.inventory), codebotData.id);
+    static fromJSON(codebotData, world: World,onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void) : Codebot {
+        const codebot = new Codebot(world, codebotData.posX, codebotData.posY, onInteraction, Inventory.fromJSON(codebotData.inventory), codebotData.id);
         codebot.program = codebotData.program;
         codebot.isRunning = codebotData.isRunning;
         codebot.inventory = codebotData.inventory ? Inventory.fromJSON(codebotData.inventory) : new Inventory(codebot.getInventorySize());

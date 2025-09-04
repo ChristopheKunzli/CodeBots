@@ -50,11 +50,6 @@ export class GameEngine {
         );
         this.camera = new Camera();
         this.codebots = [];
-        if (save) {
-            for(const codebotData of save.codebots) {
-                this.codebots.push(Codebot.fromJSON(codebotData, this.world));
-            }
-        }
 
         this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
         this.coreStepsRecipes = save ? (save.coreStepsRecipes as CoreStep[]) : coreStepsRecipes;
@@ -123,7 +118,7 @@ export class GameEngine {
         };
     }
 
-    async initialize(withoutHud?: boolean) {
+    async initialize(withoutHud?: boolean, save?: any) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
@@ -138,11 +133,24 @@ export class GameEngine {
             }
 
             // TODO test only
-            this.player.inventory.addItem(new CraftingTableItem(1));
-            this.player.inventory.addItem(new FurnaceItem(1));
-            this.player.inventory.addItem(new CodebotItem(1));
+            if (!save) {
+                this.player.inventory.addItem(new CraftingTableItem(1));
+                this.player.inventory.addItem(new FurnaceItem(1));
+                this.player.inventory.addItem(new CodebotItem(1));
+            }
         }
 
+        if (save) {
+            for (const codebotData of save.codebots) {
+                this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
+            }
+        }
+    }
+
+    addCodeBot(codebot: Codebot) {
+        this.codebots.push(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
     }
 
     addCodebot(x: number, y: number) {

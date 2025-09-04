@@ -11,6 +11,7 @@ import { CoalStone } from "./resources/coal_stone";
 import { CopperStone } from "./resources/copper_stone";
 import { IronStone } from "./resources/iron_stone";
 import { Tree } from "./resources/tree";
+import { CodebotInteractable } from "./interactables/codebot_interactable";
 
 export default class Tile {
     public chunk: Chunk;
@@ -81,6 +82,8 @@ export default class Tile {
                 return new IronStone(tile);
             case "Wood" :
                 return new Tree(tile);
+            case "Codebot":
+                return new CodebotInteractable(tile);
             default:
                 throw new Error(`Unknown tile content type: ${tileData.content.tileContentType}`);
         }
