@@ -54,7 +54,6 @@ export class GameEngine {
             for(const codebotData of save.codebots) {
                 this.codebots.push(Codebot.fromJSON(codebotData, this.world));
             }
-            console.log(this.codebots);
         }
 
         this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
