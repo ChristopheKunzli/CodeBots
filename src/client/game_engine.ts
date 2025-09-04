@@ -23,6 +23,7 @@ import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
 import { Clerk } from "@clerk/clerk-js";
+import { CoreStep } from "./types/item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -33,6 +34,7 @@ export class GameEngine {
     private keys: Set<string>;
     private codebots: Codebot[];
     private seed: string;
+    private coreStepsRecipes: CoreStep[];
 
     constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
@@ -49,7 +51,7 @@ export class GameEngine {
         this.camera = new Camera();
         this.codebots = save ? Codebot.fromJSON(save.codebots) : [];
         this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
-
+        this.coreStepsRecipes = save ? (save.coreStepsRecipes as CoreStep[]) : coreStepsRecipes;
         this.keys = new Set<string>();
 
         window.addEventListener("keydown", (e) =>
@@ -258,7 +260,7 @@ export class GameEngine {
                         chest.inventory.removeItem(i, quantity);
                     });
                 } else if (result.interactableType === InteractableType.CORE) {
-                    this.renderer.renderCoreInterface(coreStepsRecipes, this.player);
+                    this.renderer.renderCoreInterface(this.coreStepsRecipes, this.player);
                 }
                 break;
 
