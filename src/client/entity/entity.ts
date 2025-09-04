@@ -18,12 +18,27 @@ type EntityState = {
     cY: number;
 };
 
+/**
+ * Entity
+ *
+ * Abstract base class representing any entity in the game world
+ * (Player, Codebot)
+ * Provides position handling, inventory, interaction logic, and serialization
+ */
 export abstract class Entity extends Observable<EntityState> {
     private static idCounter = 1;
     public id: string;
     public inventory: Inventory;
     protected world: World;
 
+    /**
+     * Creates a new entity
+     * @param world The game world the entity belongs to
+     * @param x Initial X coordinate
+     * @param y Initial Y coordinate
+     * @param inventory Optional inventory (creates a new one if not provided)
+     * @param id Optional custom ID (auto-generated if not provided)
+     */
     constructor(world: World, x: number, y: number, inventory?: Inventory, id?: string) {
         super({
             posX: x,
@@ -37,15 +52,30 @@ export abstract class Entity extends Observable<EntityState> {
         this.id = id ? id : `entity_${Entity.idCounter++}`;
     }
 
+    /**
+     * Sets the chunk X coordinate for this entity
+     */
     set cX(newCX: number) {
         this.state.cX = newCX;
     }
 
+    /**
+     * Sets the chunk Y coordinate for this entity
+     */
     set cY(newCY: number) {
         this.state.cY = newCY;
     }
 
-    interactWithTile(tile: Tile): InteractionResult {
+    /**
+     * Interacts with the specified tile
+     * - Mines resources if a Resource is present
+     * - Opens UI for interactable objects (chests, furnaces)
+     * - Uses the held item if possible
+     *
+     * @param tile The tile to interact with
+     * @returns An InteractionResult describing the outcome
+     */
+    public interactWithTile(tile: Tile): InteractionResult {
         const content = tile?.getContent;
 
         const itemInHand : Item | null = this.inventory.itemInHand;
@@ -77,15 +107,30 @@ export abstract class Entity extends Observable<EntityState> {
         return {type: "NONE", tile};
     }
 
-    abstract getSpeed(): number;
+    /**
+     * Abstract: Get the movement speed of this entity
+     */
+    public abstract getSpeed(): number;
 
-    abstract getAnimationName(): AnimationName;
+    /**
+     * Abstract: Get the current animation name for this entity
+     */
+    public abstract getAnimationName(): AnimationName;
 
-    abstract isAnimated(): boolean;
+    /**
+     * Abstract: Indicates whether this entity should be animated
+     */
+    public abstract isAnimated(): boolean;
 
-    abstract getType(): EntityType;
+    /**
+     * Abstract: Returns the type of this entity (PLAYER, BOT, etc.)
+     */
+    public abstract getType(): EntityType;
 
-    abstract getInventorySize(): number;
+    /**
+     * Abstract: Returns the size of the entity's inventory
+     */
+    public abstract getInventorySize(): number;
 
     get posX(): number {
         return this.state.posX;
@@ -111,11 +156,18 @@ export abstract class Entity extends Observable<EntityState> {
         this.state.posY = newPosY;
     }
 
-    interact(i: Interactable) {
+    /**
+     * Placeholder method for custom interactions with Interactable objects
+     * Subclasses can override this
+     */
+    public interact(i: Interactable) {
 
     }
 
-    toJSON(): any {
+    /**
+     * Converts this entity into a serializable JSON object.
+     */
+    public toJSON(): any {
         return {
             id: this.id,
             posX: this.posX,
@@ -124,7 +176,11 @@ export abstract class Entity extends Observable<EntityState> {
         };
     }
 
-    fromJSON(entity: any) {
+    /**
+     * Loads entity data from JSON
+     * @param entity JSON data
+     */
+    public fromJSON(entity: any) {
         this.id = entity.id;
         this.posX = entity.posX;
         this.posY = entity.posY;

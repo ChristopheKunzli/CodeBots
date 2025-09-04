@@ -20,8 +20,12 @@ import { IronFrameItem } from "../world/items/craft_ingredients/iron_frame_item"
 import { CodebotItem } from "../world/items/codebot_item";
 import { ConcreteItem } from "../world/items/craft_ingredients/concrete_item";
 import { CementItem } from "../world/items/craft_ingredients/cement_item";
-import { CrateItem } from "../world/items/stations/cratet_item";
+import { CrateItem } from "../world/items/stations/crate_item";
 
+/**
+ * List of all crafting recipes available in the game
+ * Each recipe defines the required input items and the resulting output item
+ */
 export const craftingRecipes: Recipe[] = [
     // Crafting Stations
     {inputs: [new WoodPlankItem(32)], output: new CraftingTableItem(1)},

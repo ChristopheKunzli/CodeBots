@@ -2,6 +2,9 @@ import { Furnace } from "../../interactables/furnace";
 import Tile from "../../tile";
 import { Item } from "../item";
 
+/**
+ * Represents an item that can place a Furnace in the world
+ */
 export class FurnaceItem extends Item {
     constructor(quantity: number) {
         super("furnace", quantity);

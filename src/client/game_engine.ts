@@ -25,6 +25,10 @@ import { InventorySlot } from "./types/inventory";
 import { Clerk } from "@clerk/clerk-js";
 import { CoreStep } from "./types/item";
 
+/**
+ * Main class that controls the game
+ * Handles the world, player, camera, codebots, and rendering.
+ */
 export class GameEngine {
     public app: PIXI.Application;
     public world: World;
@@ -37,6 +41,11 @@ export class GameEngine {
     private coreStepsRecipes: CoreStep[];
     private firstLoad: boolean;
 
+    /**
+     * Creates a new game engine
+     * @param app The PixiJS application for rendering
+     * @param save Optional saved game data
+     */
     constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
         this.seed = save?.seed ? save.seed : this.generateRandomSeed();
@@ -55,12 +64,12 @@ export class GameEngine {
 
         this.player = save?.player ? Player.fromJSON(save.player, this.world) : new Player(this.world);
         this.coreStepsRecipes = save?.coreStepsRecipes ? coreStepsRecipes.map((step) => {
-            const stepSave = save.coreStepsRecipes.find(({name}) => name === step.name) as CoreStep|undefined;
+            const stepSave = save.coreStepsRecipes.find(({ name }) => name === step.name) as CoreStep | undefined;
             if (!stepSave) {
                 return step;
             }
             return {
-                items: step.items.map(({item, currentGathered}) => {
+                items: step.items.map(({ item, currentGathered }) => {
                     const itemSave = stepSave.items.find((i) => i.item.spriteName === item.spriteName);
                     return {
                         item,
@@ -96,10 +105,19 @@ export class GameEngine {
         });
     }
 
+    /**
+     * Generates a random seed string for world generation
+     * @param length The length of the seed string. Default is 32
+     * @returns A random seed string
+     */
     private generateRandomSeed(length: number = 32): string {
-        return Array.from({length}, () => Math.random().toString(36)[2]).join('');
+        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
     }
 
+    /**
+     * Saves the current game state
+     * @returns An object containing all necessary save data
+     */
     private save(): any {
         return {
             seed: this.seed,
@@ -116,6 +134,11 @@ export class GameEngine {
         };
     }
 
+    /**
+     * Sets up the game, renderer, UI, and loads saved data if available.
+     * @param withoutHud skips UI initialization
+     * @param save Optional saved game data
+     */
     async initialize(withoutHud?: boolean, save?: any | null) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
@@ -133,7 +156,7 @@ export class GameEngine {
                 const saveRequest = () => {
                     return fetch("/api/save", {
                         method: "POST",
-                        body: JSON.stringify({data: this.save()}),
+                        body: JSON.stringify({ data: this.save() }),
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -143,7 +166,7 @@ export class GameEngine {
                 setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
                 window.addEventListener("beforeunload", () => {
-                    const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
+                    const data = new Blob([JSON.stringify({ data: this.save() })], { type: "application/json" });
                     navigator.sendBeacon("/api/save", data);
                 }, false);
             }
@@ -169,13 +192,22 @@ export class GameEngine {
 
     }
 
-    addCodeBot(codebot: Codebot) {
+    /**
+     * Adds a codebot to the game and sets up its rendering
+     * @param codebot The codebot to add
+     */
+    public addCodeBot(codebot: Codebot): void {
         this.codebots.push(codebot);
         const sprite = this.renderer.renderEntity(codebot);
         this.renderer.initializeCodebot(sprite, codebot, this.player);
     }
 
-    addCodebot(x: number, y: number) {
+    /**
+     * Creates a new codebot at a given position
+     * @param x The X position of the codebot
+     * @param y The Y position of the codebot
+     */
+    public addCodebot(x: number, y: number): void {
         const codebot = new Codebot(
             this.world,
             x,
@@ -185,7 +217,12 @@ export class GameEngine {
         this.addCodeBot(codebot);
     }
 
-    craftEvent(recipe: Recipe, entity: Entity) {
+    /**
+     * Handles crafting items from a recipe for a specific entity
+     * @param recipe The crafting recipe to use
+     * @param entity The entity that will craft the item
+     */
+    public craftEvent(recipe: Recipe, entity: Entity): void {
         if (!entity.inventory.canAddItem(recipe.output)) {
             return;
         }
@@ -202,8 +239,12 @@ export class GameEngine {
         entity.inventory.addItem(recipe.output);
     }
 
-    update(delta: number) {
-        const entities = [this.player, ...this.codebots /* , ...robots plus tard */];
+    /**
+     * Updates the game state: entities, camera, and rendering
+     * @param delta
+     */
+    public update(delta: number): void {
+        const entities = [this.player, ...this.codebots];
         entities.forEach((entity) => entity.update(this.renderer.robotInterface?.visible ? new Set() : this.keys, delta));
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
@@ -225,7 +266,14 @@ export class GameEngine {
         this.renderer.gameContainer.y = this.camera.y;
     }
 
-    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) {
+    /**
+     * Handles interactions between a codebot and a tile
+     * @param codebot The codebot performing the action
+     * @param tile The tile the codebot interacts with
+     * @param result The result of the interaction
+     * @param data Extra data if needed
+     */
+    private handleCodebotInteraction(codebot: Codebot, tile: Tile, result: InteractionResult, data?: any): void {
         switch (result.type) {
             case "MINED":
                 if (result.tile) {
@@ -256,7 +304,11 @@ export class GameEngine {
         }
     }
 
-    private handleInteractWithTile(tile: Tile) {
+    /**
+    * Handles interactions between the player and a tile
+    * @param tile The tile clicked by the player
+    */
+    private handleInteractWithTile(tile: Tile): void {
         const distance = Math.sqrt(
             Math.pow(tile.absX - this.player.posX, 2) + Math.pow(tile.absY - this.player.posY, 2)
         );
@@ -307,7 +359,12 @@ export class GameEngine {
         }
     }
 
-    private handleMouseClick(event: MouseEvent) {
+
+    /**
+    * Handles mouse clicks and triggers mining effects.
+    * @param event The mouse click event.
+    */
+    private handleMouseClick(event: MouseEvent): void {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
 
@@ -323,7 +380,7 @@ export class GameEngine {
         );
 
         if (distance > PLAYER_RANGE) {
-            return false;
+            return;
         }
 
         this.renderer.renderMiningEffect(tile.absX, tile.absY);

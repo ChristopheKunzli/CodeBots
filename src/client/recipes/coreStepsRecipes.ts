@@ -11,6 +11,10 @@ import { ReinforcedIronPlateItem } from "../world/items/craft_ingredients/reinfo
 import { NailItem } from "../world/items/craft_ingredients/nail_item";
 import { CodebotItem } from "../world/items/codebot_item";
 
+/**
+ * List of core progression steps in the game
+ * Each step represents a technological age with required items to unlock it
+ */
 export const coreStepsRecipes: CoreStep[] = [
     {
         name: "Âge de Pierre",

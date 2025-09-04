@@ -3,7 +3,7 @@ import Observable from "../observer/observable";
 import { InventorySlot } from "../types/inventory";
 import { Item } from "../world/items/item";
 import { FurnaceItem } from "../world/items/stations/furnace_item";
-import { CrateItem } from "../world/items/stations/cratet_item";
+import { CrateItem } from "../world/items/stations/crate_item";
 import { CraftingTableItem } from "../world/items/stations/crafting_table_item";
 import { AxeItem } from "../world/items/tools/axeItem";
 import { PickaxeItem } from "../world/items/tools/pickaxeItem";
@@ -28,40 +28,71 @@ import { NailItem } from "../world/items/craft_ingredients/nail_item";
 import { CodebotItem } from "../world/items/codebot_item";
 import { WoodLogItem } from "../world/items/rawRessources/wood_log_item";
 
+/**
+ * Represents an entity's inventory.
+ * Stores items in slots, allows adding, removing, and serializing items
+ */
 export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;
 
+    /**
+     * Creates a new inventory with a given size
+     * @param size The number of slots in the inventory
+     */
     constructor(size: number) {
         super(Array.from({length: size}, () => null));
 
         this.itemInHandIndex = 0;
     }
 
+    /**
+     * Gets the item currently selected in the inventory
+     */
     get itemInHand(): InventorySlot {
         return this.items[this.itemInHandIndex];
     }
 
-    setItemInHandIndex(index: number) {
+    /**
+     * Sets the index of the currently selected slot
+     * @param index The index to set
+     */
+    public setItemInHandIndex(index: number): void {
         this.itemInHandIndex = index;
         this.notify();
     }
 
-    getItemInHandIndex(): number {
+    /**
+     * Gets the index of the currently selected slot.
+     */
+    public getItemInHandIndex(): number {
         return this.itemInHandIndex;
     }
 
+    /**
+     * Gets all items in the inventory
+     */
     get items(): InventorySlot[] {
         return this.state;
     }
 
-    getItemAtIndex(index: number): InventorySlot | null {
+    /**
+     * Gets the item at a specific index
+     * @param index The slot index
+     * @returns The item at the index or null
+     */
+    public getItemAtIndex(index: number): InventorySlot | null {
         if (index < 0 || index >= this.items.length) {
             throw new Error(`Index ${index} is out of bounds`);
         }
         return this.items[index];
     }
 
-    canAddItem(item: Item): boolean {
+    /**
+     * Checks if an item can be added to the inventory
+     * @param item The item to check
+     * @returns True if there is enough space, false otherwise
+     */
+    public canAddItem(item: Item): boolean {
         if (!item.isStackable) {
             return this.items.some(slot => slot === null);
         }
@@ -81,7 +112,12 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return Math.min(item.quantity, space) === item.quantity;
     }
 
-    canRemoveItem(item: Item): boolean {
+    /**
+     * Checks if an item can be removed from the inventory
+     * @param item The item to check
+     * @returns True if there are enough of the item, false otherwise
+     */
+    public canRemoveItem(item: Item): boolean {
         const available = this.items.reduce((acc, slot) => {
             if (slot?.spriteName === item.spriteName) {
                 return acc + slot.quantity;
@@ -93,7 +129,13 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return Math.min(item.quantity, available) === item.quantity;
     }
 
-    addItem(item: Item, quantity = item.quantity): number {
+    /**
+     * Adds an item to the inventory
+     * @param item The item to add
+     * @param quantity The number of items to add
+     * @returns The number of items successfully added
+     */
+    public addItem(item: Item, quantity = item.quantity): number {
         let remaining = quantity;
 
         // fill existing stacks
@@ -126,7 +168,13 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return item.quantity - remaining;
     }
 
-    removeItem(item: Item, quantity = item.quantity): number {
+    /**
+     * Removes an item from the inventory
+     * @param item The item to remove
+     * @param quantity The number of items to remove
+     * @returns The number of items successfully removed
+     */
+    public removeItem(item: Item, quantity = item.quantity): number {
         let remaining = quantity;
 
         for (let i = 0; i < this.items.length; i++) {
@@ -151,10 +199,18 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return item.quantity - remaining;
     }
 
-    isEmpty(): boolean {
+    /**
+     * Checks if the inventory is empty
+     * @returns True if all slots are empty, false otherwise
+     */
+    public isEmpty(): boolean {
         return this.items.every((slot) => !slot);
     }
 
+    /**
+     * Converts the inventory to a JSON object for saving
+     * @returns JSON representation of the inventory
+     */
     public toJSON(): any {
         return {
             items: this.items,
@@ -162,6 +218,11 @@ export default class Inventory extends Observable<InventorySlot[]> {
         };
     }
 
+    /**
+     * Restores an inventory from saved JSON data
+     * @param inventory Saved inventory data
+     * @returns A new Inventory instance
+     */
     public static fromJSON(inventory: any): Inventory {
         const inv = new Inventory(inventory.items.length);
         const items = inventory.items;
@@ -178,6 +239,12 @@ export default class Inventory extends Observable<InventorySlot[]> {
         return inv;
     }
 
+    /**
+     * Creates an item instance based on saved data
+     * @param item Saved item data
+     * @param qty Optional quantity override
+     * @returns An Item instance
+     */
     private static makeItem(item: any, qty?: number): Item {
         const quantity = qty || item.quantity;
         switch (item.spriteName) {

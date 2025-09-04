@@ -1,6 +1,14 @@
 import {Graphics, Text, TextStyle} from "pixi.js";
 import {ScrollBar} from "./scroll_bar";
 
+/**
+ * MultilineInput
+ *
+ * A custom multi-line text input field built with PixiJS
+ * - Supports typing, deleting, and navigating text with arrow keys
+ * - Handles paste, tab, and enter for multi-line text editing
+ * - Can scroll vertically with a ScrollBar
+ */
 export class MultilineInput extends Graphics {
     public lines: string[] = [];
     private texts: Text[] = [];
@@ -38,6 +46,12 @@ export class MultilineInput extends Graphics {
     private _snapToBottomOnAppend = true;
     private _justAppended = false; // internal marker set before render when adding at end
 
+    /**
+     * Creates a multiline text input field
+     * @param width Total width of the input box
+     * @param viewportHeight Height of the visible area (without scrolling)
+     * @param initialText Optional initial text to display
+     */
     constructor(width: number, viewportHeight: number, initialText = "") {
         super();
         this.viewportWidth = width;

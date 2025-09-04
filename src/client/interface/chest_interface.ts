@@ -4,9 +4,24 @@ import { Item } from '../world/items/item';
 import { BaseInterface } from './base_interface';
 import Inventory from '../inventory/inventory';
 
+/**
+ * Interface for displaying and interacting with a chest's inventory
+ * Allows moving items from the chest to the player's inventory
+ */
 export class ChestInterface extends BaseInterface {
     private inventory: Inventory;
     private moveItemFromChest: (item:Item)=>void;
+
+    /**
+     * Creates a ChestInterface instance
+     * @param app The PixiJS application
+     * @param spritesheets Loaded spritesheets for UI textures
+     * @param scale UI scale factor
+     * @param inventory The chest's inventory
+     * @param hudLayer The container where the interface will be displayed
+     * @param moveItemFromChest Callback triggered to move items from chest to player
+     * @param onCloseCallBack Callback triggered when the interface is closed
+     */
     constructor(app: Application, spritesheets: Spritesheet[], scale: number, inventory: Inventory, hudLayer:Container, moveItemFromChest:(item:Item)=>void, onCloseCallBack:()=>void) {
         super(app, spritesheets, scale,hudLayer, onCloseCallBack);
         this.hudLayer = hudLayer;

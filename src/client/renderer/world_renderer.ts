@@ -24,7 +24,10 @@ import { Item } from "../world/items/item";
 import Inventory from "../inventory/inventory";
 import { ChestInterface } from "../interface/chest_interface";
 
-
+/**
+ * Responsible for rendering the game world, entities, UI
+ * Handles tiles, decorations, interactable objects, and HUD elements
+ */
 export class WorldRenderer {
     public container: PIXI.Container;
     private spriteSheet: PIXI.Spritesheet<{
@@ -57,6 +60,13 @@ export class WorldRenderer {
     private onInteractionWithTile: (tile: Tile) => void;
     private onAddCodebot: (x: number, y: number) => void;
 
+    /**
+     * Creates a new WorldRenderer
+     * @param world The world to render
+     * @param app The PIXI application for rendering
+     * @param onInteractionWithTile Callback when a tile is clicked
+     * @param onAddCodebot Callback when a codebot is added
+     */
     constructor(
         world: World,
         app: PIXI.Application,
@@ -87,18 +97,31 @@ export class WorldRenderer {
         this.onAddCodebot = onAddCodebot;
     }
 
-    private setCursor() {
+    /**
+     * Sets custom cursor images for the game
+     */
+    private setCursor(): void {
         const getCursor = (name: string) => `url('/assets/${name}.png'),auto`;
         this.app.renderer.events.cursorStyles.default = getCursor("cursor");
         this.app.renderer.events.cursorStyles.hover = getCursor("pointer");
     }
 
-    async initialize() {
+    /**
+     * Loads sprite sheets and prepares rendering
+     */
+    public async initialize(): Promise<void> {
         this.spriteSheet = await getSpritesheets();
         this.setCursor();
     }
 
-    initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[], player: Player, onClickOnCraftLine: (recipe: Recipe) => void) {
+    /**
+     * Initializes the UI elements like crafting, furnace, and item bar
+     * @param craftingRecipes List of crafting recipes
+     * @param furnaceRecipes List of furnace recipes
+     * @param player The player instance
+     * @param onClickOnCraftLine Callback when a crafting recipe is selected
+     */
+    public initializeUI(craftingRecipes: Recipe[], furnaceRecipes: Recipe[], player: Player, onClickOnCraftLine: (recipe: Recipe) => void): void {
         this.craftingInterface = new CraftingInterface(this.app, this.spriteSheet, 64, craftingRecipes, this.hudLayer, onClickOnCraftLine);
         this.furnaceInterface = new CraftingInterface(this.app, this.spriteSheet, 64, furnaceRecipes, this.hudLayer, onClickOnCraftLine);
 
@@ -107,9 +130,13 @@ export class WorldRenderer {
         this.renderPlayerCoordinate(player);
     }
 
-    public render(chunks: Chunk[]) {
+    /**
+     * Renders the given chunks, unloading and loading as needed
+     * @param chunks The chunks to render
+     */
+    public render(chunks: Chunk[]): void {
         const newChunkKeys = new Set(chunks.map(c => c.key));
-        // 1. Unload ceux qui ne sont plus dans newChunkKeys
+        // Unload those not anymore in newChunkKeys
         for (const key of this.currentlyRenderingChunks) {
             if (!newChunkKeys.has(key)) {
                 const [cx, cy] = key.split("_").map(Number);
@@ -117,7 +144,7 @@ export class WorldRenderer {
                 this.currentlyRenderingChunks.delete(key);
             }
         }
-        // 2. Render ceux qui sont nouveaux
+        // Load new ones
         for (const chunk of chunks) {
             if (!this.currentlyRenderingChunks.has(chunk.key)) {
                 this.currentlyRenderingChunks.add(chunk.key);
@@ -126,22 +153,38 @@ export class WorldRenderer {
         }
     }
 
-
-    renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index: number) => void, moveItemFromChest: (item: Item) => void) {
+    /**
+     * Shows the chest interface, allowing moving items between chest and inventory
+     * @param chestInventory The inventory inside the chest
+     * @param moveItemToChest Callback to move item to chest
+     * @param moveItemFromChest Callback to move item from chest
+     */
+    public renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index: number) => void, moveItemFromChest: (item: Item) => void): void {
         const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64, chestInventory, this.hudLayer, moveItemFromChest, () => this.itemBar.resetOnClickEvent());
         chestInterface.show();
         this.itemBar.onClickEvent = moveItemToChest;
     }
 
-    public renderCraftingInterface() {
+    /**
+     * Displays the crafting interface
+     */
+    public renderCraftingInterface(): void {
         this.craftingInterface.show();
     }
 
-    public renderFurnaceInterface() {
+    /**
+     * Displays the furnace interface
+     */
+    public renderFurnaceInterface(): void {
         this.furnaceInterface.show();
     }
 
-    public renderCoreInterface(coreSteps: CoreStep[], entity: Entity) {
+    /**
+     * Displays the core interface and updates item requirements
+     * @param coreSteps Core progression steps
+     * @param entity The entity interacting with the core
+     */
+    public renderCoreInterface(coreSteps: CoreStep[], entity: Entity): void {
         const oldOnClickEvent = this.itemBar.onClickEvent;
         this.itemBar.onClickEvent = (item) => {
             if (!item) return;
@@ -167,7 +210,11 @@ export class WorldRenderer {
         this.coreInterface.show();
     }
 
-    public renderPlayerCoordinate(player: Player) {
+    /**
+     * Displays player's coordinates in the HUD
+     * @param player The player instance
+     */
+    public renderPlayerCoordinate(player: Player): void {
         const getTextFromCoordinate = (player: Player) => `x: ${Math.round(player.posX)}, y: ${Math.round(player.posY)}`
 
         document.fonts.ready.then(() => {
@@ -197,7 +244,12 @@ export class WorldRenderer {
         });
     }
 
-    public renderEntity(entity: Entity) {
+    /**
+     * Renders an entity and its animations in the game world
+     * @param entity The entity to render
+     * @returns The PIXI animated sprite of the entity
+     */
+    public renderEntity(entity: Entity): any{
         const animation = findAnimation(this.spriteSheet, entity.getAnimationName());
         if (!animation) {
             throw new Error("animation not found");
@@ -237,7 +289,13 @@ export class WorldRenderer {
         return sprite;
     }
 
-    public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, player: Player) {
+    /**
+     * Sets up interaction and UI for a codebot
+     * @param sprite The codebot sprite
+     * @param codebot The codebot entity
+     * @param player The player interacting with the codebot
+     */
+    public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, player: Player): void {
         sprite.interactive = true;
         sprite.cursor = "hover";
         sprite
@@ -247,7 +305,12 @@ export class WorldRenderer {
         this.renderCodebotMessage(sprite, codebot);
     }
 
-    private renderCodebotInterface(codebot: Codebot, player: Player) {
+    /**
+     * Render the CodeBot interface
+     * @param codebot
+     * @param player
+     */
+    private renderCodebotInterface(codebot: Codebot, player: Player): void {
         const oldOnClickEvent = this.itemBar.onClickEvent;
         this.itemBar.onClickEvent = (item: InventorySlot) => {
             if (codebot.inventory.itemInHand !== null || item === null) {
@@ -276,7 +339,13 @@ export class WorldRenderer {
         this.robotInterface.show();
     }
 
-    private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot) {
+
+    /**
+     * Shows the dialog/message box above a codebot
+     * @param sprite The codebot sprite
+     * @param codebot The codebot entity
+     */
+    private renderCodebotMessage(sprite: PIXI.Sprite, codebot: Codebot): void {
         let text = codebot.getMessage();
 
         const dialogBoxTexture = findTexture(this.spriteSheet, "dialog_box");
@@ -334,7 +403,12 @@ export class WorldRenderer {
         });
     }
 
-    public renderMiningEffect(tileX: number, tileY: number) {
+    /**
+     * Shows a visual effect when interacting with a tile
+     * @param tileX The X coordinate of the tile
+     * @param tileY The Y coordinate of the tile
+     */
+    public renderMiningEffect(tileX: number, tileY: number): void {
         const effect = new PIXI.Graphics();
         effect.setStrokeStyle({
             width: 2,
@@ -363,7 +437,12 @@ export class WorldRenderer {
         this.app.ticker.add(fade);
     }
 
-    public updateTile(chunk: Chunk, tile: Tile) {
+    /**
+     * Updates a single tile's visuals in a rendered chunk
+     * @param chunk The chunk containing the tile
+     * @param tile The tile to update
+     */
+    public updateTile(chunk: Chunk, tile: Tile): void {
         const sprites = this.chunkContent.get(chunk.key);
         if (sprites === undefined) throw new Error("Trying to update a tile in a chunk that is not loaded");
         const tileRenderer = sprites.get(`${tile.absX - chunk.cx * chunk.size}_${tile.absY - chunk.cy * chunk.size}`);
@@ -379,7 +458,12 @@ export class WorldRenderer {
         }
     }
 
-    private async unloadChunk(cx: number, cy: Number) {
+    /**
+     * Removes all sprites of a chunk from rendering
+     * @param cx Chunk X coordinate
+     * @param cy Chunk Y coordinate
+     */
+    private async unloadChunk(cx: number, cy: Number): Promise<void> {
         let sprites = this.chunkContent.get(`${cx}_${cy}`);
         if (sprites === undefined) throw new Error("Trying to unload a chunk that is not loaded");
         for (const [key, value] of sprites) {
@@ -390,7 +474,11 @@ export class WorldRenderer {
         this.chunkContent.delete(`${cx}_${cy}`)
     }
 
-    private async renderChunk(chunk: Chunk) {
+    /**
+     * Renders a chunk and all of its tiles
+     * @param chunk The chunk to render
+     */
+    private async renderChunk(chunk: Chunk): Promise<void> {
 
         if (!this.chunkContent.has(chunk.key)) {
             this.chunkContent.set(chunk.key, new Map());
@@ -410,7 +498,10 @@ export class WorldRenderer {
         }
     }
 
-    private getTextureForTile(tile: Tile, chunk: Chunk, x: number, y: number) {
+    /**
+     * Renders a tile's base texture
+     */
+    private getTextureForTile(tile: Tile, chunk: Chunk, x: number, y: number): void {
         let sprite: PIXI.Sprite;
         switch (tile.type) {
             case TileType.GRASS: {
@@ -495,7 +586,10 @@ export class WorldRenderer {
         sprite.zIndex = sprite.y;
     }
 
-    private getTextureForMiddleLayer(tile: Tile, chunk: Chunk, x: number, y: number) {
+    /**
+     * Renders sprites for objects like resources or interactables on a tile
+     */
+    private getTextureForMiddleLayer(tile: Tile, chunk: Chunk, x: number, y: number): void {
         let sprite: PIXI.Sprite;
         let offsetY = 0;
         switch (tile.getContent?.tileContentType) {
@@ -585,8 +679,10 @@ export class WorldRenderer {
         sprite.zIndex = sprite.y;
     }
 
-
-    private getTextureForDecoration(tile: Tile, chunk: Chunk, x: number, y: number) {
+    /**
+     * Renders decorative objects like bushes and flowers
+     */
+    private getTextureForDecoration(tile: Tile, chunk: Chunk, x: number, y: number): void {
         let sprite: PIXI.Sprite;
         switch (tile.decoration) {
             case DecorationType.BUSH: {
