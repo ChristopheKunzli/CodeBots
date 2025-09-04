@@ -112,8 +112,8 @@ export class GameEngine {
             seed: this.seed,
             player: this.player.toJSON(),
             codebots: this.codebots.map((codebot) => codebot.toJSON()),
-            world: this.world.toJSON(),
             coreStepsRecipes: this.coreStepsRecipes,
+            world: this.world.toJSON(),
         };
     }
 
