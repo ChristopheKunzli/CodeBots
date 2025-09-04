@@ -38,9 +38,9 @@ export class GameEngine {
 
     constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
-        this.seed = save ? save.seed : this.generateRandomSeed();
+        this.seed = save?.seed ? save.seed : this.generateRandomSeed();
         const generator = new WorldGenerator(this.seed);
-        this.world = save ? new World(generator, save.world) : new World(generator);
+        this.world = save?.world ? new World(generator, save.world) : new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
             this.world,
@@ -51,8 +51,8 @@ export class GameEngine {
         this.camera = new Camera();
         this.codebots = [];
 
-        this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
-        this.coreStepsRecipes = save ? coreStepsRecipes.map((step) => {
+        this.player = save?.player ? Player.fromJSON(save.player, this.world) : new Player(this.world);
+        this.coreStepsRecipes = save?.coreStepsRecipes ? coreStepsRecipes.map((step) => {
             const stepSave = save.coreStepsRecipes.find(({name}) => name === step.name) as CoreStep|undefined;
             if (!stepSave) {
                 return step;
@@ -159,7 +159,7 @@ export class GameEngine {
                 this.player.inventory.addItem(new FurnaceItem(1));
                 this.player.inventory.addItem(new CodebotItem(1));
             } else {
-                for (const codebotData of save.codebots) {
+                for (const codebotData of save.codebots ?? []) {
                     this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
                 }
             }
