@@ -123,7 +123,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
         this.notify();
 
-        return item.quantity - remaining;
+        return quantity - remaining;
     }
 
     removeItem(item: Item, quantity = item.quantity): number {
@@ -148,7 +148,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
         this.notify();
 
-        return item.quantity - remaining;
+        return quantity - remaining;
     }
 
     isEmpty(): boolean {

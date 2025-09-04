@@ -65,8 +65,8 @@ export class Codebot extends Entity {
     }
 
     async setIsRunning(isRunning: boolean) {
-        this.notify();
         this.isRunning = isRunning;
+        this.notify();
 
         if (this.isRunning) {
             this.error = await Codebot.interpreter.evaluate(this.program, this.customBuiltins.builtins);
