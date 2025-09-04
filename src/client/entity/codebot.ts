@@ -21,8 +21,14 @@ export class Codebot extends Entity {
     private message: string | null;
     private onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void;
 
-    constructor(world: World, x: number, y: number, onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult, data?: any) => void) {
-        super(world, x, y);
+    constructor(
+        world: World,
+        x: number,
+        y: number,
+        onInteraction: (codebot: Codebot, tile: Tile, result: InteractionResult) => void,
+        inventory?: Inventory,
+        id?: string) {
+        super(world, x, y, inventory || undefined, id || undefined);
         this.program = "";
         this.isRunning = false;
         this.error = null;
@@ -131,11 +137,11 @@ export class Codebot extends Entity {
         };
     }
 
-    static fromJSON(codebotData) {
-        const codebot = new Codebot(codebotData.world, codebotData.state.posX, codebotData.state.posY, () => {});
+    static fromJSON(codebotData, world: World) : Codebot {
+        const codebot = new Codebot(world, codebotData.posX, codebotData.posY, () => {}, Inventory.fromJSON(codebotData.inventory), codebotData.id);
         codebot.program = codebotData.program;
         codebot.isRunning = codebotData.isRunning;
         codebot.inventory = codebotData.inventory ? Inventory.fromJSON(codebotData.inventory) : new Inventory(codebot.getInventorySize());
-        return codebotData;
+        return codebot;
     }
 }

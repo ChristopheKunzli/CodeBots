@@ -49,7 +49,14 @@ export class GameEngine {
             this.addCodebot.bind(this),
         );
         this.camera = new Camera();
-        this.codebots = save ? Codebot.fromJSON(save.codebots) : [];
+        this.codebots = [];
+        if (save) {
+            for(const codebotData of save.codebots) {
+                this.codebots.push(Codebot.fromJSON(codebotData, this.world));
+            }
+            console.log(this.codebots);
+        }
+
         this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
         this.coreStepsRecipes = save ? (save.coreStepsRecipes as CoreStep[]) : coreStepsRecipes;
         this.keys = new Set<string>();

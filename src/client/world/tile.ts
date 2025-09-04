@@ -6,6 +6,11 @@ import { Core } from "./interactables/core";
 import { Furnace } from "./interactables/furnace";
 import { Chest } from "./interactables/chest";
 import { CraftingTable } from "./interactables/crafting_table";
+import { Stone } from "./resources/stone";
+import { CoalStone } from "./resources/coal_stone";
+import { CopperStone } from "./resources/copper_stone";
+import { IronStone } from "./resources/iron_stone";
+import { Tree } from "./resources/tree";
 
 export default class Tile {
     public chunk: Chunk;
@@ -66,6 +71,16 @@ export default class Tile {
                 return new Furnace(tile);
             case "Crafting_table" :
                 return new CraftingTable(tile);
+            case "Stone":
+                return new Stone(tile);
+            case "Coal" :
+                return new CoalStone(tile);
+            case "Copper":
+                return new CopperStone(tile);
+            case "Iron" :
+                return new IronStone(tile);
+            case "Wood" :
+                return new Tree(tile);
             default:
                 throw new Error(`Unknown tile content type: ${tileData.content.tileContentType}`);
         }
