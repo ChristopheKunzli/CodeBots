@@ -19,7 +19,6 @@ export class Chest extends Interactable {
     }
 
     static fromJSON(data: any, tile: Tile): Chest {
-        console.log(data)
         return new Chest(tile, Inventory.fromJSON(data.inventory));
     }
 }

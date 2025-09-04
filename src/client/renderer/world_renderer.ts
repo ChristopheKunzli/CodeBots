@@ -127,13 +127,13 @@ export class WorldRenderer {
     }
 
 
-    renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index:number)=>void, moveItemFromChest: (item:Item)=>void){
-        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64,chestInventory, this.hudLayer,moveItemFromChest, ()=> this.itemBar.resetOnClickEvent() );
+    renderChestInterface(chestInventory: Inventory, moveItemToChest: (item: InventorySlot, index: number) => void, moveItemFromChest: (item: Item) => void) {
+        const chestInterface = new ChestInterface(this.app, this.spriteSheet, 64, chestInventory, this.hudLayer, moveItemFromChest, () => this.itemBar.resetOnClickEvent());
         chestInterface.show();
         this.itemBar.onClickEvent = moveItemToChest;
     }
 
-    public renderCraftingInterface(){
+    public renderCraftingInterface() {
         this.craftingInterface.show();
     }
 
@@ -239,12 +239,12 @@ export class WorldRenderer {
 
     public initializeCodebot(sprite: PIXI.AnimatedSprite, codebot: Codebot, player: Player) {
         sprite.interactive = true;
-            sprite.cursor = "hover";
-            sprite
-                .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
-                .on("pointerout", () => sprite.filters = null)
-                .on("click", () => this.renderCodebotInterface(codebot, player));
-            this.renderCodebotMessage(sprite, codebot);
+        sprite.cursor = "hover";
+        sprite
+            .on("pointerover", () => sprite.filters = [new OutlineFilter({color: 0xffffff, thickness: 2})])
+            .on("pointerout", () => sprite.filters = null)
+            .on("click", () => this.renderCodebotInterface(codebot, player));
+        this.renderCodebotMessage(sprite, codebot);
     }
 
     private renderCodebotInterface(codebot: Codebot, player: Player) {
@@ -544,17 +544,17 @@ export class WorldRenderer {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "coal"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
             case InteractableType.CORE: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "core"))
                 this.overTileLayer.addChild(sprite);
                 break;
-            };
+            }
             case InteractableType.CODEBOT: {
                 this.onAddCodebot(tile.absX, tile.absY);
                 tile.setContent = null;
                 return;
-            };
+            }
             default: {
                 sprite = new PIXI.Sprite(findTexture(this.spriteSheet, "iron_axe"));
                 this.middleLayer.addChild(sprite);

@@ -262,10 +262,12 @@ export class GameEngine {
                     this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot: InventorySlot, index: number) => {
                         let item = this.player.inventory.getItemAtIndex(index);
                         if (!item) return;
+                        if (!this.player.inventory.canAddItem(item)) return;
                         let quantity = item.quantity;
                         this.player.inventory.removeItem(item);
                         chest.inventory.addItem(item, quantity);
                     }, (i: Item) => {
+                        if (!this.player.inventory.canAddItem(i)) return;
                         let quantity = i.quantity;
                         this.player.inventory.addItem(i);
                         chest.inventory.removeItem(i, quantity);
