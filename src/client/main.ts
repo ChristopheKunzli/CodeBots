@@ -28,7 +28,7 @@ import { GameEngine } from './game_engine';
 
     if (localSave) {
         const parsed = JSON.parse(localSave);
-        if (parsed && (save?.timestamp < parsed.timestamp)) {
+        if (parsed && (!save || (save.timestamp < parsed.timestamp))) {
             save = parsed;
         }
     }
