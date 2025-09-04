@@ -15,9 +15,14 @@ import { GameEngine } from './game_engine';
         initDevtools({app});
     }
 
-    let save = await fetch('/api/save').then(res => {
-        return res.ok ? res.json() : null;
-    }).catch(() => null);
+    const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+    let save: any = null;
+    if (viteDisableSave !== "true") {
+        save = await fetch('/api/save').then(res => {
+            return res.ok ? res.json() : null;
+        }).catch(() => null);
+    }
 
     const localSave = localStorage.getItem('save');
 
