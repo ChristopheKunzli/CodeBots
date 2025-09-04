@@ -34,8 +34,8 @@ import { GameEngine } from './game_engine';
     }
 
     document.body.appendChild(app.canvas);
-    const engine = new GameEngine(app, save.data);
-    await engine.initialize(false, save.data);
+    const engine = new GameEngine(app, save?.data);
+    await engine.initialize(false, save?.data);
 
     app.ticker.add((delta) => {
         engine.update(delta.deltaTime);
