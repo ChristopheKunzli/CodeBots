@@ -304,7 +304,5 @@ export class GameEngine {
         }
 
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
-
-        console.log(JSON.stringify(this.save()));
     }
 }
