@@ -247,6 +247,44 @@ export class GameEngine {
                     }
 
                     this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    if (!data?.type || !data?.action) {
+                        break;
+                    }
+
+                    const chest = tile.getContent as Chest;
+
+                    if (data.action === "take") {
+                        while (true) {
+                            const item = chest.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canRemoveItem(item) ||
+                                !codebot.inventory.canAddItem(item)) {
+                                break;
+                            }
+
+                            codebot.inventory.addItem(item);
+                            chest.inventory.removeItem(item);
+                        }
+                    } else if (data.action === "deposit") {
+                        while (true) {
+                            const item = codebot.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canAddItem(item) ||
+                                !codebot.inventory.canRemoveItem(item)) {
+                                break;
+                            }
+
+                            chest.inventory.addItem(item);
+                            codebot.inventory.removeItem(item);
+                        }
+                    }
                 }
                 break;
             case "NONE":

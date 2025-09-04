@@ -13,8 +13,10 @@ import { RESOURCE_TYPES, ResourceType } from "../types/resource_type";
 import { HashPair } from "codebotsinterpreter/lib/object/hash_key";
 import { World } from "../world/world";
 import { INVENTORY_STACK_SIZE } from "../constants";
+import { INTERACTABLE_TYPES, InteractableType } from "../types/interactable_type";
 
 type Resource = (typeof RESOURCE_TYPES)[number];
+type ValidInteractable = (typeof INTERACTABLE_TYPES)[number];
 
 let printTimeout: NodeJS.Timeout|null = null;
 
@@ -33,6 +35,10 @@ export default class CustomBuiltins {
 
     isValidResourceType(resourceType: string): resourceType is Resource {
         return RESOURCE_TYPES.includes(resourceType as Resource);
+    }
+
+    isValidInteractableType(interactableType: string): interactableType is ValidInteractable {
+        return INTERACTABLE_TYPES.includes(interactableType);
     }
 
     parsePosition(object: Object): Position|ErrorObject {
@@ -93,16 +99,16 @@ export default class CustomBuiltins {
         };
     }
 
-    parseResource(object: Object): ResourceType|ErrorObject {
+    parseTileContent(object: Object): ResourceType|InteractableType|ErrorObject {
         if (!(object instanceof StringObject)) {
             return new ErrorObject(`unsupported argument type: ${object.type()}`);
         }
 
-        if (!this.isValidResourceType(object.value)) {
-            return new ErrorObject(`invalid resource type: ${object.value}`);
+        if (!this.isValidResourceType(object.value) && !this.isValidInteractableType(object.value)) {
+            return new ErrorObject(`invalid resource or interactable type: ${object.value}`);
         }
 
-        return ResourceType[object.value.toUpperCase()];
+        return ResourceType[object.value.toUpperCase()] ?? InteractableType[object.value.toUpperCase()];
     }
 
     getPositionObject({x, y}: Position): HashObject {
@@ -213,13 +219,13 @@ export default class CustomBuiltins {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
 
-                const resource = this.parseResource(args[0]);
-                if (resource instanceof ErrorObject) {
-                    return resource;
+                const tileContent = this.parseTileContent(args[0]);
+                if (tileContent instanceof ErrorObject) {
+                    return tileContent;
                 }
 
                 const codebotPosition = {x: this.codebot.posX, y: this.codebot.posY};
-                const position = this.world.getNearestResourceFromPosition(codebotPosition, resource);
+                const position = this.world.getNearestContentFromPosition(codebotPosition, tileContent);
                 if (!position) {
                     return new ErrorObject(`could not find resource ${args[0].inspect()}`);
                 }
@@ -286,13 +292,21 @@ export default class CustomBuiltins {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
 
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
+                const itemType = this.parseItemType(args[0]);
+                if (itemType instanceof ErrorObject) {
+                    return itemType;
                 }
 
-                // TODO
-                throw new Error("not implemented");
+                const posX = Math.round(this.codebot.posX);
+                const posY = Math.round(this.codebot.posY);
+                const tile = this.world.getTileAt(posX, posY);
+                if (!tile) {
+                    return new ErrorObject("tile not loaded");
+                }
+
+                this.codebot.interactWithTile(tile, {type: itemType, action: "deposit"});
+
+                return NULL;
             }),
             "take": new BuiltinObject(async (...args) => {
                 // (item) => void : dans un coffre
@@ -300,13 +314,21 @@ export default class CustomBuiltins {
                     return new ErrorObject(`wrong arguments amount: received ${args.length}, expected 1`);
                 }
 
-                const item = this.parseItem(args[0]);
-                if (item instanceof ErrorObject) {
-                    return item;
+                const itemType = this.parseItemType(args[0]);
+                if (itemType instanceof ErrorObject) {
+                    return itemType;
                 }
 
-                // TODO
-                throw new Error("not implemented");
+                const posX = Math.round(this.codebot.posX);
+                const posY = Math.round(this.codebot.posY);
+                const tile = this.world.getTileAt(posX, posY);
+                if (!tile) {
+                    return new ErrorObject("tile not loaded");
+                }
+
+                this.codebot.interactWithTile(tile, {type: itemType, action: "take"});
+
+                return NULL;
             }),
         };
     }
