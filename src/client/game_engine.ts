@@ -133,7 +133,7 @@ export class GameEngine {
                 const saveRequest = () => {
                     const data = JSON.stringify({
                         data: this.save(),
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
                     });
 
                     localStorage.setItem('save', data);
