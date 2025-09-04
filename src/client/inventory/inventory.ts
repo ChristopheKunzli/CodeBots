@@ -186,7 +186,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
                 return new FurnaceItem(1);
             case "crate":
                 return new CrateItem(1);
-            case "coal":
+            case "coal_ore":
                 return new CoalItem(quantity);
             case "copper_ore":
                 return new CopperItem(quantity);
