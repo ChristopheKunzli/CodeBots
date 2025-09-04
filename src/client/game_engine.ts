@@ -108,14 +108,13 @@ export class GameEngine {
     }
 
     private save(): any {
-        const gameState = {
+        return {
             seed: this.seed,
             player: this.player.toJSON(),
             codebots: this.codebots.map((codebot) => codebot.toJSON()),
             world: this.world.toJSON(),
+            coreStepsRecipes: this.coreStepsRecipes,
         };
-
-        return gameState;
     }
 
     async initialize(withoutHud?: boolean) {

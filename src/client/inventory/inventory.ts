@@ -26,6 +26,7 @@ import { IronPlateItem } from "../world/items/craft_ingredients/iron_plate_item"
 import { IronRodItem } from "../world/items/craft_ingredients/iron_rod_item";
 import { NailItem } from "../world/items/craft_ingredients/nail_item";
 import { CodebotItem } from "../world/items/codebot_item";
+import { WoodLogItem } from "../world/items/rawRessources/wood_log_item";
 
 export default class Inventory extends Observable<InventorySlot[]> {
     private itemInHandIndex: number;
@@ -195,7 +196,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
             case "stone_ore":
                 return new StoneItem(quantity);
             case "wood_log":
-                return new WoodPlankItem(quantity);
+                return new WoodLogItem(quantity);
             case "wood_pickaxe":
                 return new PickaxeItem(new WoodMaterial());
             case "stone_pickaxe":
