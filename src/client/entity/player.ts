@@ -86,6 +86,9 @@ export class Player extends Entity {
     }
 
     static fromJSON(player, world: World): Player {
-        return new Player(world, player.posX, player.posY, Inventory.fromJSON(player.inventory), player.id);
+        const p =  new Player(world, player.posX, player.posY, Inventory.fromJSON(player.inventory), player.id);
+        p.cX =  player.cX;
+        p.cY =  player.cY;
+        return p;
     }
 }

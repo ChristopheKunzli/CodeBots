@@ -132,9 +132,9 @@ export class GameEngine {
                 tile.setContent = new Core(tile);
             }
 
-            // TODO test only
             if (!save) {
                 this.player.inventory.addItem(new CraftingTableItem(1));
+                // TODO test only
                 this.player.inventory.addItem(new FurnaceItem(1));
                 this.player.inventory.addItem(new CodebotItem(1));
             }

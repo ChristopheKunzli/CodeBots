@@ -67,7 +67,7 @@ export default class Tile {
             case "Core":
                 return new Core(tile);
             case "Chest":
-                return new Chest(tile);
+                return Chest.fromJSON(tileData.content, tile);
             case "Furnace":
                 return new Furnace(tile);
             case "Crafting_table" :
