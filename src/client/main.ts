@@ -15,13 +15,22 @@ import { GameEngine } from './game_engine';
         initDevtools({app});
     }
 
-    const save = await fetch('/api/save').then(res => {
+    let save = await fetch('/api/save').then(res => {
         return res.ok ? res.json() : null;
     }).catch(() => null);
 
+    const localSave = localStorage.getItem('save');
+
+    if (localSave) {
+        const parsed = JSON.parse(localSave);
+        if (parsed && (save.timestamp < parsed.timestamp)) {
+            save = parsed;
+        }
+    }
+
     document.body.appendChild(app.canvas);
-    const engine = new GameEngine(app, save);
-    await engine.initialize(false, save);
+    const engine = new GameEngine(app, save.data);
+    await engine.initialize(false, save.data);
 
     app.ticker.add((delta) => {
         engine.update(delta.deltaTime);

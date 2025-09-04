@@ -131,9 +131,16 @@ export class GameEngine {
                 clerk.load();
 
                 const saveRequest = () => {
+                    const data = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now()
+                    });
+
+                    localStorage.setItem('save', data);
+
                     return fetch("/api/save", {
                         method: "POST",
-                        body: JSON.stringify({data: this.save()}),
+                        body: data,
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -143,7 +150,12 @@ export class GameEngine {
                 setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
                 window.addEventListener("beforeunload", () => {
-                    const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
+                    const save = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now()
+                    });
+
+                    const data = new Blob([save], {type: "application/json"});
                     navigator.sendBeacon("/api/save", data);
                 }, false);
             }
