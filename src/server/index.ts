@@ -64,7 +64,7 @@ const handleSave = async () => {
                 return c.json({error: "no saves found"}, 404);
             }
 
-            return c.json(latest.data);
+            return c.json(latest);
         } catch (err) {
             console.error(err);
             return c.json({error: "failed to fetch data"}, 500);
