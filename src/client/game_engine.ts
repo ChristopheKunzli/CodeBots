@@ -262,7 +262,7 @@ export class GameEngine {
                     this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot: InventorySlot, index: number) => {
                         let item = this.player.inventory.getItemAtIndex(index);
                         if (!item) return;
-                        if (!this.player.inventory.canAddItem(item)) return;
+                        if (!chest.inventory.canAddItem(item)) return;
                         let quantity = item.quantity;
                         this.player.inventory.removeItem(item);
                         chest.inventory.addItem(item, quantity);
@@ -304,5 +304,7 @@ export class GameEngine {
         }
 
         this.renderer.renderMiningEffect(tile.absX, tile.absY);
+
+        console.log(JSON.stringify(this.save()));
     }
 }
