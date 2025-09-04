@@ -2,12 +2,14 @@ import { AnimationName } from "../spritesheet_atlas";
 import { EntityType } from "../types/entity_type";
 import { World } from "../world/world";
 import { Entity } from "./entity";
-import {PLAYER_INVENTORY_SIZE, PLAYER_SPEED} from "../constants";
+import { PLAYER_INVENTORY_SIZE, PLAYER_SPEED } from "../constants";
+import Inventory from "../inventory/inventory";
 
 export class Player extends Entity {
     private currentlyDisplayedAnimation: AnimationName;
-    constructor(world:World) {
-        super(world, 0, 0);
+
+    constructor(world: World, x: number = 0, y: number = 0, inventory?: Inventory, id?: string) {
+        super(world, x, y, inventory, id);
         this.currentlyDisplayedAnimation = "player_idle";
     }
 
@@ -36,9 +38,9 @@ export class Player extends Entity {
             else if (dy > 0) this.currentlyDisplayedAnimation = "player_walk_down";
             else if (dy < 0) this.currentlyDisplayedAnimation = "player_walk_up";
         } else {
-            if(this.currentlyDisplayedAnimation == "player_walk_right" || this.currentlyDisplayedAnimation =="player_idle_right") this.currentlyDisplayedAnimation = "player_idle_right";
-            else if(this.currentlyDisplayedAnimation == "player_walk_left" || this.currentlyDisplayedAnimation == "player_idle_left") this.currentlyDisplayedAnimation = "player_idle_left";
-            else if(this.currentlyDisplayedAnimation == "player_walk_up" ||this.currentlyDisplayedAnimation == "player_idle_back") this.currentlyDisplayedAnimation = "player_idle_back";
+            if (this.currentlyDisplayedAnimation == "player_walk_right" || this.currentlyDisplayedAnimation == "player_idle_right") this.currentlyDisplayedAnimation = "player_idle_right";
+            else if (this.currentlyDisplayedAnimation == "player_walk_left" || this.currentlyDisplayedAnimation == "player_idle_left") this.currentlyDisplayedAnimation = "player_idle_left";
+            else if (this.currentlyDisplayedAnimation == "player_walk_up" || this.currentlyDisplayedAnimation == "player_idle_back") this.currentlyDisplayedAnimation = "player_idle_back";
             else this.currentlyDisplayedAnimation = "player_idle";
             this.notify();
         }
@@ -70,14 +72,20 @@ export class Player extends Entity {
     getAnimationName(): AnimationName {
         return this.currentlyDisplayedAnimation;
     }
+
     isAnimated(): boolean {
         return true;
     }
+
     getType(): EntityType {
         return EntityType.PLAYER;
     }
+
     getInventorySize(): number {
         return PLAYER_INVENTORY_SIZE;
     }
 
+    static fromJSON(player, world: World): Player {
+        return new Player(world, player.posX, player.posY, Inventory.fromJSON(player.inventory), player.id);
+    }
 }

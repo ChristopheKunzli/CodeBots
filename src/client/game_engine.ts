@@ -22,7 +22,8 @@ import { Entity } from "./entity/entity";
 import { Chest } from "./world/interactables/chest";
 import { Item } from "./world/items/item";
 import { InventorySlot } from "./types/inventory";
-import {Clerk} from "@clerk/clerk-js";
+import { Clerk } from "@clerk/clerk-js";
+import { CoreStep } from "./types/item";
 
 export class GameEngine {
     public app: PIXI.Application;
@@ -33,12 +34,13 @@ export class GameEngine {
     private keys: Set<string>;
     private codebots: Codebot[];
     private seed: string;
+    private coreStepsRecipes: CoreStep[];
 
-    constructor(app: PIXI.Application, seed: string = this.generateRandomSeed()) {
+    constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
-        this.seed = seed;
-        const generator = new WorldGenerator(seed);
-        this.world = new World(generator);
+        this.seed = save ? save.seed : this.generateRandomSeed();
+        const generator = new WorldGenerator(this.seed);
+        this.world = save ? new World(generator, save.world) : new World(generator);
         generator.setWorld(this.world);
         this.renderer = new WorldRenderer(
             this.world,
@@ -49,6 +51,23 @@ export class GameEngine {
         this.camera = new Camera();
         this.codebots = [];
 
+        this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
+        this.coreStepsRecipes = save ? coreStepsRecipes.map((step) => {
+            const stepSave = save.coreStepsRecipes.find(({name}) => name === step.name) as CoreStep|undefined;
+            if (!stepSave) {
+                return step;
+            }
+            return {
+                items: step.items.map(({item, currentGathered}) => {
+                    const itemSave = stepSave.items.find((i) => i.item.spriteName === item.spriteName);
+                    return {
+                        item,
+                        currentGathered: itemSave?.currentGathered ?? currentGathered,
+                    };
+                }),
+                name: step.name,
+            };
+        }) : coreStepsRecipes;
         this.keys = new Set<string>();
 
         window.addEventListener("keydown", (e) =>
@@ -73,56 +92,60 @@ export class GameEngine {
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
-
-        const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
-
-        if (viteDisableSave !== "true") {
-            const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-            const clerk = new Clerk(clerkPubKey);
-            clerk.load();
-
-            const saveRequest = () => {
-                return fetch("/api/save", {
-                    method: "POST",
-                    body: JSON.stringify({data: this.save()}),
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                })
-            }
-
-            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
-
-            window.addEventListener("beforeunload", () => {
-                const data = new Blob([JSON.stringify({data: this.save()})], { type: "application/json" });
-                navigator.sendBeacon("/api/save", data);
-            }, false);
-        }
     }
 
     private generateRandomSeed(length: number = 32): string {
-        return Array.from({ length }, () => Math.random().toString(36)[2]).join('');
+        return Array.from({length}, () => Math.random().toString(36)[2]).join('');
     }
 
     private save(): any {
-        const gameState = {
+        return {
             seed: this.seed,
             player: this.player.toJSON(),
             codebots: this.codebots.map((codebot) => codebot.toJSON()),
+            coreStepsRecipes: this.coreStepsRecipes.map((step) => ({
+                name: step.name,
+                items: step.items.map((item) => ({
+                    item: { ...item.item },
+                    currentGathered: item.currentGathered,
+                }))
+            })),
             world: this.world.toJSON(),
         };
-
-        return gameState;
     }
 
-    async initialize(withoutHud?: boolean) {
+    async initialize(withoutHud?: boolean, save?: any | null) {
         await this.renderer.initialize();
         this.renderer.gameContainer.scale.set(this.camera.zoom);
         this.app.stage.addChild(this.renderer.container);
-        this.player = new Player(this.world);
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
+            const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+            if (viteDisableSave !== "true") {
+                const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+                const clerk = new Clerk(clerkPubKey);
+                clerk.load();
+
+                const saveRequest = () => {
+                    return fetch("/api/save", {
+                        method: "POST",
+                        body: JSON.stringify({data: this.save()}),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                }
+
+                setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+
+                window.addEventListener("beforeunload", () => {
+                    const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
+                    navigator.sendBeacon("/api/save", data);
+                }, false);
+            }
+
             this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
 
             const tile = this.world.getTileAt(1, 0);
@@ -130,12 +153,24 @@ export class GameEngine {
                 tile.setContent = new Core(tile);
             }
 
-            // TODO test only
-            this.player.inventory.addItem(new CraftingTableItem(1));
-            this.player.inventory.addItem(new FurnaceItem(1));
-            this.player.inventory.addItem(new CodebotItem(1));
+            if (!save) {
+                this.player.inventory.addItem(new CraftingTableItem(1));
+                // TODO test only
+                this.player.inventory.addItem(new FurnaceItem(1));
+                this.player.inventory.addItem(new CodebotItem(1));
+            } else {
+                for (const codebotData of save.codebots) {
+                    this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
+                }
+            }
         }
 
+    }
+
+    addCodeBot(codebot: Codebot) {
+        this.codebots.push(codebot);
+        const sprite = this.renderer.renderEntity(codebot);
+        this.renderer.initializeCodebot(sprite, codebot, this.player);
     }
 
     addCodebot(x: number, y: number) {
@@ -145,9 +180,7 @@ export class GameEngine {
             y,
             this.handleCodebotInteraction.bind(this),
         );
-        this.codebots.push(codebot);
-        const sprite = this.renderer.renderEntity(codebot);
-        this.renderer.initializeCodebot(sprite, codebot, this.player);
+        this.addCodeBot(codebot);
     }
 
     craftEvent(recipe: Recipe, entity: Entity) {
@@ -249,16 +282,18 @@ export class GameEngine {
                     this.renderer.renderChestInterface((result.tile?.getContent as Chest).inventory, (inventorySlot: InventorySlot, index: number) => {
                         let item = this.player.inventory.getItemAtIndex(index);
                         if (!item) return;
+                        if (!chest.inventory.canAddItem(item)) return;
                         let quantity = item.quantity;
                         this.player.inventory.removeItem(item);
                         chest.inventory.addItem(item, quantity);
                     }, (i: Item) => {
+                        if (!this.player.inventory.canAddItem(i)) return;
                         let quantity = i.quantity;
                         this.player.inventory.addItem(i);
                         chest.inventory.removeItem(i, quantity);
                     });
                 } else if (result.interactableType === InteractableType.CORE) {
-                    this.renderer.renderCoreInterface(coreStepsRecipes, this.player);
+                    this.renderer.renderCoreInterface(this.coreStepsRecipes, this.player);
                 }
                 break;
 

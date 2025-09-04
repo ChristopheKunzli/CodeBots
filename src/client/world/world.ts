@@ -2,10 +2,10 @@ import { CHUNK_LOAD_RADIUS, CHUNK_SIZE, RENDER_DISTANCE } from "../constants";
 import { Entity } from "../entity/entity";
 import { Player } from "../entity/player";
 import { Direction } from "../types/direction";
-import {ResourceType} from "../types/resource_type";
+import { ResourceType } from "../types/resource_type";
 import { Chunk } from "./chunk";
 import { IWorldGenerator } from "./i_world_generator";
-import type {Position} from "../types/position";
+import type { Position } from "../types/position";
 import Tile from "./tile";
 
 export class World {
@@ -14,13 +14,20 @@ export class World {
     public generator: IWorldGenerator;
     public entities: Entity[];
 
-    constructor(generator: IWorldGenerator) {
+    constructor(generator: IWorldGenerator, savedData?: any) {
         this.savedChunks = new Map();
         this.activeChunks = new Map();
         this.generator = generator;
+
+        if (savedData && savedData.savedChunks) {
+            for (const chunkData of savedData.savedChunks) {
+                const chunk = Chunk.fromJSON(chunkData, this);
+                this.savedChunks.set(chunk.key, chunk);
+            }
+        }
     }
 
-    public toJSON() : any {
+    public toJSON(): any {
         return {
             savedChunks: Array.from(this.savedChunks.values()).map(chunk => chunk.toJSON()),
         }
@@ -130,7 +137,7 @@ export class World {
         return result;
     }
 
-    getNearestResourceFromPosition(from: Position, ressourceType: ResourceType): Position|null {
+    getNearestResourceFromPosition(from: Position, ressourceType: ResourceType): Position | null {
         const visited = new Set<string>();
         const queue: Position[] = [from];
 

@@ -46,4 +46,20 @@ export class Chunk {
             tiles: this.tiles.map(row => row.map(tile => tile.toJSON())),
         };
     }
+
+    static fromJSON(chunkData: any, world: World): Chunk {
+        const chunk = new Chunk(chunkData.cx, chunkData.cy, chunkData.size, world);
+
+        let i = 0;
+        for(const tileRow of chunkData.tiles) {
+            let j = 0;
+            for(const tileData of tileRow) {
+                chunk.tiles[i][j] = Tile.fromJSON(tileData, chunk);
+                ++j;
+            }
+            ++i;
+        }
+
+        return chunk;
+    }
 }
