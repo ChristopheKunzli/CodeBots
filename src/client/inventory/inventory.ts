@@ -165,7 +165,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
         this.notify();
 
-        return item.quantity - remaining;
+        return quantity - remaining;
     }
 
     /**
@@ -196,7 +196,7 @@ export default class Inventory extends Observable<InventorySlot[]> {
 
         this.notify();
 
-        return item.quantity - remaining;
+        return quantity - remaining;
     }
 
     /**

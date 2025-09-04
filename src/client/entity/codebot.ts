@@ -97,8 +97,8 @@ export class Codebot extends Entity {
      * @param isRunning Whether the Codebot should start running code
      */
     public async setIsRunning(isRunning: boolean): Promise<void> {
-        this.notify();
         this.isRunning = isRunning;
+        this.notify();
 
         if (this.isRunning) {
             this.error = await Codebot.interpreter.evaluate(this.program, this.customBuiltins.builtins);

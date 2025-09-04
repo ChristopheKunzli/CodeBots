@@ -286,7 +286,7 @@
                                 → Met l'objet du type indiqué dans la main du robot.
                             </li>
                             <li>
-                                <code>find(&lt;resource&gt;)</code>
+                                <code>find(&lt;resource | interatable&gt;)</code>
                                 → Retourne la position de la ressource la plus proche.
                             </li>
                             <li>
@@ -302,7 +302,7 @@
                                 → Fabrique l'objet indiqué si le robot se situe sur un etablis ou un four.
                             </li>
                             <li>
-                                <code>deposit(&lt;item&gt;)</code>
+                                <code>deposit(&lt;itemType&gt;)</code>
                                 → Dépose l'objet indiqué dans un coffre.
                             </li>
                             <li>
@@ -320,6 +320,10 @@
                             </li>
                             <li id="resource-type">
                                 <code>&lt;resource&gt;</code>
+                                →
+                            </li>
+                            <li id="interatable-type">
+                                <code>&lt;interatable&gt;</code>
                                 →
                             </li>
                             <li id="itemType-type">
@@ -340,14 +344,22 @@
                     <h5>Exemple de programme</h5>
 
                     <p>
-                        Répéter 3 fois : récolter et stocker du bois<br/>
+                        Répéter 3 fois : récolter du bois puis le stocker<br/>
 <pre>var i = 0;
 while (i &lt; 3) {
     var pos = find("wood");
     goto(pos);
     gather();
     var i = i + 1;
-}</pre>
+}
+
+var pos = find("chest");
+goto(pos);
+deposit("wood_log");
+
+goto({"x": 0, "y": 0});
+print("done");
+</pre>
                     </p>
                 </div>
             </div>
@@ -362,6 +374,7 @@ while (i &lt; 3) {
     <script type="module">
         import {RESOURCE_TYPES} from "./types/resource_type";
         import {ITEM_TYPES} from "./types/item";
+        import {INTERACTABLE_TYPES} from "./types/interactable_type";
 
         const resourceElement = document.getElementById("resource-type");
         RESOURCE_TYPES.forEach((r, idx) => {
@@ -374,16 +387,27 @@ while (i &lt; 3) {
             }
         });
 
-    const itemTypeElement = document.getElementById("itemType-type");
-    ITEM_TYPES.forEach((i, idx) => {
-        const codeEl = document.createElement("code");
-        codeEl.textContent = `"${i}"`;
-        itemTypeElement.appendChild(codeEl);
+        const itemTypeElement = document.getElementById("itemType-type");
+        ITEM_TYPES.forEach((i, idx) => {
+            const codeEl = document.createElement("code");
+            codeEl.textContent = `"${i}"`;
+            itemTypeElement.appendChild(codeEl);
 
-        if (idx < ITEM_TYPES.length - 1) {
-            itemTypeElement.appendChild(document.createTextNode(", "));
-        }
-    });
+            if (idx < ITEM_TYPES.length - 1) {
+                itemTypeElement.appendChild(document.createTextNode(", "));
+            }
+        });
+
+        const interactableElement = document.getElementById("interactable-type");
+        INTERACTABLE_TYPES.forEach((i, idx) => {
+            const codeEl = document.createElement("code");
+            codeEl.textContent = `"${i}"`;
+            interactableElement.appendChild(codeEl);
+
+            if (idx < INTERACTABLE_TYPES.length - 1) {
+                interactableElement.appendChild(document.createTextNode(", "));
+            }
+        });
     </script>
 </body>
 </html>

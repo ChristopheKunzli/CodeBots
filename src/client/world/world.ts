@@ -7,6 +7,7 @@ import { Chunk } from "./chunk";
 import { IWorldGenerator } from "./i_world_generator";
 import type { Position } from "../types/position";
 import Tile from "./tile";
+import { TileContentType } from "../types/tile_content_type";
 
 /**
  * Represents the game world, which is divided into chunks and tiles
@@ -181,14 +182,14 @@ export class World {
 
         return result;
     }
-
+    
     /**
     * Finds the nearest tile with a specific resource type starting from a position
     * @param from The starting position
     * @param ressourceType The resource type to search for
     * @returns The position of the nearest resource or null if none found
     */
-    public getNearestResourceFromPosition(from: Position, ressourceType: ResourceType): Position | null {
+    getNearestContentFromPosition(from: Position, content: TileContentType): Position | null {
         const visited = new Set<string>();
         const queue: Position[] = [from];
 
@@ -218,7 +219,7 @@ export class World {
 
             const tile = chunk.getTile(x, y);
 
-            if (tile.getContent?.tileContentType === ressourceType) {
+            if (tile.getContent?.tileContentType === content) {
                 return current;
             }
 

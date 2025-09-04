@@ -5,3 +5,6 @@ export enum InteractableType {
     CORE = "Core",
     CODEBOT = "Codebot",
 }
+
+export const INTERACTABLE_TYPES = Object.values(InteractableType)
+    .map(key => key.toLowerCase());

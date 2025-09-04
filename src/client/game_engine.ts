@@ -154,9 +154,16 @@ export class GameEngine {
                 clerk.load();
 
                 const saveRequest = () => {
+                    const data = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now(),
+                    });
+
+                    localStorage.setItem('save', data);
+
                     return fetch("/api/save", {
                         method: "POST",
-                        body: JSON.stringify({ data: this.save() }),
+                        body: data,
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -166,7 +173,14 @@ export class GameEngine {
                 setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
 
                 window.addEventListener("beforeunload", () => {
-                    const data = new Blob([JSON.stringify({ data: this.save() })], { type: "application/json" });
+                    const save = JSON.stringify({
+                        data: this.save(),
+                        timestamp: Date.now()
+                    });
+
+                    localStorage.setItem('save', save);
+
+                    const data = new Blob([save], {type: "application/json"});
                     navigator.sendBeacon("/api/save", data);
                 }, false);
             }
@@ -295,6 +309,44 @@ export class GameEngine {
                     }
 
                     this.craftEvent(recipe, codebot);
+                } else if (result.interactableType === InteractableType.CHEST) {
+                    if (!data?.type || !data?.action) {
+                        break;
+                    }
+
+                    const chest = tile.getContent as Chest;
+
+                    if (data.action === "take") {
+                        while (true) {
+                            const item = chest.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canRemoveItem(item) ||
+                                !codebot.inventory.canAddItem(item)) {
+                                break;
+                            }
+
+                            codebot.inventory.addItem(item);
+                            chest.inventory.removeItem(item);
+                        }
+                    } else if (data.action === "deposit") {
+                        while (true) {
+                            const item = codebot.inventory.items.find((item) => item?.spriteName === data.type);
+                            if (!item) {
+                                break;
+                            }
+
+                            if (!chest.inventory.canAddItem(item) ||
+                                !codebot.inventory.canRemoveItem(item)) {
+                                break;
+                            }
+
+                            chest.inventory.addItem(item);
+                            codebot.inventory.removeItem(item);
+                        }
+                    }
                 }
                 break;
             case "NONE":
