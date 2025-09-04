@@ -35,6 +35,7 @@ export class GameEngine {
     private codebots: Codebot[];
     private seed: string;
     private coreStepsRecipes: CoreStep[];
+    private firstLoad: boolean;
 
     constructor(app: PIXI.Application, save: any | null) {
         this.app = app;
@@ -50,6 +51,7 @@ export class GameEngine {
         );
         this.camera = new Camera();
         this.codebots = [];
+        this.firstLoad = true;
 
         this.player = save?.player ? Player.fromJSON(save.player, this.world) : new Player(this.world);
         this.coreStepsRecipes = save?.coreStepsRecipes ? coreStepsRecipes.map((step) => {
@@ -206,7 +208,8 @@ export class GameEngine {
 
         const newCX = Math.floor(this.player.posX / CHUNK_SIZE);
         const newCY = Math.floor(this.player.posY / CHUNK_SIZE);
-        if (newCX !== this.player.cX || newCY !== this.player.cY) {
+        if (this.firstLoad || (newCX !== this.player.cX || newCY !== this.player.cY)) {
+            this.firstLoad = false;
             this.player.cX = newCX;
             this.player.cY = newCY;
 
