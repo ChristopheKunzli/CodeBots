@@ -155,6 +155,8 @@ export class GameEngine {
                         timestamp: Date.now()
                     });
 
+                    localStorage.setItem('save', save);
+
                     const data = new Blob([save], {type: "application/json"});
                     navigator.sendBeacon("/api/save", data);
                 }, false);
