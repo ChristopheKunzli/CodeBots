@@ -52,7 +52,22 @@ export class GameEngine {
         this.codebots = [];
 
         this.player = save ? Player.fromJSON(save.player, this.world) : new Player(this.world);
-        this.coreStepsRecipes = save ? (save.coreStepsRecipes as CoreStep[]) : coreStepsRecipes;
+        this.coreStepsRecipes = save ? coreStepsRecipes.map((step) => {
+            const stepSave = save.coreStepsRecipes.find(({name}) => name === step.name) as CoreStep|undefined;
+            if (!stepSave) {
+                return step;
+            }
+            return {
+                items: step.items.map(({item, currentGathered}) => {
+                    const itemSave = stepSave.items.find((i) => i.item.spriteName === item.spriteName);
+                    return {
+                        item,
+                        currentGathered: itemSave?.currentGathered ?? currentGathered,
+                    };
+                }),
+                name: step.name,
+            };
+        }) : coreStepsRecipes;
         this.keys = new Set<string>();
 
         window.addEventListener("keydown", (e) =>
@@ -77,31 +92,6 @@ export class GameEngine {
         window.addEventListener('click', (event) => {
             this.handleMouseClick(event);
         });
-
-        const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
-
-        if (viteDisableSave !== "true") {
-            const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-            const clerk = new Clerk(clerkPubKey);
-            clerk.load();
-
-            const saveRequest = () => {
-                return fetch("/api/save", {
-                    method: "POST",
-                    body: JSON.stringify({data: this.save()}),
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                })
-            }
-
-            setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
-
-            window.addEventListener("beforeunload", () => {
-                const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
-                navigator.sendBeacon("/api/save", data);
-            }, false);
-        }
     }
 
     private generateRandomSeed(length: number = 32): string {
@@ -113,7 +103,13 @@ export class GameEngine {
             seed: this.seed,
             player: this.player.toJSON(),
             codebots: this.codebots.map((codebot) => codebot.toJSON()),
-            coreStepsRecipes: this.coreStepsRecipes,
+            coreStepsRecipes: this.coreStepsRecipes.map((step) => ({
+                name: step.name,
+                items: step.items.map((item) => ({
+                    item: { ...item.item },
+                    currentGathered: item.currentGathered,
+                }))
+            })),
             world: this.world.toJSON(),
         };
     }
@@ -125,6 +121,31 @@ export class GameEngine {
         this.renderer.renderEntity(this.player);
 
         if (!withoutHud) {
+            const viteDisableSave = import.meta.env.VITE_DISABLE_SAVE;
+
+            if (viteDisableSave !== "true") {
+                const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+                const clerk = new Clerk(clerkPubKey);
+                clerk.load();
+
+                const saveRequest = () => {
+                    return fetch("/api/save", {
+                        method: "POST",
+                        body: JSON.stringify({data: this.save()}),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                }
+
+                setInterval(saveRequest, 1000 * 60 * 5);// every 5 minutes
+
+                window.addEventListener("beforeunload", () => {
+                    const data = new Blob([JSON.stringify({data: this.save()})], {type: "application/json"});
+                    navigator.sendBeacon("/api/save", data);
+                }, false);
+            }
+
             this.renderer.initializeUI(craftingRecipes, furnaceRecipes, this.player, (recipe) => this.craftEvent(recipe, this.player));
 
             const tile = this.world.getTileAt(1, 0);
@@ -137,14 +158,13 @@ export class GameEngine {
                 // TODO test only
                 this.player.inventory.addItem(new FurnaceItem(1));
                 this.player.inventory.addItem(new CodebotItem(1));
+            } else {
+                for (const codebotData of save.codebots) {
+                    this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
+                }
             }
         }
 
-        if (save) {
-            for (const codebotData of save.codebots) {
-                this.addCodeBot(Codebot.fromJSON(codebotData, this.world, this.handleCodebotInteraction.bind(this)));
-            }
-        }
     }
 
     addCodeBot(codebot: Codebot) {
