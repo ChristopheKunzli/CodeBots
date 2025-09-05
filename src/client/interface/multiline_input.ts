@@ -46,8 +46,6 @@ export class MultilineInput extends Graphics {
     private _snapToBottomOnAppend = true;
     private _justAppended = false; // internal marker set before render when adding at end
 
-    private controlPressed: boolean = false;
-
     /**
      * Creates a multiline text input field
      * @param width Total width of the input box
@@ -89,7 +87,6 @@ export class MultilineInput extends Graphics {
 
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("paste", () => this.paste());
-        window.addEventListener("keyup", this.onKeyUp)
 
         this.blinkTimer = window.setInterval(() => {
             this._caret.visible = !this._caret.visible;
@@ -260,19 +257,6 @@ export class MultilineInput extends Graphics {
         this._caret.visible = true;
     }
 
-    private onKeyUp = (e: KeyboardEvent) => {
-        if (!this.focused) return;
-        switch (e.key) {
-            case "Control":
-            case "Meta":
-                this.controlPressed = false;
-                e.preventDefault();
-                break;
-            default:
-                break;
-        }
-    }
-
     private onKeyDown = (e: KeyboardEvent) => {
         if (!this.focused) return;
 
@@ -349,7 +333,7 @@ export class MultilineInput extends Graphics {
             }
 
             case "ArrowLeft": {
-                if (this.controlPressed) {
+                if (e.ctrlKey || e.metaKey) {
                     this.cursorChar = 0;
                 } else {
                     if (this.cursorChar > 0) {
@@ -367,7 +351,7 @@ export class MultilineInput extends Graphics {
             }
 
             case "ArrowRight": {
-                if (this.controlPressed) {
+                if (e.ctrlKey || e.metaKey) {
                     const line = this.lines[this.cursorLine] ?? "";
                     this.cursorChar = line.length;
                 } else {
@@ -425,9 +409,7 @@ export class MultilineInput extends Graphics {
             case "Control":
             case "Meta":
                 this.controlPressed = true;
-                console.log("onKeyDown ", e.key, this.controlPressed);
                 e.preventDefault();
-                e.stopPropagation();
                 break;
 
             default:
