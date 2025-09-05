@@ -46,6 +46,8 @@ export class MultilineInput extends Graphics {
     private _snapToBottomOnAppend = true;
     private _justAppended = false; // internal marker set before render when adding at end
 
+    private controlPressed: boolean = false;
+
     /**
      * Creates a multiline text input field
      * @param width Total width of the input box
@@ -87,6 +89,7 @@ export class MultilineInput extends Graphics {
 
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("paste", () => this.paste());
+        window.addEventListener("keyup", this.onKeyUp)
 
         this.blinkTimer = window.setInterval(() => {
             this._caret.visible = !this._caret.visible;
@@ -257,6 +260,19 @@ export class MultilineInput extends Graphics {
         this._caret.visible = true;
     }
 
+    private onKeyUp = (e: KeyboardEvent) => {
+        if (!this.focused) return;
+        switch (e.key) {
+            case "Control":
+            case "Meta":
+                this.controlPressed = false;
+                e.preventDefault();
+                break;
+            default:
+                break;
+        }
+    }
+
     private onKeyDown = (e: KeyboardEvent) => {
         if (!this.focused) return;
 
@@ -333,12 +349,17 @@ export class MultilineInput extends Graphics {
             }
 
             case "ArrowLeft": {
-                if (this.cursorChar > 0) {
-                    this.cursorChar -= 1;
-                } else if (this.cursorLine > 0) {
-                    this.cursorLine -= 1;
-                    this.cursorChar = this.lines[this.cursorLine].length;
+                if (this.controlPressed) {
+                    this.cursorChar = 0;
+                } else {
+                    if (this.cursorChar > 0) {
+                        this.cursorChar -= 1;
+                    } else if (this.cursorLine > 0) {
+                        this.cursorLine -= 1;
+                        this.cursorChar = this.lines[this.cursorLine].length;
+                    }
                 }
+
                 this.updateCaretGraphics();
                 if (this.autoScrollToCaret) this.ensureCaretVisible();
                 e.preventDefault();
@@ -346,13 +367,19 @@ export class MultilineInput extends Graphics {
             }
 
             case "ArrowRight": {
-                const line = this.lines[this.cursorLine] ?? "";
-                if (this.cursorChar < line.length) {
-                    this.cursorChar += 1;
-                } else if (this.cursorLine < this.lines.length - 1) {
-                    this.cursorLine += 1;
-                    this.cursorChar = 0;
+                if (this.controlPressed) {
+                    const line = this.lines[this.cursorLine] ?? "";
+                    this.cursorChar = line.length;
+                } else {
+                    const line = this.lines[this.cursorLine] ?? "";
+                    if (this.cursorChar < line.length) {
+                        this.cursorChar += 1;
+                    } else if (this.cursorLine < this.lines.length - 1) {
+                        this.cursorLine += 1;
+                        this.cursorChar = 0;
+                    }
                 }
+
                 this.updateCaretGraphics();
                 if (this.autoScrollToCaret) this.ensureCaretVisible();
                 e.preventDefault();
@@ -394,6 +421,14 @@ export class MultilineInput extends Graphics {
                 e.preventDefault();
                 break;
             }
+
+            case "Control":
+            case "Meta":
+                this.controlPressed = true;
+                console.log("onKeyDown ", e.key, this.controlPressed);
+                e.preventDefault();
+                e.stopPropagation();
+                break;
 
             default:
                 break;
