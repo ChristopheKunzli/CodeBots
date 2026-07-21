@@ -57,8 +57,6 @@ Repeat:
     plant birch seed
 ```
 
-Ce code n'est plus à jour. [cf](https://codebots-dev-web-app.azurewebsites.net/doc).
-
 - Les ressources peuvent être stockées dans des coffres.
 - Les technologies débloquées permettent d’améliorer les robots et outils.
 - Une interface permet de gérer les robots et leurs actions.
